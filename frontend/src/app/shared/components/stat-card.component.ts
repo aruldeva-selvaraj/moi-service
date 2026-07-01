@@ -23,7 +23,7 @@ import { Component, Input } from '@angular/core';
 })
 export class StatCardComponent {
   @Input({ required: true }) icon!: string;
-  @Input({ required: true }) value!: string | number;
+  @Input({ required: true }) value!: string | number | null;
   @Input({ required: true }) label!: string;
-  @Input() sub?: string;
+  @Input() sub?: string | null;
 }

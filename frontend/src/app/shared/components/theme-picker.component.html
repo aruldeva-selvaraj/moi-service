@@ -1,0 +1,202 @@
+@if (ts.isPickerOpen()) {
+  <div class="picker-overlay" (click)="ts.closePicker()"></div>
+}
+
+<aside class="theme-panel" [class.open]="ts.isPickerOpen()" role="complementary" aria-label="Theme Studio">
+  <!-- Header -->
+  <div class="panel-header">
+    <div class="panel-title-group">
+      <span class="panel-title">✨ Theme Studio</span>
+      <span class="dimension-badge">5D Engine</span>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="ts.closePicker()" aria-label="Close theme panel">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- Preset Themes -->
+    <section class="section">
+      <h4 class="section-label">
+        <mat-icon>auto_awesome</mat-icon>
+        Preset Themes
+      </h4>
+      <div class="presets-grid">
+        @for (preset of presets; track preset.name) {
+          <button class="preset-btn"
+                  [class.active]="isActivePreset(preset)"
+                  [matTooltip]="preset.name"
+                  matTooltipPosition="above"
+                  (click)="ts.applyPreset(preset)">
+            <span class="preset-emoji">{{ preset.icon }}</span>
+            <div class="preset-dots">
+              <span class="preset-dot" [style.background]="preset.config.primaryColor"></span>
+              <span class="preset-dot" [style.background]="preset.config.accentColor"></span>
+            </div>
+            <span class="preset-name">{{ preset.name }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- D1: Primary Color -->
+    <section class="section">
+      <h4 class="section-label">
+        <span class="dim-badge">D1</span>
+        Primary Color
+      </h4>
+      <div class="color-control">
+        <label class="color-input-wrap" [matTooltip]="'Open color picker'">
+          <input type="color"
+                 class="color-native"
+                 [value]="ts.config().primaryColor"
+                 (input)="ts.updateColor('primaryColor', getEventValue($event))" />
+          <span class="color-preview-swatch" [style.background]="ts.config().primaryColor"></span>
+          <span class="color-hex-label">{{ ts.config().primaryColor.toUpperCase() }}</span>
+        </label>
+        <div class="quick-swatch-row">
+          @for (c of primarySwatches; track c) {
+            <button class="swatch-btn"
+                    [class.active]="ts.config().primaryColor.toLowerCase() === c.toLowerCase()"
+                    [style.background]="c"
+                    [matTooltip]="c"
+                    (click)="ts.updateColor('primaryColor', c)"></button>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- D2: Accent Color -->
+    <section class="section">
+      <h4 class="section-label">
+        <span class="dim-badge">D2</span>
+        Accent Color
+      </h4>
+      <div class="color-control">
+        <label class="color-input-wrap" [matTooltip]="'Open color picker'">
+          <input type="color"
+                 class="color-native"
+                 [value]="ts.config().accentColor"
+                 (input)="ts.updateColor('accentColor', getEventValue($event))" />
+          <span class="color-preview-swatch" [style.background]="ts.config().accentColor"></span>
+          <span class="color-hex-label">{{ ts.config().accentColor.toUpperCase() }}</span>
+        </label>
+        <div class="quick-swatch-row">
+          @for (c of accentSwatches; track c) {
+            <button class="swatch-btn"
+                    [class.active]="ts.config().accentColor.toLowerCase() === c.toLowerCase()"
+                    [style.background]="c"
+                    [matTooltip]="c"
+                    (click)="ts.updateColor('accentColor', c)"></button>
+          }
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- D3: Mood -->
+    <section class="section">
+      <h4 class="section-label">
+        <span class="dim-badge">D3</span>
+        Mood
+      </h4>
+      <div class="toggle-group">
+        <button class="toggle-btn" [class.active]="ts.config().mood === 'light'"
+                (click)="ts.updateMood('light')">
+          <mat-icon>light_mode</mat-icon>
+          <span>Light</span>
+        </button>
+        <button class="toggle-btn" [class.active]="ts.config().mood === 'dark'"
+                (click)="ts.updateMood('dark')">
+          <mat-icon>dark_mode</mat-icon>
+          <span>Dark</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- D4: Depth -->
+    <section class="section">
+      <h4 class="section-label">
+        <span class="dim-badge">D4</span>
+        Depth Style
+      </h4>
+      <div class="depth-grid">
+        <button class="depth-btn" [class.active]="ts.config().depth === 'flat'"
+                (click)="ts.updateDepth('flat')">
+          <span class="depth-preview flat-prev"></span>
+          <span>Flat</span>
+        </button>
+        <button class="depth-btn" [class.active]="ts.config().depth === 'glass'"
+                (click)="ts.updateDepth('glass')">
+          <span class="depth-preview glass-prev"></span>
+          <span>Glass</span>
+        </button>
+        <button class="depth-btn" [class.active]="ts.config().depth === 'elevated'"
+                (click)="ts.updateDepth('elevated')">
+          <span class="depth-preview elevated-prev"></span>
+          <span>3D</span>
+        </button>
+        <button class="depth-btn" [class.active]="ts.config().depth === 'neon'"
+                (click)="ts.updateDepth('neon')">
+          <span class="depth-preview neon-prev"></span>
+          <span>Neon</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- D5: Vibe -->
+    <section class="section">
+      <h4 class="section-label">
+        <span class="dim-badge">D5</span>
+        Vibe
+      </h4>
+      <div class="vibe-grid">
+        <button class="vibe-btn" [class.active]="ts.config().vibe === 'classic'"
+                (click)="ts.updateVibe('classic')">
+          <span class="vibe-icon">🏛️</span>
+          <span>Classic</span>
+        </button>
+        <button class="vibe-btn" [class.active]="ts.config().vibe === 'festive'"
+                (click)="ts.updateVibe('festive')">
+          <span class="vibe-icon">🎊</span>
+          <span>Festive</span>
+        </button>
+        <button class="vibe-btn" [class.active]="ts.config().vibe === 'royal'"
+                (click)="ts.updateVibe('royal')">
+          <span class="vibe-icon">⚜️</span>
+          <span>Royal</span>
+        </button>
+        <button class="vibe-btn" [class.active]="ts.config().vibe === 'modern'"
+                (click)="ts.updateVibe('modern')">
+          <span class="vibe-icon">⚡</span>
+          <span>Modern</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Live preview strip -->
+    <div class="preview-strip">
+      <div class="preview-card">
+        <div class="preview-heading">Moi Manager</div>
+        <div class="preview-row">
+          <span class="preview-dot primary"></span>
+          <span class="preview-dot accent"></span>
+        </div>
+      </div>
+      <div class="preview-meta">Live Preview</div>
+    </div>
+
+    <!-- Reset -->
+    <div class="reset-row">
+      <button mat-stroked-button class="reset-btn" (click)="ts.reset()">
+        <mat-icon>restart_alt</mat-icon>
+        Reset to Default
+      </button>
+    </div>
+
+  </div>
+</aside>

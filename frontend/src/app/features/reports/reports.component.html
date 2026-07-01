@@ -1,0 +1,177 @@
+<div class="page-container">
+  <app-page-header
+    title="📊 Reports &amp; Analytics"
+    subtitle="Detailed moi collection analysis and summaries"
+    [hasActions]="true">
+    @if (selectedEventId && allEntries().length > 0) {
+      <button mat-raised-button color="accent" (click)="printGuestList()"
+              matTooltip="Print full guest list with all details (A4 Landscape)">
+        <mat-icon>groups</mat-icon> Print Guest List
+      </button>
+      <button mat-stroked-button (click)="printConsolidated()"
+              matTooltip="Print A4 consolidated register — split by side">
+        <mat-icon>picture_as_pdf</mat-icon> A4 Register
+      </button>
+    }
+    <button mat-stroked-button (click)="printReport()">
+      <mat-icon>print</mat-icon> Print Report
+    </button>
+  </app-page-header>
+
+  <!-- Event Selector -->
+  <div class="selector-card">
+    <mat-form-field appearance="outline" class="wedding-select">
+      <mat-label>Select Event</mat-label>
+      <mat-select [(value)]="selectedEventId" (selectionChange)="loadReport()">
+        <mat-option [value]="null">All Events (Overall)</mat-option>
+        @for (ev of events(); track ev.id) {
+          <mat-option [value]="ev.id">{{ getEventTitle(ev) }} ({{ ev.event_date | date:'dd MMM yyyy' }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading()) {
+    <app-loading-spinner />
+  } @else {
+
+    <!-- Event-specific report -->
+    @if (eventReport() && selectedEventId) {
+      <div class="report-banner">
+        <div class="event-type-chip">{{ getSelectedEventConfig().emoji }} {{ getSelectedEventConfig().label }}</div>
+        <h2 class="report-banner-title">
+          {{ eventReport()!.primary_name }}
+          @if (eventReport()!.secondary_name) {
+            ♡ {{ eventReport()!.secondary_name }}
+          }
+        </h2>
+        <p class="report-banner-date">{{ eventReport()!.event_date | date:'dd MMMM yyyy' }}</p>
+        <div class="grid-4">
+          <div class="banner-stat">
+            <div class="banner-value">{{ eventReport()!.total_amount | currency:'INR':'symbol':'1.0-0' }}</div>
+            <div class="banner-label">Total Moi</div>
+          </div>
+          <div class="banner-stat">
+            <div class="banner-value">{{ eventReport()!.moi_count }}</div>
+            <div class="banner-label">Total Guests</div>
+          </div>
+          <div class="banner-stat">
+            <div class="banner-value">{{ eventReport()!.groom_amount | currency:'INR':'symbol':'1.0-0' }}</div>
+            <div class="banner-label">{{ getSelectedEventConfig().sideALabel }}</div>
+          </div>
+          <div class="banner-stat">
+            <div class="banner-value">{{ eventReport()!.bride_amount | currency:'INR':'symbol':'1.0-0' }}</div>
+            <div class="banner-label">{{ getSelectedEventConfig().sideBLabel }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Mode Breakdown -->
+      <h3 class="section-title">Payment Mode Breakdown</h3>
+      <div class="grid-3 section-gap">
+        <app-stat-card icon="💵"
+          [value]="eventReport()!.cash_amount | currency:'INR':'symbol':'1.0-0'"
+          label="Cash"
+          [sub]="eventReport()!.total_amount > 0 ? (eventReport()!.cash_amount / eventReport()!.total_amount | percent:'1.0-1') : '0%'" />
+        <app-stat-card icon="📝"
+          [value]="eventReport()!.cheque_amount | currency:'INR':'symbol':'1.0-0'"
+          label="Cheque"
+          [sub]="eventReport()!.total_amount > 0 ? (eventReport()!.cheque_amount / eventReport()!.total_amount | percent:'1.0-1') : '0%'" />
+        <app-stat-card icon="📱"
+          [value]="eventReport()!.online_amount | currency:'INR':'symbol':'1.0-0'"
+          label="Online"
+          [sub]="eventReport()!.total_amount > 0 ? (eventReport()!.online_amount / eventReport()!.total_amount | percent:'1.0-1') : '0%'" />
+      </div>
+    }
+
+    <!-- Relationship Analysis -->
+    @if (relationshipData().length > 0) {
+      <div class="section-header">
+        <h3 class="section-title no-margin">Contributions by Relationship</h3>
+      </div>
+      <div class="data-table-container section-gap">
+        <table mat-table [dataSource]="relationshipData()">
+          <ng-container matColumnDef="rank">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let r; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+          <ng-container matColumnDef="relationship">
+            <th mat-header-cell *matHeaderCellDef>Relationship</th>
+            <td mat-cell *matCellDef="let r" class="rel-name">{{ r.relationship }}</td>
+          </ng-container>
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>No. of Guests</th>
+            <td mat-cell *matCellDef="let r">{{ r.count }}</td>
+          </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total Amount</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="amount-display">{{ r.total_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="avg">
+            <th mat-header-cell *matHeaderCellDef>Avg. per Guest</th>
+            <td mat-cell *matCellDef="let r">
+              {{ (r.total_amount / r.count) | currency:'INR':'symbol':'1.0-0' }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['rank','relationship','count','total','avg']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['rank','relationship','count','total','avg'];"></tr>
+        </table>
+      </div>
+    }
+
+    <!-- All Events Summary -->
+    @if (!selectedEventId && events().length > 0) {
+      <h3 class="section-title">Event-wise Summary</h3>
+      <div class="data-table-container">
+        <table mat-table [dataSource]="events()">
+          <ng-container matColumnDef="event">
+            <th mat-header-cell *matHeaderCellDef>Event</th>
+            <td mat-cell *matCellDef="let ev">
+              <a [routerLink]="['/events', ev.id]" class="couple-link">
+                {{ getEventTitle(ev) }}
+              </a>
+              @if (ev.family_name) {
+                <div class="family-name">{{ ev.family_name }}</div>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let ev">{{ getEventConfig(ev).emoji }} {{ getEventConfig(ev).label }}</td>
+          </ng-container>
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let ev">{{ ev.event_date | date:'dd MMM yyyy' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="venue">
+            <th mat-header-cell *matHeaderCellDef>Venue</th>
+            <td mat-cell *matCellDef="let ev">{{ ev.venue || '-' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="guests">
+            <th mat-header-cell *matHeaderCellDef>Guests</th>
+            <td mat-cell *matCellDef="let ev">{{ ev.moi_count }}</td>
+          </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total Moi</th>
+            <td mat-cell *matCellDef="let ev">
+              <span class="amount-display">{{ ev.total_moi | currency:'INR':'symbol':'1.0-0' }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let ev">
+              <button mat-stroked-button [routerLink]="['/events', ev.id]" class="view-btn">View</button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['event','type','date','venue','guests','total','action']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['event','type','date','venue','guests','total','action'];"></tr>
+        </table>
+      </div>
+    }
+
+  }
+</div>

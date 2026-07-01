@@ -1,0 +1,98 @@
+<div class="page-container">
+  <app-page-header title="🪔 Welcome to Moi Manager"
+    subtitle="Cash Gift Management for Weddings, Birthdays, Baby Showers &amp; More" />
+
+  @if (loading()) {
+    <app-loading-spinner message="Loading dashboard..." />
+  } @else {
+    <!-- Stats Row -->
+    <div class="grid-4 stats-section">
+      <app-stat-card icon="🎉"
+        [value]="stats()?.total_events || 0"
+        label="Total Events" />
+      <app-stat-card icon="👥"
+        [value]="stats()?.total_moi_entries || 0"
+        label="Total Guests" />
+      <app-stat-card icon="💰"
+        [value]="(stats()?.total_amount || 0) | currency:'INR':'symbol':'1.0-0'"
+        label="Total Moi Collected" />
+      <app-stat-card icon="📊"
+        [value]="(stats()?.avg_amount || 0) | currency:'INR':'symbol':'1.0-0'"
+        label="Avg. Gift Amount" />
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <a mat-raised-button color="primary" routerLink="/events/new">
+        <mat-icon>add_circle</mat-icon> Add New Event
+      </a>
+      <a mat-stroked-button color="primary" routerLink="/moi">
+        <mat-icon>payments</mat-icon> All Moi Entries
+      </a>
+      <a mat-stroked-button color="primary" routerLink="/reports">
+        <mat-icon>bar_chart</mat-icon> View Reports
+      </a>
+    </div>
+
+    <!-- Recent Events -->
+    <div class="section-header">
+      <h2>Recent Events</h2>
+      <a mat-button routerLink="/events" color="primary">View All →</a>
+    </div>
+
+    @if (events().length === 0) {
+      <app-empty-state
+        icon="🎉"
+        title="No events yet"
+        message="Start by adding a new event — wedding, birthday, baby shower, and more"
+        actionLabel="Add First Event"
+        actionLink="/events/new" />
+    } @else {
+      <div class="grid-3">
+        @for (ev of events(); track ev.id) {
+          <div class="wedding-card" [routerLink]="['/events', ev.id]">
+            <div class="card-header">
+              <div>
+                <div class="wedding-card-title">
+                  {{ getEventEmoji(ev) }} {{ getEventTitle(ev) }}
+                </div>
+                @if (ev.family_name) {
+                  <div class="wedding-card-subtitle">{{ ev.family_name }} Family</div>
+                }
+              </div>
+              <mat-icon class="favorite-icon">favorite</mat-icon>
+            </div>
+
+            <div class="card-meta">
+              <span class="meta-item">
+                <mat-icon>event</mat-icon>
+                {{ ev.event_date | date:'dd MMM yyyy' }}
+              </span>
+              @if (ev.venue) {
+                <span class="meta-item">
+                  <mat-icon>location_on</mat-icon>
+                  {{ ev.venue }}
+                </span>
+              }
+            </div>
+
+            <mat-divider class="card-divider"></mat-divider>
+
+            <div class="card-footer">
+              <div>
+                <div class="wedding-card-amount">
+                  {{ ev.total_moi | currency:'INR':'symbol':'1.0-0' }}
+                </div>
+                <div class="guest-count">{{ ev.moi_count }} guests</div>
+              </div>
+              <a mat-mini-fab color="primary" [routerLink]="['/events', ev.id]"
+                (click)="$event.stopPropagation()">
+                <mat-icon>arrow_forward</mat-icon>
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

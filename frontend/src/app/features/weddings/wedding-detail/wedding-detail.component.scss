@@ -1,0 +1,148 @@
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.wedding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.event-type-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #8B6347);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.wedding-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.wedding-title {
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  color: var(--text-heading, #6B2D0A);
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.wedding-meta {
+  display: flex;
+  gap: 16px;
+  padding-left: 52px;
+  color: var(--text-muted, #8B6347);
+  font-size: 0.875rem;
+}
+
+.meta-icon {
+  font-size: 14px;
+  height: 14px;
+  width: 14px;
+  vertical-align: middle;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+
+.stats-row {
+  margin-bottom: 28px;
+}
+
+// ── Tab content ───────────────────────────────────────────────────────────────
+
+.tab-content {
+  padding: 24px 0;
+}
+
+// ── Moi form ──────────────────────────────────────────────────────────────────
+
+.moi-form-card {
+  max-width: 900px;
+}
+
+.form-section-title {
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  color: var(--text-heading, #6B2D0A);
+  margin-bottom: 20px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.paper-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .paper-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--text-muted, #8B6347);
+  }
+
+  mat-button-toggle-group {
+    height: 32px;
+
+    mat-button-toggle { font-size: 11px; }
+  }
+}
+
+.form-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+
+.filter-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-field {
+  width: 200px;
+}
+
+.search-field {
+  width: 250px;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+
+.guest-name {
+  font-weight: 500;
+}
+
+.guest-relation {
+  font-size: 0.75rem;
+  color: var(--text-muted, #8B6347);
+}
+
+.entries-footer {
+  padding: 12px;
+  text-align: right;
+  color: var(--text-muted, #8B6347);
+  font-size: 0.875rem;
+}

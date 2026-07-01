@@ -1,0 +1,297 @@
+<div class="page-container">
+  @if (loading()) {
+    <app-loading-spinner />
+  } @else if (event()) {
+
+    <!-- Event Header -->
+    <div class="wedding-header">
+      <div>
+        <div class="wedding-title-row">
+          <a mat-icon-button routerLink="/events" matTooltip="Back to events">
+            <mat-icon>arrow_back</mat-icon>
+          </a>
+          <div>
+            <div class="event-type-label">{{ eventConfig().emoji }} {{ eventConfig().label }}</div>
+            <h1 class="wedding-title">{{ eventTitle() }}</h1>
+          </div>
+        </div>
+        <div class="wedding-meta">
+          @if (event()!.family_name) {
+            <span><mat-icon class="meta-icon">family_restroom</mat-icon> {{ event()!.family_name }}</span>
+          }
+          <span><mat-icon class="meta-icon">event</mat-icon> {{ event()!.event_date | date:'dd MMMM yyyy' }}</span>
+          @if (event()!.venue) {
+            <span><mat-icon class="meta-icon">location_on</mat-icon> {{ event()!.venue }}</span>
+          }
+          @if (event()!.city) {
+            <span><mat-icon class="meta-icon">location_city</mat-icon> {{ event()!.city }}</span>
+          }
+        </div>
+      </div>
+      <div class="header-actions">
+        <a mat-stroked-button [routerLink]="['/events', event()!.id, 'edit']">
+          <mat-icon>edit</mat-icon> Edit
+        </a>
+        <button mat-raised-button color="accent" (click)="printGuestListA4()"
+                matTooltip="Print full guest list with all details grouped by side (A4 Landscape)"
+                [disabled]="entries().length === 0">
+          <mat-icon>groups</mat-icon> Print Guest List
+        </button>
+        <button mat-stroked-button (click)="printConsolidatedA4()"
+                matTooltip="Print A4 consolidated register — split by side">
+          <mat-icon>picture_as_pdf</mat-icon> A4 Register
+        </button>
+        <button mat-stroked-button (click)="printMoiList()">
+          <mat-icon>print</mat-icon> Print
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid-3 stats-row">
+      <app-stat-card icon="💰"
+        [value]="event()!.total_moi | currency:'INR':'symbol':'1.0-0'"
+        label="Total Moi Collected" />
+      <app-stat-card icon="👥"
+        [value]="event()!.moi_count"
+        label="Total Guests" />
+      <app-stat-card icon="📊"
+        [value]="event()!.moi_count > 0 ? (event()!.total_moi / event()!.moi_count | currency:'INR':'symbol':'1.0-0') : '₹0'"
+        label="Average per Guest" />
+    </div>
+
+    <mat-tab-group>
+
+      <!-- Add Moi Tab -->
+      <mat-tab label="➕ Add Moi Entry">
+        <div class="tab-content">
+          <div class="form-card moi-form-card">
+            <h3 class="form-section-title">Record New Moi Entry</h3>
+            <form [formGroup]="moiForm" (ngSubmit)="submitMoi()">
+              <div class="grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Guest Name *</mat-label>
+                  <input matInput formControlName="guest_name" placeholder="Enter guest's name">
+                  <mat-icon matPrefix>person</mat-icon>
+                  @if (moiForm.get('guest_name')?.hasError('required') && moiForm.get('guest_name')?.touched) {
+                    <mat-error>Guest name is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Relationship</mat-label>
+                  <input matInput formControlName="relationship" placeholder="e.g., Uncle, Friend, Colleague">
+                  <mat-icon matPrefix>people</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Amount (₹) *</mat-label>
+                  <input matInput type="number" formControlName="amount" placeholder="0" min="1">
+                  <mat-icon matPrefix>currency_rupee</mat-icon>
+                  @if (moiForm.get('amount')?.hasError('required') && moiForm.get('amount')?.touched) {
+                    <mat-error>Amount is required</mat-error>
+                  }
+                  @if (moiForm.get('amount')?.hasError('min') && moiForm.get('amount')?.touched) {
+                    <mat-error>Amount must be positive</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Side</mat-label>
+                  <mat-select formControlName="side">
+                    <mat-option value="groom">{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }}</mat-option>
+                    <mat-option value="bride">{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }}</mat-option>
+                    <mat-option value="both">Both</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Payment Mode</mat-label>
+                  <mat-select formControlName="payment_mode">
+                    <mat-option value="cash">💵 Cash</mat-option>
+                    <mat-option value="cheque">📝 Cheque</mat-option>
+                    <mat-option value="online">📱 Online Transfer</mat-option>
+                    <mat-option value="dd">🏦 DD</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                @if (moiForm.get('payment_mode')?.value === 'cheque') {
+                  <mat-form-field appearance="outline">
+                    <mat-label>Cheque Number</mat-label>
+                    <input matInput formControlName="cheque_number">
+                    <mat-icon matPrefix>receipt</mat-icon>
+                  </mat-form-field>
+                }
+
+                @if (moiForm.get('payment_mode')?.value === 'online') {
+                  <mat-form-field appearance="outline">
+                    <mat-label>Transaction Reference</mat-label>
+                    <input matInput formControlName="transaction_ref">
+                    <mat-icon matPrefix>confirmation_number</mat-icon>
+                  </mat-form-field>
+                }
+              </div>
+
+              <div class="grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Guest City</mat-label>
+                  <input matInput formControlName="city" placeholder="e.g., Chennai">
+                  <mat-icon matPrefix>location_city</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Phone</mat-label>
+                  <input matInput formControlName="phone" placeholder="10-digit mobile">
+                  <mat-icon matPrefix>phone</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Received By</mat-label>
+                  <input matInput formControlName="received_by" placeholder="Who collected the moi">
+                  <mat-icon matPrefix>how_to_reg</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Notes</mat-label>
+                  <input matInput formControlName="notes" placeholder="Additional notes">
+                  <mat-icon matPrefix>notes</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <div class="paper-size-selector">
+                  <mat-icon class="paper-icon" matTooltip="Thermal paper width">print</mat-icon>
+                  <mat-button-toggle-group [value]="paperSize()" (change)="paperSize.set($event.value)">
+                    <mat-button-toggle value="58">58 mm</mat-button-toggle>
+                    <mat-button-toggle value="80">80 mm</mat-button-toggle>
+                  </mat-button-toggle-group>
+                </div>
+                <div class="form-buttons">
+                  <button mat-stroked-button type="button" (click)="moiForm.reset(defaultMoiValues)">
+                    Reset
+                  </button>
+                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting()">
+                    @if (submitting()) {
+                      <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+                    }
+                    <mat-icon>add</mat-icon> Record &amp; Print
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Moi List Tab -->
+      <mat-tab [label]="'📋 Moi List (' + entries().length + ')'">
+        <div class="tab-content">
+
+          <!-- Filters -->
+          <div class="filter-row">
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Filter by Side</mat-label>
+              <mat-select [(value)]="filterSide" (selectionChange)="applyFilter()">
+                <mat-option value="">All</mat-option>
+                <mat-option value="groom">{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }}</mat-option>
+                <mat-option value="bride">{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }}</mat-option>
+                <mat-option value="both">Both</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Filter by Payment</mat-label>
+              <mat-select [(value)]="filterPayment" (selectionChange)="applyFilter()">
+                <mat-option value="">All</mat-option>
+                <mat-option value="cash">Cash</mat-option>
+                <mat-option value="cheque">Cheque</mat-option>
+                <mat-option value="online">Online</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search Guest</mat-label>
+              <input matInput [(ngModel)]="searchQuery" (input)="applyFilter()" placeholder="Search by name...">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+
+          @if (entriesLoading()) {
+            <app-loading-spinner [diameter]="32" />
+          } @else if (entries().length === 0) {
+            <app-empty-state
+              icon="💝"
+              title="No moi entries yet"
+              message='Use the "Add Moi Entry" tab to record guest contributions' />
+          } @else {
+            <div class="data-table-container">
+              <table mat-table [dataSource]="entries()">
+                <ng-container matColumnDef="guest_name">
+                  <th mat-header-cell *matHeaderCellDef>Guest Name</th>
+                  <td mat-cell *matCellDef="let e">
+                    <div class="guest-name">{{ e.guest_name }}</div>
+                    @if (e.relationship) {
+                      <div class="guest-relation">{{ e.relationship }}</div>
+                    }
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="side">
+                  <th mat-header-cell *matHeaderCellDef>Side</th>
+                  <td mat-cell *matCellDef="let e">
+                    <span [class]="'badge ' + getSideBadge(e.side)">{{ getSideLabel(e.side) }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="amount">
+                  <th mat-header-cell *matHeaderCellDef>Amount</th>
+                  <td mat-cell *matCellDef="let e">
+                    <span class="amount-display">{{ e.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="payment_mode">
+                  <th mat-header-cell *matHeaderCellDef>Payment</th>
+                  <td mat-cell *matCellDef="let e">
+                    <span [class]="'badge badge-' + e.payment_mode">{{ e.payment_mode | uppercase }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="city">
+                  <th mat-header-cell *matHeaderCellDef>City</th>
+                  <td mat-cell *matCellDef="let e">{{ e.city || '-' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="received_by">
+                  <th mat-header-cell *matHeaderCellDef>Received By</th>
+                  <td mat-cell *matCellDef="let e">{{ e.received_by || '-' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let e">
+                    <button mat-icon-button matTooltip="Print receipt" (click)="printEntry(e)">
+                      <mat-icon>receipt</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" matTooltip="Delete entry" (click)="deleteEntry(e)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              </table>
+            </div>
+
+            <div class="entries-footer">
+              Showing {{ entries().length }} of {{ totalEntries() }} entries
+            </div>
+          }
+
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  }
+</div>

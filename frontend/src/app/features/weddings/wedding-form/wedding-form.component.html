@@ -1,0 +1,101 @@
+<div class="page-container">
+  <app-page-header
+    [title]="isEdit ? '✏️ Edit Event' : '🎉 New Event'"
+    [subtitle]="isEdit ? 'Update event details' : 'Register a new event for moi tracking'" />
+
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- Event Type -->
+      <div class="form-section">
+        <h3 class="form-section-title">Event Type</h3>
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Select Event Type</mat-label>
+          <mat-select formControlName="event_type">
+            @for (et of eventTypes; track et.value) {
+              <mat-option [value]="et.value">{{ et.emoji }} {{ et.label }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>celebration</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Host / Couple Information -->
+      <div class="form-section">
+        <h3 class="form-section-title">{{ selectedEventConfig.emoji }} Host / Couple Information</h3>
+        <div class="grid-2">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ selectedEventConfig.primaryLabel }} *</mat-label>
+            <input matInput formControlName="primary_name"
+              [placeholder]="'Enter ' + selectedEventConfig.primaryLabel">
+            <mat-icon matPrefix>person</mat-icon>
+            @if (form.get('primary_name')?.hasError('required') && form.get('primary_name')?.touched) {
+              <mat-error>{{ selectedEventConfig.primaryLabel }} is required</mat-error>
+            }
+          </mat-form-field>
+
+          @if (selectedEventConfig.showSecondary) {
+            <mat-form-field appearance="outline">
+              <mat-label>{{ selectedEventConfig.secondaryLabel }}</mat-label>
+              <input matInput formControlName="secondary_name"
+                [placeholder]="'Enter ' + selectedEventConfig.secondaryLabel">
+              <mat-icon matPrefix>person</mat-icon>
+            </mat-form-field>
+          }
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Family Name (optional)</mat-label>
+          <input matInput formControlName="family_name" placeholder="e.g., Krishnaswamy">
+          <mat-icon matPrefix>family_restroom</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Event Details -->
+      <div class="form-section">
+        <h3 class="form-section-title">Event Details</h3>
+        <div class="grid-2">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ selectedEventConfig.dateLabel }} *</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="event_date">
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            @if (form.get('event_date')?.hasError('required') && form.get('event_date')?.touched) {
+              <mat-error>{{ selectedEventConfig.dateLabel }} is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city" placeholder="e.g., Chennai">
+            <mat-icon matPrefix>location_city</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Venue / Hall</mat-label>
+          <input matInput formControlName="venue" placeholder="e.g., Sri Vijaya Mahal, T Nagar">
+          <mat-icon matPrefix>location_on</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Notes (optional)</mat-label>
+          <textarea matInput formControlName="notes" rows="3"
+            placeholder="Any additional notes about the event..."></textarea>
+          <mat-icon matPrefix>notes</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <a mat-stroked-button routerLink="/events">Cancel</a>
+        <button mat-raised-button color="primary" type="submit" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+          }
+          {{ isEdit ? 'Update Event' : 'Create Event' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

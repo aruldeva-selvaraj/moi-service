@@ -1,0 +1,47 @@
+.filter-card {
+  background: var(--card-bg, white);
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border-color, #f0d080);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-wedding { width: 220px; }
+.filter-side    { width: 180px; }
+.filter-payment { width: 180px; }
+.filter-search  { width: 250px; }
+
+.wedding-link {
+  color: var(--text-heading, #6B2D0A);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover { text-decoration: underline; }
+}
+
+.guest-name {
+  font-weight: 500;
+}
+
+.guest-relation {
+  font-size: 0.75rem;
+  color: var(--text-muted, #8B6347);
+}
+
+.date-cell {
+  font-size: 0.8rem;
+}
+
+.table-paginator {
+  background: var(--card-bg, white);
+  border-radius: 0 0 var(--radius-md, 12px) var(--radius-md, 12px);
+  border: 1px solid var(--border-color, #f0d080);
+  border-top: none;
+}

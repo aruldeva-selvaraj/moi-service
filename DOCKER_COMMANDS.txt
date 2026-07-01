@@ -1,0 +1,123 @@
+===============================================================
+  MOI MANAGER — DOCKER COMMANDS REFERENCE
+  Run all commands from the project root folder:
+  c:\Users\aruldeva.selvaraj\moi-wedding-app\
+===============================================================
+
+
+───────────────────────────────────────────────────────────────
+  START
+───────────────────────────────────────────────────────────────
+
+  First time / after code changes (builds image):
+    docker compose up --build
+
+  Normal start (no rebuild):
+    docker compose up
+
+  Start in background (detached):
+    docker compose up -d
+
+  Start only the API (DB already running):
+    docker compose up --build api
+
+
+───────────────────────────────────────────────────────────────
+  STOP
+───────────────────────────────────────────────────────────────
+
+  Stop containers (keep data):
+    docker compose down
+
+  Stop and delete database volume (wipes all data):
+    docker compose down -v
+
+  Stop a single container:
+    docker stop moi_api
+    docker stop moi_db
+
+
+───────────────────────────────────────────────────────────────
+  STATUS / LOGS
+───────────────────────────────────────────────────────────────
+
+  Check running containers:
+    docker compose ps
+
+  View live logs (both containers):
+    docker compose logs -f
+
+  View logs for API only:
+    docker compose logs -f api
+
+  View logs for DB only:
+    docker compose logs -f db
+
+
+───────────────────────────────────────────────────────────────
+  DATABASE
+───────────────────────────────────────────────────────────────
+
+  Open PostgreSQL shell:
+    docker exec -it moi_db psql -U postgres -d moi_manager_db
+
+  Load sample data (run once after first start):
+    docker exec -i moi_db psql -U postgres -d moi_manager_db < backend/setup_db.sql
+
+  Backup database to file:
+    docker exec moi_db pg_dump -U postgres moi_manager_db > backup.sql
+
+  Restore database from backup:
+    docker exec -i moi_db psql -U postgres -d moi_manager_db < backup.sql
+
+
+───────────────────────────────────────────────────────────────
+  CLEAN UP
+───────────────────────────────────────────────────────────────
+
+  Remove stopped containers:
+    docker container prune
+
+  Remove unused images:
+    docker image prune
+
+  Remove everything (containers + images + volumes):
+    docker compose down -v --rmi all
+
+  Full Docker system cleanup (careful — removes ALL unused Docker data):
+    docker system prune -a
+
+
+───────────────────────────────────────────────────────────────
+  REBUILD
+───────────────────────────────────────────────────────────────
+
+  Rebuild API image from scratch (no cache):
+    docker compose build --no-cache api
+
+  Restart only the API container:
+    docker compose restart api
+
+
+───────────────────────────────────────────────────────────────
+  URLS (once containers are running)
+───────────────────────────────────────────────────────────────
+
+  API base:        http://localhost:8000
+  Swagger docs:    http://localhost:8000/docs
+  ReDoc docs:      http://localhost:8000/redoc
+  Health check:    http://localhost:8000/health
+  PostgreSQL:      localhost:5432  (user: postgres / db: moi_manager_db)
+
+
+───────────────────────────────────────────────────────────────
+  QUICK START (copy-paste for first run)
+───────────────────────────────────────────────────────────────
+
+  1. cd c:\Users\aruldeva.selvaraj\moi-wedding-app
+  2. docker compose up --build -d
+  3. docker compose logs -f api
+     (wait for "Application startup complete")
+  4. Open http://localhost:8000/docs
+
+===============================================================

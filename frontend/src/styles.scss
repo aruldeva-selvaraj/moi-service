@@ -1,0 +1,480 @@
+@use '@angular/material' as mat;
+
+// ── Static Material theme (compiled at build time) ─────────────────────────
+$wedding-primary: mat.m2-define-palette((
+  50: #fef9e7,
+  100: #fdf0c4,
+  200: #fbe69d,
+  300: #f9db75,
+  400: #f7d458,
+  500: #f6cc3b,
+  600: #e8b800,
+  700: #c9920a,
+  800: #a87015,
+  900: #8B4513,
+  A100: #ffe57a,
+  A200: #ffd740,
+  A400: #ffc400,
+  A700: #ffab00,
+  contrast: (
+    50: rgba(0,0,0,.87),
+    100: rgba(0,0,0,.87),
+    200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87),
+    400: rgba(0,0,0,.87),
+    500: rgba(0,0,0,.87),
+    600: rgba(0,0,0,.87),
+    700: rgba(0,0,0,.87),
+    800: #fff,
+    900: #fff,
+    A100: rgba(0,0,0,.87),
+    A200: rgba(0,0,0,.87),
+    A400: rgba(0,0,0,.87),
+    A700: rgba(0,0,0,.87),
+  )
+), 700);
+
+$wedding-accent: mat.m2-define-palette((
+  50: #fce4ec,
+  100: #f8bbd0,
+  200: #f48fb1,
+  300: #f06292,
+  400: #ec407a,
+  500: #8B0000,
+  600: #7B0000,
+  700: #6B0000,
+  800: #5B0000,
+  900: #4B0000,
+  A100: #ff80ab,
+  A200: #ff4081,
+  A400: #f50057,
+  A700: #c51162,
+  contrast: (
+    50: rgba(0,0,0,.87),
+    100: rgba(0,0,0,.87),
+    200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87),
+    400: #fff,
+    500: #fff,
+    600: #fff,
+    700: #fff,
+    800: #fff,
+    900: #fff,
+    A100: rgba(0,0,0,.87),
+    A200: #fff,
+    A400: #fff,
+    A700: #fff,
+  )
+), 500);
+
+$wedding-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $wedding-primary,
+    accent: $wedding-accent,
+  ),
+  typography: mat.m2-define-typography-config(
+    $font-family: 'Inter, sans-serif',
+  ),
+  density: 0,
+));
+
+@include mat.all-component-themes($wedding-theme);
+
+// ── 5D CSS Custom Properties (defaults — ThemeService overrides at runtime) ─
+:root {
+  // D1: Primary
+  --color-primary: #8B4513;
+  --color-primary-dark: #5C2D0C;
+  --color-primary-darker: #2E160A;
+  --color-primary-light: #c5a289;
+  --color-primary-lighter: #f0e0d0;
+  --color-primary-rgb: 139, 69, 19;
+
+  // D2: Accent
+  --color-accent: #8B0000;
+  --color-accent-dark: #5B0000;
+  --color-accent-light: #e07070;
+  --color-accent-rgb: 139, 0, 0;
+
+  // D3: Mood — light defaults
+  --bg-page: #fdf6e3;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fff9f0;
+  --bg-stat: #fff8e1;
+  --text-heading: #6B2D0A;
+  --text-body: #3d2b1f;
+  --text-muted: #8B6347;
+  --border-color: rgba(139, 69, 19, 0.3);
+  --nav-accent-color: #FFD700;
+  --nav-bg: linear-gradient(135deg, #5C2D0C 0%, #7B3B0F 50%, #8B4513 100%);
+
+  // D4: Depth — elevated defaults
+  --card-bg: #ffffff;
+  --card-border: 1px solid rgba(139, 69, 19, 0.18);
+  --card-shadow: 0 4px 16px rgba(139, 69, 19, 0.1), 0 1px 4px rgba(0,0,0,0.06);
+  --card-hover-shadow: 0 12px 40px rgba(139, 69, 19, 0.2), 0 4px 12px rgba(0,0,0,0.1);
+  --card-backdrop: none;
+  --glow: none;
+  --table-header-bg: #8B4513;
+  --nav-backdrop: none;
+  --nav-shadow: 0 2px 16px rgba(139, 69, 19, 0.35);
+
+  // D5: Vibe — festive defaults
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+  --font-heading: 'Playfair Display', serif;
+  --card-transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// ── Global reset ───────────────────────────────────────────────────────────
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-body);
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+// ── Glass depth background blobs ──────────────────────────────────────────
+:root[data-depth="glass"] body::before {
+  content: '';
+  position: fixed;
+  width: 70vw;
+  height: 70vw;
+  max-width: 700px;
+  max-height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--color-primary-rgb), 0.18), transparent 65%);
+  top: -15vw;
+  left: -10vw;
+  pointer-events: none;
+  z-index: -1;
+  animation: blob-drift-1 18s ease-in-out infinite;
+}
+
+:root[data-depth="glass"] body::after {
+  content: '';
+  position: fixed;
+  width: 55vw;
+  height: 55vw;
+  max-width: 550px;
+  max-height: 550px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--color-accent-rgb), 0.13), transparent 65%);
+  bottom: -10vw;
+  right: -8vw;
+  pointer-events: none;
+  z-index: -1;
+  animation: blob-drift-2 14s ease-in-out infinite;
+}
+
+// Neon dark scan-line grid subtle effect
+:root[data-depth="neon"][data-mood="dark"] body {
+  background-image:
+    linear-gradient(rgba(var(--color-primary-rgb), 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+@keyframes blob-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(60px, -50px) scale(1.08); }
+  66%       { transform: translate(-40px, 70px) scale(0.94); }
+}
+
+@keyframes blob-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-50px, 40px) scale(1.1); }
+  66%       { transform: translate(45px, -60px) scale(0.96); }
+}
+
+// ── Dark mode Material overrides ──────────────────────────────────────────
+:root[data-mood="dark"] {
+  .mat-mdc-card,
+  .mat-mdc-dialog-container,
+  .mat-mdc-menu-panel {
+    background-color: var(--bg-card) !important;
+    color: var(--text-body) !important;
+  }
+
+  .mat-mdc-form-field .mdc-text-field {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .mat-mdc-form-field .mat-mdc-floating-label,
+  .mat-mdc-form-field input,
+  .mat-mdc-form-field textarea {
+    color: var(--text-body) !important;
+  }
+
+  .mat-mdc-select-value {
+    color: var(--text-body) !important;
+  }
+
+  .mat-mdc-table {
+    background: var(--bg-card) !important;
+
+    .mat-mdc-row {
+      background: var(--bg-card);
+      color: var(--text-body);
+      border-color: var(--border-color) !important;
+    }
+
+    .mat-mdc-row:hover { background: var(--bg-card-hover) !important; }
+  }
+
+  .mat-mdc-paginator {
+    background: var(--bg-card) !important;
+    color: var(--text-muted) !important;
+  }
+}
+
+// ── Layout ────────────────────────────────────────────────────────────────
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  h1 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    transition: color 0.3s ease;
+  }
+
+  p {
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+}
+
+// ── Stat cards ────────────────────────────────────────────────────────────
+.stat-card {
+  background: var(--card-bg);
+  backdrop-filter: var(--card-backdrop);
+  border: var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  transition: transform var(--card-transition), box-shadow var(--card-transition);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--bg-stat) 0%, var(--bg-card-hover) 100%);
+    z-index: -1;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    filter: drop-shadow(var(--glow));
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    color: var(--color-accent);
+    text-shadow: var(--glow);
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+}
+
+// ── Wedding cards ─────────────────────────────────────────────────────────
+.wedding-card {
+  background: var(--card-bg);
+  backdrop-filter: var(--card-backdrop);
+  border-radius: var(--radius-md);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  padding: 20px;
+  transition: transform var(--card-transition), box-shadow var(--card-transition);
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .wedding-card-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-heading);
+  }
+
+  .wedding-card-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+
+  .wedding-card-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    font-family: var(--font-heading);
+    text-shadow: var(--glow);
+  }
+}
+
+// ── Data tables ───────────────────────────────────────────────────────────
+.data-table-container {
+  background: var(--card-bg);
+  backdrop-filter: var(--card-backdrop);
+  border-radius: var(--radius-md);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+
+  table { width: 100%; }
+
+  th.mat-header-cell {
+    background-color: var(--table-header-bg);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  tr.mat-row:hover {
+    background-color: var(--bg-card-hover) !important;
+  }
+}
+
+// ── Badges ────────────────────────────────────────────────────────────────
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.badge-cash   { background: #e8f5e9; color: #2e7d32; }
+  &.badge-cheque { background: #e3f2fd; color: #1565c0; }
+  &.badge-online { background: #f3e5f5; color: #6a1b9a; }
+  &.badge-bride  { background: #fce4ec; color: #880e4f; }
+  &.badge-groom  { background: #e8eaf6; color: #283593; }
+  &.badge-both   { background: #fff3e0; color: #e65100; }
+}
+
+:root[data-mood="dark"] .badge {
+  &.badge-cash   { background: rgba(46,125,50,0.2);   color: #81c784; }
+  &.badge-cheque { background: rgba(21,101,192,0.2);  color: #64b5f6; }
+  &.badge-online { background: rgba(106,27,154,0.2);  color: #ce93d8; }
+  &.badge-bride  { background: rgba(136,14,79,0.2);   color: #f48fb1; }
+  &.badge-groom  { background: rgba(40,53,147,0.2);   color: #9fa8da; }
+  &.badge-both   { background: rgba(230,81,0,0.2);    color: #ffcc80; }
+}
+
+// ── Form card ─────────────────────────────────────────────────────────────
+.form-card {
+  background: var(--card-bg);
+  backdrop-filter: var(--card-backdrop);
+  border-radius: var(--radius-lg);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  padding: 32px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+// ── Misc helpers ──────────────────────────────────────────────────────────
+.amount-display {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-shadow: var(--glow);
+}
+
+.action-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  h3 {
+    font-family: var(--font-heading);
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  p { color: var(--text-muted); opacity: 0.7; }
+}
+
+// ── Snackbars ─────────────────────────────────────────────────────────────
+.success-snackbar { background: #2e7d32 !important; color: white !important; }
+.error-snackbar   { background: #c62828 !important; color: white !important; }
+
+// ── Form fields ───────────────────────────────────────────────────────────
+.mat-mdc-form-field { width: 100%; }
+
+// ── Print ─────────────────────────────────────────────────────────────────
+@media print {
+  app-nav         { display: none !important; }
+  app-theme-picker { display: none !important; }
+  .no-print       { display: none !important; }
+  .print-only     { display: block !important; }
+  body            { background: white; }
+}
+
+// ── Responsive grids ──────────────────────────────────────────────────────
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  @media (max-width: 1200px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 600px)  { grid-template-columns: 1fr; }
+}

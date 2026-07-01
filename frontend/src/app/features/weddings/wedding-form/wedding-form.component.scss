@@ -1,0 +1,20 @@
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section-title {
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  color: var(--text-heading, #6B2D0A);
+  margin-bottom: 16px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}

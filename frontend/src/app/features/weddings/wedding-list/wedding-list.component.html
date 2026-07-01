@@ -1,0 +1,80 @@
+<div class="page-container">
+  <app-page-header
+    title="🎉 Events"
+    subtitle="Manage all events — weddings, birthdays, baby showers and more"
+    [hasActions]="true">
+    <a mat-raised-button color="primary" routerLink="/events/new">
+      <mat-icon>add</mat-icon> New Event
+    </a>
+  </app-page-header>
+
+  @if (loading()) {
+    <app-loading-spinner />
+  } @else if (events().length === 0) {
+    <app-empty-state
+      icon="🎉"
+      title="No events recorded yet"
+      message='Click "New Event" to start — choose from wedding, birthday, baby shower, and more' />
+  } @else {
+    <div class="results-count">{{ events().length }} event(s) found</div>
+
+    <div class="grid-3">
+      @for (ev of events(); track ev.id) {
+        <div class="wedding-card">
+          <div class="card-top">
+            <div class="card-title-area">
+              <div class="event-type-chip">{{ getEventEmoji(ev) }} {{ getEventTypeLabel(ev) }}</div>
+              <div class="wedding-card-title">{{ getEventTitle(ev) }}</div>
+              @if (ev.family_name) {
+                <div class="wedding-card-subtitle">{{ ev.family_name }} Family</div>
+              }
+            </div>
+            <div class="card-actions">
+              <a mat-icon-button [routerLink]="['/events', ev.id, 'edit']"
+                matTooltip="Edit" (click)="$event.stopPropagation()">
+                <mat-icon>edit</mat-icon>
+              </a>
+              <button mat-icon-button color="warn" matTooltip="Delete"
+                (click)="confirmDelete(ev, $event); $event.stopPropagation()">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-meta">
+            <span class="meta-item">
+              <mat-icon>event</mat-icon>
+              {{ ev.event_date | date:'dd MMM yyyy' }}
+            </span>
+            @if (ev.venue) {
+              <span class="meta-item">
+                <mat-icon>location_on</mat-icon>
+                {{ ev.venue }}
+              </span>
+            }
+            @if (ev.city) {
+              <span class="meta-item">
+                <mat-icon>location_city</mat-icon>
+                {{ ev.city }}
+              </span>
+            }
+          </div>
+
+          <mat-divider class="card-divider"></mat-divider>
+
+          <div class="card-footer">
+            <div>
+              <div class="wedding-card-amount">
+                {{ ev.total_moi | currency:'INR':'symbol':'1.0-0' }}
+              </div>
+              <div class="guest-count">{{ ev.moi_count }} guest contributions</div>
+            </div>
+            <a mat-raised-button color="primary" [routerLink]="['/events', ev.id]">
+              <mat-icon>payments</mat-icon> Manage Moi
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

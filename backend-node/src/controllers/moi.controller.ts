@@ -51,14 +51,14 @@ export class MoiController {
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    const countRows = await this.moiRepo.execute(
+    const countRows = await this.moiRepo.query(
       `SELECT COUNT(*)::int AS total FROM moi_entries ${where}`,
       params,
     );
     const total = Number(countRows[0]?.total ?? 0);
 
     const dataParams = [...params, pageSize, (page - 1) * pageSize];
-    const items = await this.moiRepo.execute(
+    const items = await this.moiRepo.query(
       `SELECT * FROM moi_entries ${where}
        ORDER BY created_at DESC
        LIMIT $${pIdx} OFFSET $${pIdx + 1}`,
@@ -84,7 +84,7 @@ export class MoiController {
   ): Promise<object> {
     let rows: Record<string, unknown>[];
     if (eventId) {
-      rows = await this.moiRepo.execute(
+      rows = await this.moiRepo.query(
         `SELECT
            1::int AS total_events,
            COUNT(*)::int AS total_moi_entries,
@@ -94,7 +94,7 @@ export class MoiController {
         [eventId],
       );
     } else {
-      rows = await this.moiRepo.execute(
+      rows = await this.moiRepo.query(
         `SELECT
            (SELECT COUNT(*)::int FROM events) AS total_events,
            COUNT(*)::int AS total_moi_entries,
@@ -116,7 +116,7 @@ export class MoiController {
   ): Promise<object[]> {
     const where = eventId ? 'WHERE event_id = $1' : '';
     const params = eventId ? [eventId] : [];
-    return this.moiRepo.execute(
+    return this.moiRepo.query(
       `SELECT
          COALESCE(relationship, 'Other') AS relationship,
          COUNT(*)::int                   AS count,
@@ -137,7 +137,7 @@ export class MoiController {
     },
   })
   async getMoi(@param.path.number('id') id: number): Promise<object> {
-    const rows = await this.moiRepo.execute(
+    const rows = await this.moiRepo.query(
       'SELECT * FROM moi_entries WHERE id = $1',
       [id],
     );
@@ -156,7 +156,7 @@ export class MoiController {
     @requestBody({content: {'application/json': {schema: {type: 'object'}}}})
     data: MoiCreateDto,
   ): Promise<object> {
-    const event = await this.eventRepo.execute(
+    const event = await this.eventRepo.query(
       'SELECT id FROM events WHERE id = $1',
       [data.event_id],
     );
@@ -164,7 +164,7 @@ export class MoiController {
       throw new HttpErrors.NotFound(`Event ${data.event_id} not found`);
 
     const now = new Date();
-    const result = await this.moiRepo.execute(
+    const result = await this.moiRepo.query(
       `INSERT INTO moi_entries
          (event_id, guest_name, relationship, side, amount, payment_mode,
           cheque_number, transaction_ref, city, phone, notes, received_by,
@@ -204,7 +204,7 @@ export class MoiController {
     @requestBody({content: {'application/json': {schema: {type: 'object'}}}})
     data: Partial<MoiCreateDto>,
   ): Promise<object> {
-    const existing = await this.moiRepo.execute(
+    const existing = await this.moiRepo.query(
       'SELECT id FROM moi_entries WHERE id = $1',
       [id],
     );
@@ -220,7 +220,7 @@ export class MoiController {
     values.push(new Date()); // updated_at
     values.push(id);         // WHERE id
 
-    await this.moiRepo.execute(
+    await this.moiRepo.query(
       `UPDATE moi_entries SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx}`,
       values,
     );
@@ -235,12 +235,12 @@ export class MoiController {
     },
   })
   async deleteMoi(@param.path.number('id') id: number): Promise<void> {
-    const existing = await this.moiRepo.execute(
+    const existing = await this.moiRepo.query(
       'SELECT id FROM moi_entries WHERE id = $1',
       [id],
     );
     if (!existing.length) throw new HttpErrors.NotFound('Moi entry not found');
-    await this.moiRepo.execute('DELETE FROM moi_entries WHERE id = $1', [id]);
+    await this.moiRepo.query('DELETE FROM moi_entries WHERE id = $1', [id]);
     this.response.status(204);
   }
 }

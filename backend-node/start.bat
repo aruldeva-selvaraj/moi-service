@@ -32,7 +32,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [INFO] Starting on http://localhost:8001
-echo [INFO] API Explorer: http://localhost:8001/api-explorer
+echo [INFO] Starting on http://localhost:3000
+echo [INFO] API Explorer: http://localhost:3000/api-explorer
 echo.
 node .

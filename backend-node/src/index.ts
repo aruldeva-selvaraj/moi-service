@@ -23,7 +23,7 @@ export async function main(options: ApplicationConfig = {}) {
 
 const config: ApplicationConfig = {
   rest: {
-    port: +(process.env.PORT ?? 8001),
+    port: +(process.env.PORT ?? 3000),
     host: process.env.HOST ?? '0.0.0.0',
     gracePeriodForClose: 5000,
     openApiSpec: {

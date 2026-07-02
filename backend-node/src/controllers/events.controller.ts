@@ -27,7 +27,7 @@ export class EventsController {
     responses: {'200': {description: 'List of events with moi totals'}},
   })
   async listEvents(): Promise<object[]> {
-    return this.eventRepo.execute(
+    return this.eventRepo.query(
       `SELECT
          e.id, e.event_type, e.primary_name, e.secondary_name,
          e.family_name, e.event_date::text, e.venue, e.city, e.notes,
@@ -51,7 +51,7 @@ export class EventsController {
     data: EventCreateDto,
   ): Promise<object> {
     const now = new Date();
-    const result = await this.eventRepo.execute(
+    const result = await this.eventRepo.query(
       `INSERT INTO events
          (event_type, primary_name, secondary_name, family_name,
           event_date, venue, city, notes, created_at, updated_at)
@@ -84,7 +84,7 @@ export class EventsController {
     },
   })
   async getEvent(@param.path.number('id') id: number): Promise<object> {
-    const rows = await this.eventRepo.execute(
+    const rows = await this.eventRepo.query(
       `SELECT
          e.id, e.event_type, e.primary_name, e.secondary_name,
          e.family_name, e.event_date::text, e.venue, e.city, e.notes,
@@ -113,7 +113,7 @@ export class EventsController {
     @requestBody({content: {'application/json': {schema: {type: 'object'}}}})
     data: Partial<EventCreateDto>,
   ): Promise<object> {
-    const existing = await this.eventRepo.execute(
+    const existing = await this.eventRepo.query(
       'SELECT id FROM events WHERE id = $1',
       [id],
     );
@@ -129,7 +129,7 @@ export class EventsController {
     values.push(new Date()); // updated_at
     values.push(id);         // WHERE id
 
-    await this.eventRepo.execute(
+    await this.eventRepo.query(
       `UPDATE events SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx}`,
       values,
     );
@@ -144,12 +144,12 @@ export class EventsController {
     },
   })
   async deleteEvent(@param.path.number('id') id: number): Promise<void> {
-    const existing = await this.eventRepo.execute(
+    const existing = await this.eventRepo.query(
       'SELECT id FROM events WHERE id = $1',
       [id],
     );
     if (!existing.length) throw new HttpErrors.NotFound('Event not found');
-    await this.eventRepo.execute('DELETE FROM events WHERE id = $1', [id]);
+    await this.eventRepo.query('DELETE FROM events WHERE id = $1', [id]);
     this.response.status(204);
   }
 
@@ -161,7 +161,7 @@ export class EventsController {
     },
   })
   async getEventReport(@param.path.number('id') id: number): Promise<object> {
-    const events = await this.eventRepo.execute(
+    const events = await this.eventRepo.query(
       `SELECT id, event_type, primary_name, secondary_name, event_date::text
        FROM events WHERE id = $1`,
       [id],
@@ -169,7 +169,7 @@ export class EventsController {
     if (!events.length) throw new HttpErrors.NotFound('Event not found');
     const ev = events[0];
 
-    const rows = await this.eventRepo.execute(
+    const rows = await this.eventRepo.query(
       `SELECT
          COALESCE(SUM(amount), 0)::float                                           AS total_amount,
          COUNT(id)::int                                                             AS moi_count,

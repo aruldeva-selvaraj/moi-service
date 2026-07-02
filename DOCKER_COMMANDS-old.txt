@@ -2,44 +2,38 @@
   MOI MANAGER — DOCKER COMMANDS REFERENCE
   Run all commands from the project root folder:
   c:\Users\aruldeva.selvaraj\moi-wedding-app\
-  Database: moi_wedding_db
 ===============================================================
 
 
 ───────────────────────────────────────────────────────────────
-  CHOOSE YOUR BACKEND  (use ONE profile at a time)
+  START
 ───────────────────────────────────────────────────────────────
 
-  Run Python / FastAPI backend  (port 8000):
-    docker compose --profile python up --build
+  First time / after code changes (builds image):
+    docker compose up --build
 
-  Run Node.js / LoopBack 4 backend  (port 3000):
-    docker compose --profile node up --build
+  Normal start (no rebuild):
+    docker compose up
 
-  Run in background (detached):
-    docker compose --profile python up -d
-    docker compose --profile node   up -d
+  Start in background (detached):
+    docker compose up -d
 
-  Start without rebuild (after first build):
-    docker compose --profile python up
-    docker compose --profile node   up
+  Start only the API (DB already running):
+    docker compose up --build api
 
 
 ───────────────────────────────────────────────────────────────
   STOP
 ───────────────────────────────────────────────────────────────
 
-  Stop all containers (keep data):
-    docker compose --profile python down
-    docker compose --profile node   down
+  Stop containers (keep data):
+    docker compose down
 
   Stop and delete database volume (wipes all data):
-    docker compose --profile python down -v
-    docker compose --profile node   down -v
+    docker compose down -v
 
   Stop a single container:
-    docker stop moi_api_python
-    docker stop moi_api_node
+    docker stop moi_api
     docker stop moi_db
 
 
@@ -50,13 +44,13 @@
   Check running containers:
     docker compose ps
 
-  Live logs — Python backend:
-    docker compose --profile python logs -f
+  View live logs (both containers):
+    docker compose logs -f
 
-  Live logs — Node.js backend:
-    docker compose --profile node logs -f
+  View logs for API only:
+    docker compose logs -f api
 
-  Logs for DB only:
+  View logs for DB only:
     docker compose logs -f db
 
 
@@ -65,31 +59,16 @@
 ───────────────────────────────────────────────────────────────
 
   Open PostgreSQL shell:
-    docker exec -it moi_db psql -U postgres -d moi_wedding_db
+    docker exec -it moi_db psql -U postgres -d moi_manager_db
 
-  Load schema / seed data (run once after first start):
-    docker exec -i moi_db psql -U postgres -d moi_wedding_db < backend/setup_db.sql
+  Load sample data (run once after first start):
+    docker exec -i moi_db psql -U postgres -d moi_manager_db < backend/setup_db.sql
 
   Backup database to file:
-    docker exec moi_db pg_dump -U postgres moi_wedding_db > backup.sql
+    docker exec moi_db pg_dump -U postgres moi_manager_db > backup.sql
 
   Restore database from backup:
-    docker exec -i moi_db psql -U postgres -d moi_wedding_db < backup.sql
-
-
-───────────────────────────────────────────────────────────────
-  REBUILD
-───────────────────────────────────────────────────────────────
-
-  Rebuild Python image (no cache):
-    docker compose --profile python build --no-cache api-python
-
-  Rebuild Node.js image (no cache):
-    docker compose --profile node build --no-cache api-node
-
-  Restart only one backend container:
-    docker compose --profile python restart api-python
-    docker compose --profile node   restart api-node
+    docker exec -i moi_db psql -U postgres -d moi_manager_db < backup.sql
 
 
 ───────────────────────────────────────────────────────────────
@@ -103,49 +82,42 @@
     docker image prune
 
   Remove everything (containers + images + volumes):
-    docker compose --profile python down -v --rmi all
-    docker compose --profile node   down -v --rmi all
+    docker compose down -v --rmi all
 
   Full Docker system cleanup (careful — removes ALL unused Docker data):
     docker system prune -a
 
 
 ───────────────────────────────────────────────────────────────
+  REBUILD
+───────────────────────────────────────────────────────────────
+
+  Rebuild API image from scratch (no cache):
+    docker compose build --no-cache api
+
+  Restart only the API container:
+    docker compose restart api
+
+
+───────────────────────────────────────────────────────────────
   URLS (once containers are running)
 ───────────────────────────────────────────────────────────────
 
-  Python backend:
-    API base:        http://localhost:8000
-    Swagger docs:    http://localhost:8000/docs
-    Health check:    http://localhost:8000/health
-
-  Node.js backend:
-    API base:        http://localhost:3000
-    API Explorer:    http://localhost:3000/api-explorer
-    Health check:    http://localhost:3000/health
-
-  PostgreSQL:        localhost:5432  (user: postgres / db: moi_wedding_db)
+  API base:        http://localhost:8000
+  Swagger docs:    http://localhost:8000/docs
+  ReDoc docs:      http://localhost:8000/redoc
+  Health check:    http://localhost:8000/health
+  PostgreSQL:      localhost:5432  (user: postgres / db: moi_manager_db)
 
 
 ───────────────────────────────────────────────────────────────
-  QUICK START — PYTHON (copy-paste for first run)
+  QUICK START (copy-paste for first run)
 ───────────────────────────────────────────────────────────────
 
   1. cd c:\Users\aruldeva.selvaraj\moi-wedding-app
-  2. docker compose --profile python up --build -d
-  3. docker compose --profile python logs -f
+  2. docker compose up --build -d
+  3. docker compose logs -f api
      (wait for "Application startup complete")
   4. Open http://localhost:8000/docs
-
-
-───────────────────────────────────────────────────────────────
-  QUICK START — NODE.JS (copy-paste for first run)
-───────────────────────────────────────────────────────────────
-
-  1. cd c:\Users\aruldeva.selvaraj\moi-wedding-app
-  2. docker compose --profile node up --build -d
-  3. docker compose --profile node logs -f
-     (wait for "Server is running at http://[::]:3000")
-  4. Open http://localhost:3000/api-explorer
 
 ===============================================================

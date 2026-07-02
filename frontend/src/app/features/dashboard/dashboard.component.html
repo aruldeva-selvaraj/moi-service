@@ -1,25 +1,140 @@
 <div class="page-container">
-  <app-page-header title="🪔 Welcome to Moi Manager"
-    subtitle="Cash Gift Management for Weddings, Birthdays, Baby Showers &amp; More" />
+  <app-page-header title="🪔 Moi Manager"
+    subtitle="Cash Gift Management Dashboard" />
 
   @if (loading()) {
     <app-loading-spinner message="Loading dashboard..." />
   } @else {
-    <!-- Stats Row -->
-    <div class="grid-4 stats-section">
-      <app-stat-card icon="🎉"
-        [value]="stats()?.total_events || 0"
-        label="Total Events" />
-      <app-stat-card icon="👥"
-        [value]="stats()?.total_moi_entries || 0"
-        label="Total Guests" />
-      <app-stat-card icon="💰"
-        [value]="(stats()?.total_amount || 0) | currency:'INR':'symbol':'1.0-0'"
-        label="Total Moi Collected" />
-      <app-stat-card icon="📊"
-        [value]="(stats()?.avg_amount || 0) | currency:'INR':'symbol':'1.0-0'"
-        label="Avg. Gift Amount" />
+
+    <!-- Event Selector Row -->
+    <div class="event-selector-row">
+      <mat-form-field appearance="outline" class="event-select">
+        <mat-label>Select Event</mat-label>
+        <mat-select [value]="selectedEventId()" (selectionChange)="onEventChange($event.value)">
+          <mat-option [value]="null">— All Events —</mat-option>
+          @for (ev of events(); track ev.id) {
+            <mat-option [value]="ev.id">
+              {{ getEventEmoji(ev) }} {{ getEventTitle(ev) }} · {{ ev.event_date | date:'dd MMM yyyy' }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @if (eventReport()) {
+        <button mat-raised-button color="primary" class="pdf-btn" (click)="generatePdfReport()">
+          <mat-icon>picture_as_pdf</mat-icon> Generate PDF Report
+        </button>
+      }
     </div>
+
+    <!-- Event-Specific Stats -->
+    @if (reportLoading()) {
+      <app-loading-spinner message="Loading event stats..." />
+    } @else if (eventReport() && selectedEvent()) {
+      <div class="event-report-section">
+
+        <!-- Event Banner -->
+        <div class="event-banner">
+          <div class="event-banner-type">
+            {{ selectedEventConfig().emoji }} {{ selectedEventConfig().label }}
+          </div>
+          <div class="event-banner-title">
+            {{ selectedEvent()!.primary_name }}
+            @if (selectedEvent()!.secondary_name) {
+              <span class="heart">♡</span> {{ selectedEvent()!.secondary_name }}
+            }
+          </div>
+          <div class="event-banner-meta">
+            📅 {{ selectedEvent()!.event_date | date:'dd MMMM yyyy' }}
+            @if (selectedEvent()!.venue) {
+              &nbsp;·&nbsp; 📍 {{ selectedEvent()!.venue }}
+            }
+          </div>
+        </div>
+
+        <!-- Guest Count -->
+        <h3 class="subsection-title">Guest Count</h3>
+        <div class="grid-3 stats-section">
+          <app-stat-card
+            icon="👥"
+            [value]="eventReport()!.moi_count"
+            label="Total Guests" />
+          <app-stat-card
+            [icon]="selectedEventConfig().sideAEmoji"
+            [value]="eventReport()!.groom_count"
+            [label]="selectedEventConfig().sideALabel + ' Guests'" />
+          <app-stat-card
+            [icon]="selectedEventConfig().sideBEmoji"
+            [value]="eventReport()!.bride_count"
+            [label]="selectedEventConfig().sideBLabel + ' Guests'" />
+        </div>
+
+        <!-- Collection Totals -->
+        <h3 class="subsection-title">Moi Collection</h3>
+        <div class="grid-3 stats-section">
+          <app-stat-card
+            icon="💰"
+            [value]="eventReport()!.total_amount | currency:'INR':'symbol':'1.0-0'"
+            label="Total Collected" />
+          <app-stat-card
+            [icon]="selectedEventConfig().sideAEmoji"
+            [value]="eventReport()!.groom_amount | currency:'INR':'symbol':'1.0-0'"
+            [label]="selectedEventConfig().sideALabel + ' Collection'"
+            [sub]="eventReport()!.total_amount > 0
+              ? (eventReport()!.groom_amount / eventReport()!.total_amount | percent:'1.0-1')
+              : '0%'" />
+          <app-stat-card
+            [icon]="selectedEventConfig().sideBEmoji"
+            [value]="eventReport()!.bride_amount | currency:'INR':'symbol':'1.0-0'"
+            [label]="selectedEventConfig().sideBLabel + ' Collection'"
+            [sub]="eventReport()!.total_amount > 0
+              ? (eventReport()!.bride_amount / eventReport()!.total_amount | percent:'1.0-1')
+              : '0%'" />
+        </div>
+
+        <!-- Payment Mode -->
+        <h3 class="subsection-title">By Payment Mode</h3>
+        <div class="grid-3 stats-section">
+          <app-stat-card
+            icon="💵"
+            [value]="eventReport()!.cash_amount | currency:'INR':'symbol':'1.0-0'"
+            label="Cash"
+            [sub]="eventReport()!.total_amount > 0
+              ? (eventReport()!.cash_amount / eventReport()!.total_amount | percent:'1.0-1')
+              : '0%'" />
+          <app-stat-card
+            icon="📝"
+            [value]="eventReport()!.cheque_amount | currency:'INR':'symbol':'1.0-0'"
+            label="Cheque"
+            [sub]="eventReport()!.total_amount > 0
+              ? (eventReport()!.cheque_amount / eventReport()!.total_amount | percent:'1.0-1')
+              : '0%'" />
+          <app-stat-card
+            icon="📱"
+            [value]="eventReport()!.online_amount | currency:'INR':'symbol':'1.0-0'"
+            label="Online / UPI"
+            [sub]="eventReport()!.total_amount > 0
+              ? (eventReport()!.online_amount / eventReport()!.total_amount | percent:'1.0-1')
+              : '0%'" />
+        </div>
+      </div>
+
+    } @else if (!selectedEventId()) {
+      <!-- Overall stats when no specific event is selected -->
+      <div class="grid-4 stats-section">
+        <app-stat-card icon="🎉"
+          [value]="stats()?.total_events || 0"
+          label="Total Events" />
+        <app-stat-card icon="👥"
+          [value]="stats()?.total_moi_entries || 0"
+          label="Total Guests" />
+        <app-stat-card icon="💰"
+          [value]="(stats()?.total_amount || 0) | currency:'INR':'symbol':'1.0-0'"
+          label="Total Moi Collected" />
+        <app-stat-card icon="📊"
+          [value]="(stats()?.avg_amount || 0) | currency:'INR':'symbol':'1.0-0'"
+          label="Avg. Gift Amount" />
+      </div>
+    }
 
     <!-- Quick Actions -->
     <div class="quick-actions">
@@ -49,7 +164,7 @@
         actionLink="/events/new" />
     } @else {
       <div class="grid-3">
-        @for (ev of events(); track ev.id) {
+        @for (ev of events().slice(0, 6); track ev.id) {
           <div class="wedding-card" [routerLink]="['/events', ev.id]">
             <div class="card-header">
               <div>

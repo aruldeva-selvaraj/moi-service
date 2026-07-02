@@ -108,6 +108,14 @@ export class ReportsComponent implements OnInit {
     }
   }
 
+  printEventReport(): void {
+    const ev = this.getSelectedEvent();
+    const report = this.eventReport();
+    if (ev && report) {
+      this.receiptService.printEventReport(report, ev);
+    }
+  }
+
   printReport() {
     window.print();
   }

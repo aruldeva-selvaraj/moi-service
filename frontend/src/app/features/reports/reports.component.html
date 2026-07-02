@@ -3,6 +3,12 @@
     title="📊 Reports &amp; Analytics"
     subtitle="Detailed moi collection analysis and summaries"
     [hasActions]="true">
+    @if (selectedEventId && eventReport()) {
+      <button mat-raised-button color="primary" (click)="printEventReport()"
+              matTooltip="Generate A4 PDF summary — totals, side split, payment modes">
+        <mat-icon>picture_as_pdf</mat-icon> PDF Report
+      </button>
+    }
     @if (selectedEventId && allEntries().length > 0) {
       <button mat-raised-button color="accent" (click)="printGuestList()"
               matTooltip="Print full guest list with all details (A4 Landscape)">
@@ -10,7 +16,7 @@
       </button>
       <button mat-stroked-button (click)="printConsolidated()"
               matTooltip="Print A4 consolidated register — split by side">
-        <mat-icon>picture_as_pdf</mat-icon> A4 Register
+        <mat-icon>summarize</mat-icon> A4 Register
       </button>
     }
     <button mat-stroked-button (click)="printReport()">

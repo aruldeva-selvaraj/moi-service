@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { MoiEntry } from '../models/moi.model';
-import { Event, getEventConfig, getEventTitle } from '../models/event.model';
+import { Event, EventReport, getEventConfig, getEventTitle } from '../models/event.model';
 
 export type PaperSize = '58' | '80';
 
@@ -94,6 +94,157 @@ export class ReceiptService {
       win.onafterprint = () => win.close();
       setTimeout(() => { try { win.close(); } catch { /* already closed */ } }, 30000);
     }, 400);
+  }
+
+  printEventReport(report: EventReport, event: Event): void {
+    const html = this.buildEventReportHtml(report, event);
+    const win = this.doc.defaultView?.open('', '_blank', 'width=820,height=700,toolbar=no,menubar=yes,scrollbars=yes');
+    if (!win) {
+      const frame = this.doc.createElement('iframe');
+      frame.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:0;';
+      this.doc.body.appendChild(frame);
+      frame.contentDocument!.write(html);
+      frame.contentDocument!.close();
+      frame.contentWindow?.focus();
+      setTimeout(() => {
+        frame.contentWindow?.print();
+        setTimeout(() => frame.remove(), 1000);
+      }, 300);
+      return;
+    }
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => {
+      win.print();
+      win.onafterprint = () => win.close();
+      setTimeout(() => { try { win.close(); } catch { /* already closed */ } }, 30000);
+    }, 500);
+  }
+
+  private buildEventReportHtml(report: EventReport, event: Event): string {
+    const cfg = getEventConfig(event.event_type);
+    const title = getEventTitle(event);
+
+    const fmt = (n: number) =>
+      new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
+    const fmtDate = (d: string) =>
+      new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const pct = (part: number, total: number) =>
+      total > 0 ? ((part / total) * 100).toFixed(1) + '%' : '0%';
+
+    const total = Number(report.total_amount);
+    const now = new Date().toLocaleString('en-IN', {
+      day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    } as Intl.DateTimeFormatOptions);
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Moi Report – ${title}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; background: #fff; padding: 24px; }
+  .report-header { text-align: center; padding: 20px 0 16px; border-bottom: 3px solid #6c3eb8; margin-bottom: 24px; }
+  .report-header h1 { font-size: 20px; color: #6c3eb8; margin-bottom: 6px; }
+  .report-header .event-title { font-size: 26px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+  .report-header .meta { font-size: 13px; color: #666; }
+  .section-title { font-size: 13px; font-weight: 700; color: #6c3eb8; text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px; border-left: 4px solid #6c3eb8; padding-left: 8px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 4px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 4px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 4px; }
+  .stat-box { border: 1px solid #e0d6f5; border-radius: 8px; padding: 14px 10px; text-align: center; }
+  .stat-box.highlight { background: #f3eeff; border-color: #6c3eb8; }
+  .stat-icon { font-size: 20px; margin-bottom: 6px; }
+  .stat-value { font-size: 17px; font-weight: 700; color: #6c3eb8; }
+  .stat-label { font-size: 11px; color: #666; margin-top: 3px; }
+  .stat-sub { font-size: 11px; color: #999; margin-top: 2px; }
+  .groom-box { background: #e8f4fd; border-color: #1976d2; }
+  .groom-box .stat-value { color: #1565c0; }
+  .bride-box { background: #fce4ec; border-color: #d81b60; }
+  .bride-box .stat-value { color: #c2185b; }
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #eee; text-align: center; font-size: 11px; color: #aaa; }
+  @media print { @page { margin: 15mm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+<div class="report-header">
+  <h1>${cfg.emoji} ${cfg.label} — Moi Collection Report</h1>
+  <div class="event-title">${title}</div>
+  <div class="meta">📅 ${fmtDate(report.event_date)}${event.venue ? ' &nbsp;·&nbsp; 📍 ' + event.venue : ''}${event.city ? ', ' + event.city : ''}</div>
+</div>
+
+<div class="section-title">Overall Summary</div>
+<div class="grid-5">
+  <div class="stat-box highlight">
+    <div class="stat-icon">💰</div>
+    <div class="stat-value">${fmt(total)}</div>
+    <div class="stat-label">Total Collected</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-icon">👥</div>
+    <div class="stat-value">${report.moi_count}</div>
+    <div class="stat-label">Total Guests</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-icon">📊</div>
+    <div class="stat-value">${report.moi_count > 0 ? fmt(total / report.moi_count) : '₹0'}</div>
+    <div class="stat-label">Avg per Guest</div>
+  </div>
+  <div class="stat-box groom-box">
+    <div class="stat-icon">${cfg.sideAEmoji}</div>
+    <div class="stat-value">${report.groom_count}</div>
+    <div class="stat-label">${cfg.sideALabel} Guests</div>
+  </div>
+  <div class="stat-box bride-box">
+    <div class="stat-icon">${cfg.sideBEmoji}</div>
+    <div class="stat-value">${report.bride_count}</div>
+    <div class="stat-label">${cfg.sideBLabel} Guests</div>
+  </div>
+</div>
+
+<div class="section-title">Collection by Side</div>
+<div class="grid-2">
+  <div class="stat-box groom-box">
+    <div class="stat-icon">${cfg.sideAEmoji} ${cfg.sideALabel}</div>
+    <div class="stat-value">${fmt(Number(report.groom_amount))}</div>
+    <div class="stat-label">Total Collected</div>
+    <div class="stat-sub">${report.groom_count} guests · ${pct(Number(report.groom_amount), total)} of total</div>
+  </div>
+  <div class="stat-box bride-box">
+    <div class="stat-icon">${cfg.sideBEmoji} ${cfg.sideBLabel}</div>
+    <div class="stat-value">${fmt(Number(report.bride_amount))}</div>
+    <div class="stat-label">Total Collected</div>
+    <div class="stat-sub">${report.bride_count} guests · ${pct(Number(report.bride_amount), total)} of total</div>
+  </div>
+</div>
+
+<div class="section-title">Payment Mode Breakdown</div>
+<div class="grid-3">
+  <div class="stat-box">
+    <div class="stat-icon">💵</div>
+    <div class="stat-value">${fmt(Number(report.cash_amount))}</div>
+    <div class="stat-label">Cash</div>
+    <div class="stat-sub">${pct(Number(report.cash_amount), total)} of total</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-icon">📝</div>
+    <div class="stat-value">${fmt(Number(report.cheque_amount))}</div>
+    <div class="stat-label">Cheque</div>
+    <div class="stat-sub">${pct(Number(report.cheque_amount), total)} of total</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-icon">📱</div>
+    <div class="stat-value">${fmt(Number(report.online_amount))}</div>
+    <div class="stat-label">Online / UPI</div>
+    <div class="stat-sub">${pct(Number(report.online_amount), total)} of total</div>
+  </div>
+</div>
+
+<div class="footer">Generated by Moi Manager &nbsp;|&nbsp; ${now}</div>
+</body>
+</html>`;
   }
 
   private buildGuestListHtml(entries: MoiEntry[], event: Event): string {

@@ -139,6 +139,8 @@ export interface EventReport {
   event_date: string;
   total_amount: number;
   moi_count: number;
+  groom_count: number;
+  bride_count: number;
   groom_amount: number;
   bride_amount: number;
   cash_amount: number;

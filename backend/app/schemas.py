@@ -138,6 +138,8 @@ class EventReport(BaseModel):
     event_date: date
     total_amount: Decimal
     moi_count: int
+    groom_count: int
+    bride_count: int
     groom_amount: Decimal
     bride_amount: Decimal
     cash_amount: Decimal

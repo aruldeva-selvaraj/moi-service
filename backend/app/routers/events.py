@@ -116,6 +116,8 @@ async def get_event_report(event_id: int, db: AsyncSession = Depends(get_db)):
         select(
             func.coalesce(func.sum(MoiEntry.amount), 0).label("total"),
             func.count(MoiEntry.id).label("count"),
+            func.count(MoiEntry.id).filter(MoiEntry.side == "groom").label("groom_count"),
+            func.count(MoiEntry.id).filter(MoiEntry.side == "bride").label("bride_count"),
             func.coalesce(
                 func.sum(MoiEntry.amount).filter(MoiEntry.side == "groom"), 0
             ).label("groom_total"),
@@ -143,9 +145,11 @@ async def get_event_report(event_id: int, db: AsyncSession = Depends(get_db)):
         event_date=event.event_date,
         total_amount=row[0],
         moi_count=row[1],
-        groom_amount=row[2],
-        bride_amount=row[3],
-        cash_amount=row[4],
-        cheque_amount=row[5],
-        online_amount=row[6],
+        groom_count=row[2],
+        bride_count=row[3],
+        groom_amount=row[4],
+        bride_amount=row[5],
+        cash_amount=row[6],
+        cheque_amount=row[7],
+        online_amount=row[8],
     )

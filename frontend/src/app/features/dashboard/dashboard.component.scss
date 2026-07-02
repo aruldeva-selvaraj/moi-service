@@ -1,7 +1,81 @@
 .stats-section {
+  margin-bottom: 24px;
+}
+
+// ── Event Selector ──────────────────────────────────────
+.event-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  .event-select {
+    flex: 1;
+    min-width: 260px;
+    max-width: 520px;
+  }
+
+  .pdf-btn {
+    white-space: nowrap;
+    height: 56px;
+    padding: 0 20px;
+  }
+}
+
+// ── Event Report Section ────────────────────────────────
+.event-report-section {
   margin-bottom: 32px;
 }
 
+.event-banner {
+  background: linear-gradient(135deg, var(--color-primary-light, #f8f3ff) 0%, #fff 100%);
+  border: 1px solid var(--color-primary, #6c3eb8);
+  border-left: 5px solid var(--color-primary, #6c3eb8);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+
+  .event-banner-type {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary, #6c3eb8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .event-banner-title {
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-heading, #1a1a1a);
+    margin-bottom: 6px;
+
+    .heart {
+      color: #e91e63;
+      margin: 0 6px;
+    }
+  }
+
+  .event-banner-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+  }
+}
+
+.subsection-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-primary, #6c3eb8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px;
+  padding-left: 10px;
+  border-left: 3px solid var(--color-primary, #6c3eb8);
+}
+
+// ── Quick Actions ───────────────────────────────────────
 .quick-actions {
   display: flex;
   gap: 12px;
@@ -9,6 +83,7 @@
   flex-wrap: wrap;
 }
 
+// ── Section Header ──────────────────────────────────────
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -23,6 +98,7 @@
   }
 }
 
+// ── Event Cards ─────────────────────────────────────────
 .card-header {
   display: flex;
   justify-content: space-between;

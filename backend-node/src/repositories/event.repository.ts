@@ -14,7 +14,7 @@ export class EventRepository extends DefaultCrudRepository<
     super(Event, dataSource);
   }
 
-  async execute(
+  async query(
     sql: string,
     params: unknown[],
   ): Promise<Record<string, unknown>[]> {

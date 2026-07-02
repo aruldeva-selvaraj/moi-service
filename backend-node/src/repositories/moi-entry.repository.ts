@@ -14,7 +14,7 @@ export class MoiEntryRepository extends DefaultCrudRepository<
     super(MoiEntry, dataSource);
   }
 
-  async execute(
+  async query(
     sql: string,
     params: unknown[],
   ): Promise<Record<string, unknown>[]> {

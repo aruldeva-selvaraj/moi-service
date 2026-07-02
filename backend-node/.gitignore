@@ -3,3 +3,4 @@ dist/
 .env
 *.tsbuildinfo
 .eslintcache
+package-lock.json

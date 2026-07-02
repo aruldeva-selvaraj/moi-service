@@ -8,7 +8,7 @@ const config = {
   port: +(process.env.DB_PORT ?? '5432'),
   user: process.env.DB_USER ?? 'postgres',
   password: process.env.DB_PASSWORD ?? 'password',
-  database: process.env.DB_NAME ?? 'moi_wedding_db',
+  database: process.env.DB_NAME ?? 'moi_manager_db',
   ssl:
     process.env.DB_SSL === 'true' ? {rejectUnauthorized: false} : false,
 };

@@ -83,7 +83,7 @@ class EventListResponse(BaseModel):
 # Moi Entry Schemas
 class MoiEntryBase(BaseModel):
     guest_name: str = Field(..., min_length=1, max_length=150)
-    relationship: Optional[str] = None
+    relationship: Optional[str] = Field(None, alias="guest_relationship")
     side: SideEnum = SideEnum.groom
     amount: Decimal = Field(..., gt=0, decimal_places=2)
     payment_mode: PaymentModeEnum = PaymentModeEnum.cash
@@ -94,6 +94,8 @@ class MoiEntryBase(BaseModel):
     notes: Optional[str] = None
     received_by: Optional[str] = None
 
+    model_config = {"populate_by_name": True}
+
 
 class MoiEntryCreate(MoiEntryBase):
     event_id: int
@@ -101,7 +103,7 @@ class MoiEntryCreate(MoiEntryBase):
 
 class MoiEntryUpdate(BaseModel):
     guest_name: Optional[str] = None
-    relationship: Optional[str] = None
+    relationship: Optional[str] = Field(None, alias="guest_relationship")
     side: Optional[SideEnum] = None
     amount: Optional[Decimal] = None
     payment_mode: Optional[PaymentModeEnum] = None
@@ -119,7 +121,7 @@ class MoiEntryResponse(MoiEntryBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 
 # Report Schemas

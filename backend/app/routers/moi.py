@@ -100,12 +100,12 @@ async def get_by_relationship(
 ):
     query = (
         select(
-            MoiEntry.relationship,
+            MoiEntry.guest_relationship,
             func.count(MoiEntry.id).label("count"),
             func.sum(MoiEntry.amount).label("total_amount"),
         )
-        .where(MoiEntry.relationship.isnot(None))
-        .group_by(MoiEntry.relationship)
+        .where(MoiEntry.guest_relationship.isnot(None))
+        .group_by(MoiEntry.guest_relationship)
         .order_by(desc("total_amount"))
     )
     if event_id:

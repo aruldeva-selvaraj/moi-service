@@ -27,7 +27,7 @@ class MoiEntry(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
     guest_name = Column(String(150), nullable=False)
-    relationship = Column(String(100))
+    guest_relationship = Column(String(100))
     side = Column(String(20), default="groom")   # groom, bride, both
     amount = Column(Numeric(10, 2), nullable=False)
     payment_mode = Column(String(30), default="cash")

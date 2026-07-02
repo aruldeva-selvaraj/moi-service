@@ -3,19 +3,32 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 import os
+import logging
 
 from app.database import init_db
 from app.routers import events, moi
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200").split(",")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    # Startup
+    try:
+        logger.info("Initializing database...")
+        await init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+    
     yield
+    
+    # Shutdown
+    logger.info("Application shutting down...")
 
 
 app = FastAPI(

@@ -1,0 +1,35 @@
+{
+  "name": "moi-manager-backend-node",
+  "version": "2.0.0",
+  "description": "Moi Manager API — LoopBack 4 + PostgreSQL",
+  "keywords": ["loopback-application", "loopback4"],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "lb-tsc",
+    "build:watch": "lb-tsc --watch",
+    "prestart": "npm run build",
+    "start": "node .",
+    "dev": "nodemon --watch src -e ts --exec \"npm run build && node .\"",
+    "clean": "lb-clean dist *.tsbuildinfo .eslintcache"
+  },
+  "dependencies": {
+    "@loopback/boot": "^7.0.0",
+    "@loopback/core": "^6.0.0",
+    "@loopback/repository": "^7.0.0",
+    "@loopback/rest": "^14.0.0",
+    "@loopback/rest-explorer": "^7.0.0",
+    "dotenv": "^16.4.5",
+    "loopback-connector-postgresql": "^7.1.4",
+    "pg": "^8.13.0",
+    "tslib": "^2.6.3"
+  },
+  "devDependencies": {
+    "@loopback/build": "^11.0.0",
+    "@types/node": "^20.0.0",
+    "nodemon": "^3.1.0"
+  }
+}

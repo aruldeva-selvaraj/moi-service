@@ -1,0 +1,134 @@
+<div class="signup-page">
+  <div class="signup-card">
+
+    <!-- Header -->
+    <div class="card-header">
+      <div class="header-icon">
+        <mat-icon>person_add</mat-icon>
+      </div>
+      <h1>Create User</h1>
+      <p class="header-sub">
+        Logged in as <strong>{{ currentUser()?.full_name || currentUser()?.username }}</strong>
+        <span class="role-chip" [attr.data-role]="currentUser()?.role">{{ currentUser()?.role }}</span>
+      </p>
+    </div>
+
+    <!-- Success banner -->
+    <div class="success-banner" *ngIf="state === 'success'">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ successMsg }}</span>
+    </div>
+
+    <!-- Form -->
+    <form class="signup-form" (ngSubmit)="onSubmit()" #f="ngForm">
+
+      <!-- Full name -->
+      <div class="form-field">
+        <label>Full Name <span class="optional">(optional)</span></label>
+        <div class="input-wrap">
+          <mat-icon class="field-icon">badge</mat-icon>
+          <input type="text" [(ngModel)]="full_name" name="full_name"
+                 placeholder="e.g. Karthik Krishnaswamy"
+                 (input)="clearState()" />
+        </div>
+      </div>
+
+      <!-- Username -->
+      <div class="form-field" [class.has-error]="state === 'error'">
+        <label>Username <span class="required">*</span></label>
+        <div class="input-wrap">
+          <mat-icon class="field-icon">alternate_email</mat-icon>
+          <input type="text" [(ngModel)]="username" name="username"
+                 placeholder="e.g. karthik.admin"
+                 autocomplete="off" (input)="clearState()" required />
+        </div>
+      </div>
+
+      <!-- Mobile number -->
+      <div class="form-field" [class.has-error]="state === 'error' && mobile_number">
+        <label>Mobile Number <span class="optional">(optional — used for login)</span></label>
+        <div class="input-wrap">
+          <mat-icon class="field-icon">smartphone</mat-icon>
+          <input type="tel" [(ngModel)]="mobile_number" name="mobile_number"
+                 placeholder="e.g. 9876543210 (10–15 digits)"
+                 autocomplete="off" (input)="clearState()" />
+        </div>
+      </div>
+
+      <!-- Role -->
+      <div class="form-field">
+        <label>Role <span class="required">*</span></label>
+        <div class="role-selector">
+          <button type="button"
+                  *ngFor="let r of roles"
+                  class="role-btn"
+                  [class.selected]="role === r.value"
+                  [attr.data-role]="r.value"
+                  (click)="role = r.value; clearState()">
+            <mat-icon>{{ r.icon }}</mat-icon>
+            <span>{{ r.label }}</span>
+          </button>
+        </div>
+        <div class="role-desc" [attr.data-role]="role">
+          <ng-container [ngSwitch]="role">
+            <span *ngSwitchCase="'admin'">Full access: manage events, moi entries, create users</span>
+            <span *ngSwitchCase="'superadmin'">Super access: all admin rights + manage admins</span>
+            <span *ngSwitchCase="'user'">Read-only: view events and reports</span>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-field" [class.has-error]="state === 'error'">
+        <label>Password <span class="required">*</span></label>
+        <div class="input-wrap">
+          <mat-icon class="field-icon">lock</mat-icon>
+          <input [type]="showPw ? 'text' : 'password'"
+                 [(ngModel)]="password" name="password"
+                 placeholder="Min 6 characters"
+                 autocomplete="new-password" (input)="clearState()" required />
+          <button type="button" class="toggle-pw" (click)="showPw = !showPw"
+                  [attr.aria-label]="showPw ? 'Hide password' : 'Show password'">
+            <mat-icon>{{ showPw ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Confirm password -->
+      <div class="form-field" [class.has-error]="state === 'error'">
+        <label>Confirm Password <span class="required">*</span></label>
+        <div class="input-wrap">
+          <mat-icon class="field-icon">lock_reset</mat-icon>
+          <input [type]="showPw ? 'text' : 'password'"
+                 [(ngModel)]="confirmPw" name="confirmPw"
+                 placeholder="Re-enter password"
+                 autocomplete="new-password" (input)="clearState()" required />
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div class="error-msg" *ngIf="errorMsg">
+        <mat-icon>error_outline</mat-icon>
+        {{ errorMsg }}
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <a mat-stroked-button routerLink="/dashboard" class="cancel-btn">
+          <mat-icon>arrow_back</mat-icon> Back
+        </a>
+        <button mat-raised-button color="primary" type="submit"
+                [disabled]="state === 'loading'"
+                class="submit-btn">
+          <span *ngIf="state !== 'loading'">
+            <mat-icon>person_add</mat-icon> Create User
+          </span>
+          <span *ngIf="state === 'loading'" class="spinner-wrap">
+            <span class="btn-spinner"></span> Creating…
+          </span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

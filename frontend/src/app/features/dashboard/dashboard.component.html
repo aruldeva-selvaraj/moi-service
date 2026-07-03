@@ -1,6 +1,8 @@
 <div class="page-container">
-  <app-page-header title="🪔 Moi Manager"
-    subtitle="Cash Gift Management Dashboard" />
+  <app-page-header title="🪔 Moify"
+    [subtitle]="auth.isAdmin()
+      ? 'Smart Digital Wedding Gift Ledger — All Events'
+      : 'Welcome, ' + (auth.currentUser()?.full_name || auth.currentUser()?.username || 'Guest') + ' · My Events'" />
 
   @if (loading()) {
     <app-loading-spinner message="Loading dashboard..." />
@@ -9,7 +11,7 @@
     <!-- Event Selector Row -->
     <div class="event-selector-row">
       <mat-form-field appearance="outline" class="event-select">
-        <mat-label>Select Event</mat-label>
+        <mat-label>{{ auth.isAdmin() ? 'Select Event (All Users)' : 'Select My Event' }}</mat-label>
         <mat-select [value]="selectedEventId()" (selectionChange)="onEventChange($event.value)">
           <mat-option [value]="null">— All Events —</mat-option>
           @for (ev of events(); track ev.id) {
@@ -151,7 +153,7 @@
 
     <!-- Recent Events -->
     <div class="section-header">
-      <h2>Recent Events</h2>
+      <h2>{{ auth.isAdmin() ? 'Recent Events (All Users)' : 'My Recent Events' }}</h2>
       <a mat-button routerLink="/events" color="primary">View All →</a>
     </div>
 

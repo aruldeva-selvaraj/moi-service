@@ -1,0 +1,183 @@
+<div class="login-page" [class.success-bg]="loginState === 'success'">
+
+  <!-- Falling petals background -->
+  <div class="petals-container" *ngIf="loginState !== 'success'">
+    <div class="petal" *ngFor="let p of petals"
+         [style.left.%]="p.left"
+         [style.animationDelay.s]="p.delay"
+         [style.animationDuration.s]="p.duration"
+         [style.width.px]="p.size"
+         [style.height.px]="p.size"
+         [style.background]="p.color">
+    </div>
+  </div>
+
+  <!-- Success overlay -->
+  <div class="success-overlay" *ngIf="loginState === 'success'">
+    <div class="success-burst">
+      <div class="burst-ring r1"></div>
+      <div class="burst-ring r2"></div>
+      <div class="burst-ring r3"></div>
+      <div class="success-icon">✓</div>
+    </div>
+    <div class="success-text">வணக்கம்! Welcome!</div>
+    <div class="success-sub">Redirecting to Moify…</div>
+    <div class="fireworks">
+      <div class="fw" *ngFor="let n of [1,2,3,4,5,6,7,8]" [class]="'fw-' + n"></div>
+    </div>
+  </div>
+
+  <!-- Login card -->
+  <div class="login-card" [class.shake]="loginState === 'error'" *ngIf="loginState !== 'success'">
+
+    <!-- Characters -->
+    <div class="characters">
+      <!-- Groom -->
+      <div class="character groom-char">
+        <svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- Turban -->
+          <ellipse cx="40" cy="18" rx="18" ry="7" fill="#c9920a"/>
+          <rect x="22" y="14" width="36" height="8" rx="4" fill="#e8b800"/>
+          <rect x="28" y="10" width="24" height="8" rx="4" fill="#c9920a"/>
+          <!-- Feather -->
+          <ellipse cx="55" cy="10" rx="3" ry="9" fill="#ff8a65" transform="rotate(20 55 10)"/>
+          <!-- Head -->
+          <circle cx="40" cy="30" r="13" fill="#d4956a"/>
+          <!-- Eyes -->
+          <circle cx="35" cy="28" r="2" fill="#2c1810"/>
+          <circle cx="45" cy="28" r="2" fill="#2c1810"/>
+          <!-- Mustache -->
+          <path d="M34 34 Q37 37 40 34 Q43 37 46 34" stroke="#2c1810" stroke-width="1.5" fill="none"/>
+          <!-- Body / Sherwani -->
+          <rect x="26" y="42" width="28" height="40" rx="4" fill="#8B4513"/>
+          <!-- Collar -->
+          <polygon points="35,42 40,50 45,42" fill="#e8b800"/>
+          <!-- Buttons -->
+          <circle cx="40" cy="55" r="2" fill="#e8b800"/>
+          <circle cx="40" cy="64" r="2" fill="#e8b800"/>
+          <circle cx="40" cy="73" r="2" fill="#e8b800"/>
+          <!-- Neck -->
+          <rect x="36" y="41" width="8" height="6" fill="#d4956a"/>
+          <!-- Dhoti/Pants -->
+          <rect x="28" y="80" width="10" height="28" rx="3" fill="#f5f0e8"/>
+          <rect x="42" y="80" width="10" height="28" rx="3" fill="#f5f0e8"/>
+          <!-- Vanakkam hands (namaste) -->
+          <g class="hands-groom">
+            <path d="M26 56 Q12 52 10 60 Q8 68 18 66 Q22 65 26 62Z" fill="#d4956a"/>
+            <path d="M54 56 Q68 52 70 60 Q72 68 62 66 Q58 65 54 62Z" fill="#d4956a"/>
+            <!-- Pressed palms -->
+            <ellipse cx="18" cy="63" rx="5" ry="3" fill="#c4825a" transform="rotate(-15 18 63)"/>
+            <ellipse cx="62" cy="63" rx="5" ry="3" fill="#c4825a" transform="rotate(15 62 63)"/>
+          </g>
+        </svg>
+        <div class="char-label">Groom</div>
+      </div>
+
+      <!-- Vanakkam title in center -->
+      <div class="vanakkam-center">
+        <div class="vanakkam-text">வணக்கம்</div>
+        <div class="vanakkam-en">Vanakkam</div>
+        <div class="diya">🪔</div>
+      </div>
+
+      <!-- Bride -->
+      <div class="character bride-char">
+        <svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- Hair bun -->
+          <ellipse cx="40" cy="12" rx="12" ry="8" fill="#2c1810"/>
+          <circle cx="50" cy="10" r="4" fill="#e91e63"/>
+          <!-- Flowers in hair -->
+          <circle cx="28" cy="14" r="3" fill="#fff176"/>
+          <circle cx="52" cy="14" r="3" fill="#fff176"/>
+          <!-- Head -->
+          <circle cx="40" cy="28" r="13" fill="#e8b090"/>
+          <!-- Bindi -->
+          <circle cx="40" cy="21" r="2.5" fill="#e91e63"/>
+          <!-- Eyes with lashes -->
+          <ellipse cx="35" cy="27" rx="2.5" ry="2" fill="#2c1810"/>
+          <ellipse cx="45" cy="27" rx="2.5" ry="2" fill="#2c1810"/>
+          <path d="M32 24 Q35 22 38 24" stroke="#2c1810" stroke-width="1" fill="none"/>
+          <path d="M42 24 Q45 22 48 24" stroke="#2c1810" stroke-width="1" fill="none"/>
+          <!-- Smile -->
+          <path d="M36 33 Q40 37 44 33" stroke="#c4725a" stroke-width="1.5" fill="none"/>
+          <!-- Nose ring -->
+          <circle cx="43" cy="31" r="1.5" fill="#e8b800" opacity="0.9"/>
+          <!-- Neck / Necklace -->
+          <rect x="36" y="40" width="8" height="6" fill="#e8b090"/>
+          <path d="M33 44 Q40 50 47 44" stroke="#e8b800" stroke-width="2" fill="none"/>
+          <!-- Saree -->
+          <path d="M22 46 Q18 60 20 82 Q22 90 40 92 Q58 90 60 82 Q62 60 58 46Z" fill="#c51162"/>
+          <!-- Saree border -->
+          <path d="M22 46 Q18 60 20 82" stroke="#e8b800" stroke-width="2" fill="none"/>
+          <path d="M58 46 Q62 60 60 82" stroke="#e8b800" stroke-width="2" fill="none"/>
+          <!-- Blouse -->
+          <rect x="28" y="42" width="24" height="12" rx="3" fill="#880e4f"/>
+          <!-- Vanakkam hands -->
+          <g class="hands-bride">
+            <path d="M26 54 Q12 50 10 58 Q8 66 18 64 Q22 63 26 60Z" fill="#e8b090"/>
+            <path d="M54 54 Q68 50 70 58 Q72 66 62 64 Q58 63 54 60Z" fill="#e8b090"/>
+            <ellipse cx="18" cy="61" rx="5" ry="3" fill="#d4957a" transform="rotate(-15 18 61)"/>
+            <ellipse cx="62" cy="61" rx="5" ry="3" fill="#d4957a" transform="rotate(15 62 61)"/>
+          </g>
+          <!-- Bangles -->
+          <rect x="10" y="57" width="8" height="2" rx="1" fill="#e91e63"/>
+          <rect x="10" y="61" width="8" height="2" rx="1" fill="#e8b800"/>
+          <rect x="62" y="57" width="8" height="2" rx="1" fill="#e91e63"/>
+          <rect x="62" y="61" width="8" height="2" rx="1" fill="#e8b800"/>
+          <!-- Saree drape bottom -->
+          <path d="M20 82 Q30 110 40 108 Q50 110 60 82" fill="#c51162"/>
+          <path d="M20 82 Q30 110 40 108 Q50 110 60 82" stroke="#e8b800" stroke-width="1.5" fill="none"/>
+        </svg>
+        <div class="char-label">Bride</div>
+      </div>
+    </div>
+
+    <!-- App branding -->
+    <div class="app-brand">
+      <div class="brand-title">Moify</div>
+      <div class="brand-slogan">Smart Digital Wedding Gift Ledger</div>
+    </div>
+
+    <!-- Login form -->
+    <form class="login-form" (ngSubmit)="onSubmit()" #f="ngForm">
+      <div class="form-group" [class.has-error]="loginState === 'error'">
+        <label for="username">Username or Mobile Number</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input id="username" type="text" [(ngModel)]="username" name="username"
+                 placeholder="Username or mobile number" autocomplete="username"
+                 (input)="clearError()" required />
+        </div>
+      </div>
+
+      <div class="form-group" [class.has-error]="loginState === 'error'">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input id="password" [type]="showPassword ? 'text' : 'password'"
+                 [(ngModel)]="password" name="password"
+                 placeholder="Enter password" autocomplete="current-password"
+                 (input)="clearError()" required />
+          <button type="button" class="toggle-pw" (click)="showPassword = !showPassword">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="error-msg" *ngIf="errorMsg">
+        ⚠️ {{ errorMsg }}
+      </div>
+
+      <button type="submit" class="login-btn"
+              [class.loading]="loginState === 'loading'"
+              [disabled]="loginState === 'loading'">
+        <span *ngIf="loginState !== 'loading'">🪔 Login to Moify</span>
+        <span *ngIf="loginState === 'loading'" class="spinner-wrap">
+          <span class="btn-spinner"></span> Signing in…
+        </span>
+      </button>
+    </form>
+
+    <div class="login-hint">Contact administrator for login credentials</div>
+  </div>
+</div>

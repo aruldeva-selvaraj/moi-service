@@ -22,7 +22,7 @@ export class MoiService {
     if (filter.payment_mode) params = params.set('payment_mode', filter.payment_mode);
     if (filter.search) params = params.set('search', filter.search);
 
-    return this.http.get<PaginatedMoiResponse>(this.baseUrl + '/', { params });
+    return this.http.get<PaginatedMoiResponse>(this.baseUrl, { params });
   }
 
   getById(id: number): Observable<MoiEntry> {
@@ -30,7 +30,7 @@ export class MoiService {
   }
 
   create(data: MoiEntryCreate): Observable<MoiEntry> {
-    return this.http.post<MoiEntry>(this.baseUrl + '/', data);
+    return this.http.post<MoiEntry>(this.baseUrl, data);
   }
 
   update(id: number, data: Partial<MoiEntryCreate>): Observable<MoiEntry> {

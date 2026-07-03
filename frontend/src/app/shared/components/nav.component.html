@@ -1,7 +1,8 @@
 <mat-toolbar class="nav-toolbar">
   <div class="nav-brand">
     <span class="nav-logo">🪔</span>
-    <span class="nav-title">Moi Manager</span>
+    <span class="nav-title">Moify</span>
+    <span class="nav-slogan">Smart Digital Wedding Gift Ledger</span>
   </div>
 
   <div class="nav-links">
@@ -21,6 +22,11 @@
       <mat-icon>bar_chart</mat-icon>
       <span class="link-label">Reports</span>
     </a>
+    <a mat-button routerLink="/users/create" routerLinkActive="active-link"
+       *ngIf="auth.isAdmin()">
+      <mat-icon>person_add</mat-icon>
+      <span class="link-label">Create User</span>
+    </a>
   </div>
 
   <div class="nav-actions">
@@ -38,6 +44,15 @@
             (click)="ts.togglePicker()"
             aria-label="Open Theme Studio">
       <mat-icon>palette</mat-icon>
+    </button>
+
+    <!-- Logout -->
+    <button mat-icon-button
+            matTooltip="Logout"
+            matTooltipPosition="below"
+            (click)="auth.logout()"
+            aria-label="Logout">
+      <mat-icon>logout</mat-icon>
     </button>
   </div>
 </mat-toolbar>

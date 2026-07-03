@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { EventService } from '../../core/services/event.service';
 import { MoiService } from '../../core/services/moi.service';
 import { ReceiptService } from '../../core/services/receipt.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/models/event.model';
 import { SummaryStats } from '../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../shared/components/index';
@@ -30,6 +31,7 @@ export class DashboardComponent implements OnInit {
   private readonly eventService = inject(EventService);
   private readonly moiService = inject(MoiService);
   private readonly receiptService = inject(ReceiptService);
+  readonly auth = inject(AuthService);
 
   loading = signal(true);
   reportLoading = signal(false);

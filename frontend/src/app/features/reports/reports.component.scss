@@ -1,3 +1,12 @@
+.side-toggle {
+  height: 36px;
+  font-size: 0.8rem;
+
+  .mat-button-toggle {
+    font-size: 0.8rem;
+  }
+}
+
 .selector-card {
   background: var(--card-bg, white);
   border-radius: var(--radius-md, 12px);

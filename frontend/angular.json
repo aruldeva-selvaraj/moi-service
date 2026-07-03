@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "moi-wedding": {
+    "moify": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -18,7 +18,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/moi-wedding",
+            "outputPath": "dist/moify",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -69,10 +69,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "moi-wedding:build:production"
+              "buildTarget": "moify:build:production"
             },
             "development": {
-              "buildTarget": "moi-wedding:build:development"
+              "buildTarget": "moify:build:development"
             }
           },
           "defaultConfiguration": "development"

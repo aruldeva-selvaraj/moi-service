@@ -1,7 +1,7 @@
 {
-  "name": "moi-manager-backend-node",
+  "name": "moify-backend",
   "version": "2.0.0",
-  "description": "Moi Manager API — LoopBack 4 + PostgreSQL",
+  "description": "Moify API — LoopBack 4 + PostgreSQL",
   "keywords": ["loopback-application", "loopback4"],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

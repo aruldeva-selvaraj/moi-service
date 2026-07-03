@@ -10,14 +10,8 @@
       </button>
     }
     @if (selectedEventId && allEntries().length > 0) {
-      <mat-button-toggle-group [(value)]="printSide" class="side-toggle"
-                               matTooltip="Choose which side to print in the table">
-        <mat-button-toggle value="both">Both</mat-button-toggle>
-        <mat-button-toggle value="groom">{{ getSelectedEventConfig().sideALabel }}</mat-button-toggle>
-        <mat-button-toggle value="bride">{{ getSelectedEventConfig().sideBLabel }}</mat-button-toggle>
-      </mat-button-toggle-group>
       <button mat-raised-button color="warn" (click)="printTableReport()"
-              matTooltip="Print A4 table — S.No, Name, City, Amount">
+              matTooltip="Print A4 table — Groom Side, Bride Side, Both · columns: S.No, Name, City, Amount">
         <mat-icon>table_view</mat-icon> Print Table
       </button>
       <button mat-raised-button color="accent" (click)="printGuestList()"
@@ -29,9 +23,6 @@
         <mat-icon>summarize</mat-icon> A4 Register
       </button>
     }
-    <button mat-stroked-button (click)="printReport()">
-      <mat-icon>print</mat-icon> Print Report
-    </button>
   </app-page-header>
 
   <!-- Event Selector -->

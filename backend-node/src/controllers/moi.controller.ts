@@ -206,14 +206,14 @@ export class MoiController {
   ): Promise<object> {
     const caller = extractCaller(this.request);
     const ownerClause = isAdmin(caller)
-      ? 'WHERE id = $1'
-      : `WHERE id = $1 AND created_by = ${caller?.sub ?? 0}`;
+      ? `WHERE id = $1 AND status = 'approved'`
+      : `WHERE id = $1 AND status = 'approved' AND created_by = ${caller?.sub ?? 0}`;
     const event = await this.eventRepo.query(
       `SELECT id FROM events ${ownerClause}`,
       [data.event_id],
     );
     if (!event.length)
-      throw new HttpErrors.NotFound(`Event ${data.event_id} not found`);
+      throw new HttpErrors.NotFound(`Event ${data.event_id} not found or not approved`);
 
     const now = new Date();
     const result = await this.moiRepo.query(

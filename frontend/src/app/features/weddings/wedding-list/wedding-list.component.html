@@ -1,7 +1,7 @@
 <div class="page-container">
   <app-page-header
     title="🎉 Events"
-    subtitle="Manage all events — weddings, birthdays, baby showers and more"
+    [subtitle]="auth.isAdmin() ? 'Manage all events — approve pending requests' : 'My events — approved events are fully active'"
     [hasActions]="true">
     <a mat-raised-button color="primary" routerLink="/events/new">
       <mat-icon>add</mat-icon> New Event
@@ -10,71 +10,156 @@
 
   @if (loading()) {
     <app-loading-spinner />
-  } @else if (events().length === 0) {
-    <app-empty-state
-      icon="🎉"
-      title="No events recorded yet"
-      message='Click "New Event" to start — choose from wedding, birthday, baby shower, and more' />
   } @else {
-    <div class="results-count">{{ events().length }} event(s) found</div>
 
-    <div class="grid-3">
-      @for (ev of events(); track ev.id) {
-        <div class="wedding-card">
-          <div class="card-top">
-            <div class="card-title-area">
-              <div class="event-type-chip">{{ getEventEmoji(ev) }} {{ getEventTypeLabel(ev) }}</div>
-              <div class="wedding-card-title">{{ getEventTitle(ev) }}</div>
-              @if (ev.family_name) {
-                <div class="wedding-card-subtitle">{{ ev.family_name }} Family</div>
+    <!-- ── Pending Approval Section (Admin only) ─────────────── -->
+    @if (auth.isAdmin() && pendingEvents().length > 0) {
+      <div class="pending-section">
+        <div class="pending-section-header">
+          <mat-icon class="pending-icon">pending_actions</mat-icon>
+          <h3>Pending Approval <span class="pending-count">{{ pendingEvents().length }}</span></h3>
+        </div>
+        <div class="grid-3">
+          @for (ev of pendingEvents(); track ev.id) {
+            <div class="wedding-card pending-card">
+              <div class="card-top">
+                <div class="card-title-area">
+                  <div class="event-type-chip">{{ getEventEmoji(ev) }} {{ getEventTypeLabel(ev) }}</div>
+                  <div class="wedding-card-title">{{ getEventTitle(ev) }}</div>
+                  @if (ev.family_name) {
+                    <div class="wedding-card-subtitle">{{ ev.family_name }} Family</div>
+                  }
+                </div>
+                <span class="status-badge status-pending">Pending</span>
+              </div>
+
+              <div class="card-meta">
+                <span class="meta-item">
+                  <mat-icon>event</mat-icon>
+                  {{ ev.event_date | date:'dd MMM yyyy' }}
+                </span>
+                @if (ev.venue) {
+                  <span class="meta-item">
+                    <mat-icon>location_on</mat-icon>
+                    {{ ev.venue }}
+                  </span>
+                }
+                @if (ev.city) {
+                  <span class="meta-item">
+                    <mat-icon>location_city</mat-icon>
+                    {{ ev.city }}
+                  </span>
+                }
+              </div>
+
+              <mat-divider class="card-divider"></mat-divider>
+
+              <div class="approval-actions">
+                <button mat-raised-button color="primary" class="approve-btn"
+                  (click)="approveEvent(ev, $event)">
+                  <mat-icon>check_circle</mat-icon> Approve
+                </button>
+                <button mat-stroked-button color="warn" class="reject-btn"
+                  (click)="rejectEvent(ev, $event)">
+                  <mat-icon>cancel</mat-icon> Reject
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── Pending notice for non-admin user ─────────────────── -->
+    @if (!auth.isAdmin() && pendingEvents().length > 0) {
+      <div class="user-pending-notice">
+        <mat-icon>hourglass_top</mat-icon>
+        <span>You have <strong>{{ pendingEvents().length }}</strong> event(s) awaiting admin approval. You can manage moi entries once approved.</span>
+      </div>
+    }
+
+    <!-- ── Approved Events ────────────────────────────────────── -->
+    @if (approvedEvents().length === 0 && pendingEvents().length === 0) {
+      <app-empty-state
+        icon="🎉"
+        title="No events recorded yet"
+        message='Click "New Event" to start — choose from wedding, birthday, baby shower, and more' />
+    } @else if (approvedEvents().length > 0) {
+
+      @if (auth.isAdmin() && pendingEvents().length > 0) {
+        <div class="section-label">Approved Events</div>
+      }
+
+      <div class="results-count">{{ approvedEvents().length }} approved event(s)</div>
+
+      <div class="grid-3">
+        @for (ev of approvedEvents(); track ev.id) {
+          <div class="wedding-card">
+            <div class="card-top">
+              <div class="card-title-area">
+                <div class="event-type-chip">{{ getEventEmoji(ev) }} {{ getEventTypeLabel(ev) }}</div>
+                <div class="wedding-card-title">{{ getEventTitle(ev) }}</div>
+                @if (ev.family_name) {
+                  <div class="wedding-card-subtitle">{{ ev.family_name }} Family</div>
+                }
+              </div>
+              <div class="card-top-right">
+                <span class="status-badge status-approved">Approved</span>
+                <div class="card-actions">
+                  <a mat-icon-button [routerLink]="['/events', ev.id, 'edit']"
+                    matTooltip="Edit" (click)="$event.stopPropagation()">
+                    <mat-icon>edit</mat-icon>
+                  </a>
+                  <button mat-icon-button color="warn" matTooltip="Delete"
+                    (click)="confirmDelete(ev, $event)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-meta">
+              <span class="meta-item">
+                <mat-icon>event</mat-icon>
+                {{ ev.event_date | date:'dd MMM yyyy' }}
+              </span>
+              @if (ev.venue) {
+                <span class="meta-item">
+                  <mat-icon>location_on</mat-icon>
+                  {{ ev.venue }}
+                </span>
+              }
+              @if (ev.city) {
+                <span class="meta-item">
+                  <mat-icon>location_city</mat-icon>
+                  {{ ev.city }}
+                </span>
               }
             </div>
-            <div class="card-actions">
-              <a mat-icon-button [routerLink]="['/events', ev.id, 'edit']"
-                matTooltip="Edit" (click)="$event.stopPropagation()">
-                <mat-icon>edit</mat-icon>
-              </a>
-              <button mat-icon-button color="warn" matTooltip="Delete"
-                (click)="confirmDelete(ev, $event); $event.stopPropagation()">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-          </div>
 
-          <div class="card-meta">
-            <span class="meta-item">
-              <mat-icon>event</mat-icon>
-              {{ ev.event_date | date:'dd MMM yyyy' }}
-            </span>
-            @if (ev.venue) {
-              <span class="meta-item">
-                <mat-icon>location_on</mat-icon>
-                {{ ev.venue }}
-              </span>
-            }
-            @if (ev.city) {
-              <span class="meta-item">
-                <mat-icon>location_city</mat-icon>
-                {{ ev.city }}
-              </span>
-            }
-          </div>
+            <mat-divider class="card-divider"></mat-divider>
 
-          <mat-divider class="card-divider"></mat-divider>
-
-          <div class="card-footer">
-            <div>
-              <div class="wedding-card-amount">
-                {{ ev.total_moi | currency:'INR':'symbol':'1.0-0' }}
+            <div class="card-footer">
+              <div>
+                <div class="wedding-card-amount">
+                  {{ ev.total_moi | currency:'INR':'symbol':'1.0-0' }}
+                </div>
+                <div class="guest-count">{{ ev.moi_count }} guest contributions</div>
               </div>
-              <div class="guest-count">{{ ev.moi_count }} guest contributions</div>
+              <a mat-raised-button color="primary" [routerLink]="['/events', ev.id]">
+                <mat-icon>payments</mat-icon> Manage Moi
+              </a>
             </div>
-            <a mat-raised-button color="primary" [routerLink]="['/events', ev.id]">
-              <mat-icon>payments</mat-icon> Manage Moi
-            </a>
           </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
+
+    } @else if (!auth.isAdmin()) {
+      <!-- User has only pending events (no approved yet) -->
+      <app-empty-state
+        icon="⏳"
+        title="No approved events yet"
+        message="Your event requests are pending admin approval. You will be able to manage moi entries once approved." />
+    }
   }
 </div>

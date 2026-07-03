@@ -1,4 +1,4 @@
-import {del, get, param, post, put, requestBody, HttpErrors, RestBindings, Response, Request} from '@loopback/rest';
+import {del, get, param, patch, post, put, requestBody, HttpErrors, RestBindings, Response, Request} from '@loopback/rest';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {EventRepository} from '../repositories';
@@ -14,6 +14,15 @@ interface EventCreateDto {
   city?: string;
   notes?: string;
 }
+
+const EVENT_SELECT = `
+  e.id, e.event_type, e.primary_name, e.secondary_name,
+  e.family_name, e.event_date::text, e.venue, e.city, e.notes,
+  e.created_by, e.status, e.created_at, e.updated_at,
+  COALESCE(SUM(m.amount), 0)::float AS total_moi,
+  COUNT(m.id)::int                  AS moi_count`;
+
+const EVENT_JOIN = `LEFT JOIN moi_entries m ON e.id = m.event_id`;
 
 export class EventsController {
   constructor(
@@ -32,35 +41,24 @@ export class EventsController {
   async listEvents(): Promise<object[]> {
     const caller = extractCaller(this.request);
     if (isAdmin(caller)) {
+      // Admin sees all events (pending + approved)
       return this.eventRepo.query(
-        `SELECT
-           e.id, e.event_type, e.primary_name, e.secondary_name,
-           e.family_name, e.event_date::text, e.venue, e.city, e.notes,
-           e.created_by, e.created_at, e.updated_at,
-           COALESCE(SUM(m.amount), 0)::float AS total_moi,
-           COUNT(m.id)::int                  AS moi_count
-         FROM events e
-         LEFT JOIN moi_entries m ON e.id = m.event_id
+        `SELECT ${EVENT_SELECT}
+         FROM events e ${EVENT_JOIN}
          GROUP BY e.id
-         ORDER BY e.event_date DESC`,
+         ORDER BY e.status ASC, e.event_date DESC`,
         [],
       );
     }
-    // user role — only own events
+    // User: own approved events + own pending events
     const userId = caller?.sub;
     if (!userId) return [];
     return this.eventRepo.query(
-      `SELECT
-         e.id, e.event_type, e.primary_name, e.secondary_name,
-         e.family_name, e.event_date::text, e.venue, e.city, e.notes,
-         e.created_by, e.created_at, e.updated_at,
-         COALESCE(SUM(m.amount), 0)::float AS total_moi,
-         COUNT(m.id)::int                  AS moi_count
-       FROM events e
-       LEFT JOIN moi_entries m ON e.id = m.event_id
+      `SELECT ${EVENT_SELECT}
+       FROM events e ${EVENT_JOIN}
        WHERE e.created_by = $1
        GROUP BY e.id
-       ORDER BY e.event_date DESC`,
+       ORDER BY e.status ASC, e.event_date DESC`,
       [userId],
     );
   }
@@ -74,14 +72,16 @@ export class EventsController {
     data: EventCreateDto,
   ): Promise<object> {
     const caller = extractCaller(this.request);
+    // Admin / superadmin events are auto-approved; user events require approval
+    const status = isAdmin(caller) ? 'approved' : 'pending';
     const now = new Date();
     const result = await this.eventRepo.query(
       `INSERT INTO events
          (event_type, primary_name, secondary_name, family_name,
-          event_date, venue, city, notes, created_by, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+          event_date, venue, city, notes, created_by, status, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        RETURNING id, event_type, primary_name, secondary_name, family_name,
-                 event_date::text, venue, city, notes, created_by,
+                 event_date::text, venue, city, notes, created_by, status,
                  created_at, updated_at,
                  0::float AS total_moi, 0::int AS moi_count`,
       [
@@ -94,6 +94,7 @@ export class EventsController {
         data.city ?? null,
         data.notes ?? null,
         caller?.sub ?? null,
+        status,
         now,
         now,
       ],
@@ -113,14 +114,8 @@ export class EventsController {
     const caller = extractCaller(this.request);
     const ownerClause = isAdmin(caller) ? '' : `AND e.created_by = ${caller?.sub ?? 0}`;
     const rows = await this.eventRepo.query(
-      `SELECT
-         e.id, e.event_type, e.primary_name, e.secondary_name,
-         e.family_name, e.event_date::text, e.venue, e.city, e.notes,
-         e.created_by, e.created_at, e.updated_at,
-         COALESCE(SUM(m.amount), 0)::float AS total_moi,
-         COUNT(m.id)::int                  AS moi_count
-       FROM events e
-       LEFT JOIN moi_entries m ON e.id = m.event_id
+      `SELECT ${EVENT_SELECT}
+       FROM events e ${EVENT_JOIN}
        WHERE e.id = $1 ${ownerClause}
        GROUP BY e.id`,
       [id],
@@ -166,6 +161,68 @@ export class EventsController {
     return this.getEvent(id);
   }
 
+  // ── PATCH /api/events/:id/approve ─────────────────────
+  @patch('/api/events/{id}/approve', {
+    responses: {
+      '200': {description: 'Event approved'},
+      '401': {description: 'Not authenticated'},
+      '403': {description: 'Insufficient role'},
+      '404': {description: 'Not found'},
+    },
+  })
+  async approveEvent(@param.path.number('id') id: number): Promise<object> {
+    const caller = extractCaller(this.request);
+    if (!caller) {
+      this.response.status(401);
+      return {error: 'Authentication required'};
+    }
+    if (!isAdmin(caller)) {
+      this.response.status(403);
+      return {error: 'Only admin or superadmin can approve events'};
+    }
+    const existing = await this.eventRepo.query(
+      `SELECT id FROM events WHERE id = $1`,
+      [id],
+    );
+    if (!existing.length) throw new HttpErrors.NotFound('Event not found');
+
+    await this.eventRepo.query(
+      `UPDATE events SET status = 'approved', updated_at = NOW() WHERE id = $1`,
+      [id],
+    );
+    return this.getEvent(id);
+  }
+
+  // ── PATCH /api/events/:id/reject ──────────────────────
+  @patch('/api/events/{id}/reject', {
+    responses: {
+      '200': {description: 'Event rejected and deleted'},
+      '401': {description: 'Not authenticated'},
+      '403': {description: 'Insufficient role'},
+      '404': {description: 'Not found'},
+    },
+  })
+  async rejectEvent(@param.path.number('id') id: number): Promise<object> {
+    const caller = extractCaller(this.request);
+    if (!caller) {
+      this.response.status(401);
+      return {error: 'Authentication required'};
+    }
+    if (!isAdmin(caller)) {
+      this.response.status(403);
+      return {error: 'Only admin or superadmin can reject events'};
+    }
+    const existing = await this.eventRepo.query(
+      `SELECT id FROM events WHERE id = $1`,
+      [id],
+    );
+    if (!existing.length) throw new HttpErrors.NotFound('Event not found');
+
+    // Rejection permanently deletes the event and its moi entries (CASCADE)
+    await this.eventRepo.query(`DELETE FROM events WHERE id = $1`, [id]);
+    return {success: true, message: `Event ${id} rejected and deleted`};
+  }
+
   // ── DELETE /api/events/:id ─────────────────────────────
   @del('/api/events/{id}', {
     responses: {
@@ -197,10 +254,10 @@ export class EventsController {
     const ownerClause = isAdmin(caller) ? '' : `AND created_by = ${caller?.sub ?? 0}`;
     const events = await this.eventRepo.query(
       `SELECT id, event_type, primary_name, secondary_name, event_date::text
-       FROM events WHERE id = $1 ${ownerClause}`,
+       FROM events WHERE id = $1 AND status = 'approved' ${ownerClause}`,
       [id],
     );
-    if (!events.length) throw new HttpErrors.NotFound('Event not found');
+    if (!events.length) throw new HttpErrors.NotFound('Event not found or not approved');
     const ev = events[0];
 
     const rows = await this.eventRepo.query(

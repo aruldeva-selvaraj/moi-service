@@ -40,8 +40,11 @@ export class DashboardComponent implements OnInit {
   selectedEventId = signal<number | null>(null);
   eventReport = signal<EventReport | null>(null);
 
+  approvedEvents = computed(() => this.events().filter((ev: Event) => ev.status === 'approved'));
+  pendingCount = computed(() => this.events().filter((ev: Event) => ev.status === 'pending').length);
+
   selectedEvent = computed(() =>
-    this.events().find((ev: Event) => ev.id === this.selectedEventId()) ?? null
+    this.approvedEvents().find((ev: Event) => ev.id === this.selectedEventId()) ?? null
   );
 
   selectedEventConfig = computed(() => {
@@ -82,9 +85,10 @@ export class DashboardComponent implements OnInit {
     this.eventService.getAll().subscribe({
       next: (data) => {
         this.events.set(data);
-        if (data.length > 0) {
-          this.selectedEventId.set(data[0].id);
-          this.loadEventReport(data[0].id);
+        const approved = data.filter((ev: Event) => ev.status === 'approved');
+        if (approved.length > 0) {
+          this.selectedEventId.set(approved[0].id);
+          this.loadEventReport(approved[0].id);
         }
         checkDone();
       },

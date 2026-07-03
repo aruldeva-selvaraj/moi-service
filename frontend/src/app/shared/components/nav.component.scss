@@ -27,6 +27,16 @@
     transition: color 0.3s ease;
     white-space: nowrap;
   }
+
+  .nav-slogan {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    align-self: flex-end;
+    padding-bottom: 2px;
+  }
 }
 
 .nav-links {
@@ -81,7 +91,8 @@
 }
 
 @media (max-width: 768px) {
-  .link-label { display: none; }
+  .link-label  { display: none; }
   .nav-title   { display: none; }
+  .nav-slogan  { display: none; }
   .new-wedding-btn .link-label { display: none; }
 }

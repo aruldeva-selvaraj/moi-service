@@ -10,7 +10,7 @@ export class EventService {
   private readonly baseUrl = `${environment.apiUrl}/api/events`;
 
   getAll(): Observable<Event[]> {
-    return this.http.get<Event[]>(this.baseUrl + '/');
+    return this.http.get<Event[]>(this.baseUrl);
   }
 
   getById(id: number): Observable<Event> {
@@ -18,7 +18,7 @@ export class EventService {
   }
 
   create(data: EventCreate): Observable<Event> {
-    return this.http.post<Event>(this.baseUrl + '/', data);
+    return this.http.post<Event>(this.baseUrl, data);
   }
 
   update(id: number, data: Partial<EventCreate>): Observable<Event> {

@@ -1,7 +1,8 @@
-import {del, get, param, post, put, requestBody, HttpErrors, RestBindings, Response} from '@loopback/rest';
+import {del, get, param, post, put, requestBody, HttpErrors, RestBindings, Response, Request} from '@loopback/rest';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {EventRepository} from '../repositories';
+import {extractCaller, isAdmin} from '../utils/jwt.utils';
 
 interface EventCreateDto {
   event_type?: string;
@@ -20,6 +21,8 @@ export class EventsController {
     private eventRepo: EventRepository,
     @inject(RestBindings.Http.RESPONSE)
     private response: Response,
+    @inject(RestBindings.Http.REQUEST)
+    private request: Request,
   ) {}
 
   // ── GET /api/events ────────────────────────────────────
@@ -27,18 +30,38 @@ export class EventsController {
     responses: {'200': {description: 'List of events with moi totals'}},
   })
   async listEvents(): Promise<object[]> {
+    const caller = extractCaller(this.request);
+    if (isAdmin(caller)) {
+      return this.eventRepo.query(
+        `SELECT
+           e.id, e.event_type, e.primary_name, e.secondary_name,
+           e.family_name, e.event_date::text, e.venue, e.city, e.notes,
+           e.created_by, e.created_at, e.updated_at,
+           COALESCE(SUM(m.amount), 0)::float AS total_moi,
+           COUNT(m.id)::int                  AS moi_count
+         FROM events e
+         LEFT JOIN moi_entries m ON e.id = m.event_id
+         GROUP BY e.id
+         ORDER BY e.event_date DESC`,
+        [],
+      );
+    }
+    // user role — only own events
+    const userId = caller?.sub;
+    if (!userId) return [];
     return this.eventRepo.query(
       `SELECT
          e.id, e.event_type, e.primary_name, e.secondary_name,
          e.family_name, e.event_date::text, e.venue, e.city, e.notes,
-         e.created_at, e.updated_at,
+         e.created_by, e.created_at, e.updated_at,
          COALESCE(SUM(m.amount), 0)::float AS total_moi,
          COUNT(m.id)::int                  AS moi_count
        FROM events e
        LEFT JOIN moi_entries m ON e.id = m.event_id
+       WHERE e.created_by = $1
        GROUP BY e.id
        ORDER BY e.event_date DESC`,
-      [],
+      [userId],
     );
   }
 
@@ -50,14 +73,16 @@ export class EventsController {
     @requestBody({content: {'application/json': {schema: {type: 'object'}}}})
     data: EventCreateDto,
   ): Promise<object> {
+    const caller = extractCaller(this.request);
     const now = new Date();
     const result = await this.eventRepo.query(
       `INSERT INTO events
          (event_type, primary_name, secondary_name, family_name,
-          event_date, venue, city, notes, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          event_date, venue, city, notes, created_by, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING id, event_type, primary_name, secondary_name, family_name,
-                 event_date::text, venue, city, notes, created_at, updated_at,
+                 event_date::text, venue, city, notes, created_by,
+                 created_at, updated_at,
                  0::float AS total_moi, 0::int AS moi_count`,
       [
         data.event_type ?? 'wedding',
@@ -68,6 +93,7 @@ export class EventsController {
         data.venue ?? null,
         data.city ?? null,
         data.notes ?? null,
+        caller?.sub ?? null,
         now,
         now,
       ],
@@ -84,16 +110,18 @@ export class EventsController {
     },
   })
   async getEvent(@param.path.number('id') id: number): Promise<object> {
+    const caller = extractCaller(this.request);
+    const ownerClause = isAdmin(caller) ? '' : `AND e.created_by = ${caller?.sub ?? 0}`;
     const rows = await this.eventRepo.query(
       `SELECT
          e.id, e.event_type, e.primary_name, e.secondary_name,
          e.family_name, e.event_date::text, e.venue, e.city, e.notes,
-         e.created_at, e.updated_at,
+         e.created_by, e.created_at, e.updated_at,
          COALESCE(SUM(m.amount), 0)::float AS total_moi,
          COUNT(m.id)::int                  AS moi_count
        FROM events e
        LEFT JOIN moi_entries m ON e.id = m.event_id
-       WHERE e.id = $1
+       WHERE e.id = $1 ${ownerClause}
        GROUP BY e.id`,
       [id],
     );
@@ -113,8 +141,10 @@ export class EventsController {
     @requestBody({content: {'application/json': {schema: {type: 'object'}}}})
     data: Partial<EventCreateDto>,
   ): Promise<object> {
+    const caller = extractCaller(this.request);
+    const ownerClause = isAdmin(caller) ? '' : `AND created_by = ${caller?.sub ?? 0}`;
     const existing = await this.eventRepo.query(
-      'SELECT id FROM events WHERE id = $1',
+      `SELECT id FROM events WHERE id = $1 ${ownerClause}`,
       [id],
     );
     if (!existing.length) throw new HttpErrors.NotFound('Event not found');
@@ -126,8 +156,8 @@ export class EventsController {
     const values: unknown[] = fields.map(([, v]) => v);
     const updIdx = fields.length + 1;
     const idIdx = fields.length + 2;
-    values.push(new Date()); // updated_at
-    values.push(id);         // WHERE id
+    values.push(new Date());
+    values.push(id);
 
     await this.eventRepo.query(
       `UPDATE events SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx}`,
@@ -144,8 +174,10 @@ export class EventsController {
     },
   })
   async deleteEvent(@param.path.number('id') id: number): Promise<void> {
+    const caller = extractCaller(this.request);
+    const ownerClause = isAdmin(caller) ? '' : `AND created_by = ${caller?.sub ?? 0}`;
     const existing = await this.eventRepo.query(
-      'SELECT id FROM events WHERE id = $1',
+      `SELECT id FROM events WHERE id = $1 ${ownerClause}`,
       [id],
     );
     if (!existing.length) throw new HttpErrors.NotFound('Event not found');
@@ -161,9 +193,11 @@ export class EventsController {
     },
   })
   async getEventReport(@param.path.number('id') id: number): Promise<object> {
+    const caller = extractCaller(this.request);
+    const ownerClause = isAdmin(caller) ? '' : `AND created_by = ${caller?.sub ?? 0}`;
     const events = await this.eventRepo.query(
       `SELECT id, event_type, primary_name, secondary_name, event_date::text
-       FROM events WHERE id = $1`,
+       FROM events WHERE id = $1 ${ownerClause}`,
       [id],
     );
     if (!events.length) throw new HttpErrors.NotFound('Event not found');
@@ -187,20 +221,20 @@ export class EventsController {
 
     const r = rows[0] ?? {};
     return {
-      event_id:      ev.id,
-      event_type:    ev.event_type,
-      primary_name:  ev.primary_name,
+      event_id:       ev.id,
+      event_type:     ev.event_type,
+      primary_name:   ev.primary_name,
       secondary_name: ev.secondary_name ?? null,
-      event_date:    ev.event_date,
-      total_amount:  r.total_amount  ?? 0,
-      moi_count:     r.moi_count     ?? 0,
-      groom_count:   r.groom_count   ?? 0,
-      bride_count:   r.bride_count   ?? 0,
-      groom_amount:  r.groom_amount  ?? 0,
-      bride_amount:  r.bride_amount  ?? 0,
-      cash_amount:   r.cash_amount   ?? 0,
-      cheque_amount: r.cheque_amount ?? 0,
-      online_amount: r.online_amount ?? 0,
+      event_date:     ev.event_date,
+      total_amount:   r.total_amount  ?? 0,
+      moi_count:      r.moi_count     ?? 0,
+      groom_count:    r.groom_count   ?? 0,
+      bride_count:    r.bride_count   ?? 0,
+      groom_amount:   r.groom_amount  ?? 0,
+      bride_amount:   r.bride_amount  ?? 0,
+      cash_amount:    r.cash_amount   ?? 0,
+      cheque_amount:  r.cheque_amount ?? 0,
+      online_amount:  r.online_amount ?? 0,
     };
   }
 }

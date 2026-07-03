@@ -1,5 +1,8 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { filter, map } from 'rxjs/operators';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavComponent } from './shared/components/nav.component';
 import { ThemePickerComponent } from './shared/components/theme-picker.component';
 import { ThemeService } from './core/services/theme.service';
@@ -7,13 +10,17 @@ import { ThemeService } from './core/services/theme.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavComponent, ThemePickerComponent],
+  imports: [RouterOutlet, CommonModule, NavComponent, ThemePickerComponent],
   template: `
-    <app-nav />
-    <main class="main-content">
+    @if (!isLoginPage()) {
+      <app-nav />
+    }
+    <main [class.main-content]="!isLoginPage()">
       <router-outlet />
     </main>
-    <app-theme-picker />
+    @if (!isLoginPage()) {
+      <app-theme-picker />
+    }
   `,
   styles: [`
     .main-content {
@@ -24,6 +31,14 @@ import { ThemeService } from './core/services/theme.service';
   `]
 })
 export class AppComponent {
-  // Inject to trigger theme initialization on app start
   private _theme = inject(ThemeService);
+  private router = inject(Router);
+
+  isLoginPage = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects.startsWith('/login'))
+    ),
+    { initialValue: false }
+  );
 }

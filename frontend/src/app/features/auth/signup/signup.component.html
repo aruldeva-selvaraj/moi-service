@@ -73,7 +73,7 @@
           <ng-container [ngSwitch]="role">
             <span *ngSwitchCase="'admin'">Full access: manage events, moi entries, create users</span>
             <span *ngSwitchCase="'superadmin'">Super access: all admin rights + manage admins</span>
-            <span *ngSwitchCase="'user'">Read-only: view events and reports</span>
+            <span *ngSwitchCase="'user'">Standard access: create and manage own events and moi entries</span>
           </ng-container>
         </div>
       </div>

@@ -1,8 +1,8 @@
 -- Moify — Multi-event schema
 -- Run: psql -U postgres -f setup_db.sql
 
-CREATE DATABASE moi_wedding_db;
-\c moi_wedding_db;
+CREATE DATABASE moify_db;
+\c moify_db;
 
 -- ─── Users (must be created first — events references users) ──────────────
 
@@ -120,7 +120,7 @@ INSERT INTO moi_entries (event_id, guest_name, relationship, side, amount, payme
 (3, 'Kamala Aunty',    'Maternal Aunt',     'groom', 2500,  'cash',   'Madurai',    'Meena');
 
 -- ─── Migration: existing DB — add new columns if upgrading ───────────────────
--- Run these ALTER statements on an existing moi_wedding_db:
+-- Run these ALTER statements on an existing moify_db:
 --
 --   ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(15) UNIQUE;
 --   ALTER TABLE events ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id) ON DELETE SET NULL;
@@ -129,11 +129,11 @@ INSERT INTO moi_entries (event_id, guest_name, relationship, side, amount, payme
 --   -- Assign existing events to admin:
 --   UPDATE events SET created_by = (SELECT id FROM users WHERE username = 'admin') WHERE created_by IS NULL;
 
--- ─── Migration: moi_manager_db → moi_wedding_db rename (reference only) ──────
+-- ─── Migration: moi_manager_db → moify_db rename (reference only) ──────
 -- If you already have data in the old moi_manager_db, dump and restore:
 --
 --   pg_dump -U postgres moi_manager_db > backup.sql
---   psql  -U postgres moi_wedding_db   < backup.sql
+--   psql  -U postgres moify_db   < backup.sql
 
 -- ─── Migration: v1 weddings table → v2 events table ──────────────────────────
 -- Run ONLY if upgrading from the old schema that had a "weddings" table.

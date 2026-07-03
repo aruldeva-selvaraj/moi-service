@@ -17,7 +17,7 @@ export function extractCaller(request: Request): CallerPayload | null {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token) return null;
   try {
-    return jwt.verify(token, JWT_SECRET) as CallerPayload;
+    return jwt.verify(token, JWT_SECRET) as unknown as CallerPayload;
   } catch {
     return null;
   }

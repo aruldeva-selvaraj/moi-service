@@ -29,6 +29,7 @@ export class AuthController {
     );
     if (existing.length === 0) {
       const hash = await bcrypt.hash('moify@2024', 12);
+      console.log("password : "+hash);
       await this.userRepo.query(
         `INSERT INTO public.users (username, password_hash, role, full_name, mobile_number, is_active)
          VALUES ($1, $2, $3, $4, $5, $6)`,

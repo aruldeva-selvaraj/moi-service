@@ -90,6 +90,7 @@ export class AuthController {
       password_hash: string;
       role: string;
       full_name: string | null;
+      mobile_number: string | null;
       is_active: boolean;
     };
 
@@ -291,7 +292,7 @@ export class AuthController {
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     if (!token) return null;
     try {
-      return jwt.verify(token, JWT_SECRET) as {sub: number; username: string; role: string};
+      return jwt.verify(token, JWT_SECRET) as unknown as {sub: number; username: string; role: string};
     } catch {
       return null;
     }

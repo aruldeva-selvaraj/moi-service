@@ -104,6 +104,8 @@ export function getEventTypeLabel(type: EventType | string): string {
   return (EVENT_TYPE_CONFIGS[type as EventType] ?? EVENT_TYPE_CONFIGS['other']).label;
 }
 
+export type EventStatus = 'pending' | 'approved';
+
 export interface Event {
   id: number;
   event_type: EventType;
@@ -116,6 +118,8 @@ export interface Event {
   notes?: string;
   total_moi: number;
   moi_count: number;
+  status: EventStatus;
+  created_by?: number;
   created_at: string;
   updated_at: string;
 }

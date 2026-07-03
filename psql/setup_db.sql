@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS events (
     city           VARCHAR(100),
     notes          TEXT,
     created_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,  -- FK to owner user
+    status         VARCHAR(20)  NOT NULL DEFAULT 'approved',         -- pending | approved
     created_at     TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at     TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -50,6 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_events_event_date   ON events(event_date DESC);
 CREATE INDEX IF NOT EXISTS idx_events_event_type   ON events(event_type);
 CREATE INDEX IF NOT EXISTS idx_events_primary_name ON events(lower(primary_name));
 CREATE INDEX IF NOT EXISTS idx_events_created_by   ON events(created_by);
+CREATE INDEX IF NOT EXISTS idx_events_status       ON events(status);
 
 COMMENT ON TABLE events IS 'Events: wedding, birthday, baby_shower, engagement, anniversary, other';
 
@@ -123,11 +125,19 @@ INSERT INTO moi_entries (event_id, guest_name, relationship, side, amount, payme
 -- Run these ALTER statements on an existing moify_db:
 --
 --   ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(15) UNIQUE;
+--   ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(15) UNIQUE;
 --   ALTER TABLE events ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id) ON DELETE SET NULL;
+--   ALTER TABLE events ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved';
 --   CREATE INDEX IF NOT EXISTS idx_events_created_by ON events(created_by);
+--   CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
 --   CREATE UNIQUE INDEX IF NOT EXISTS idx_users_mobile ON users(mobile_number) WHERE mobile_number IS NOT NULL;
 --   -- Assign existing events to admin:
 --   UPDATE events SET created_by = (SELECT id FROM users WHERE username = 'admin') WHERE created_by IS NULL;
+
+-- ─── Migration: add event approval status (run on existing moify_db) ───────
+--
+--   ALTER TABLE events ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved';
+--   CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
 
 -- ─── Migration: moi_manager_db → moify_db rename (reference only) ──────
 -- If you already have data in the old moi_manager_db, dump and restore:

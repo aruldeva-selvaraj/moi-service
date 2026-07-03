@@ -320,9 +320,13 @@ export class AuthController {
       `ALTER TABLE public.users ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(15) UNIQUE`,
       [],
     );
-    // Add created_by to events if upgrading from older schema
+    // Add created_by and status to events if upgrading from older schema
     await this.userRepo.query(
       `ALTER TABLE public.events ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES public.users(id) ON DELETE SET NULL`,
+      [],
+    ).catch(() => { /* events table may not exist yet — ignore */ });
+    await this.userRepo.query(
+      `ALTER TABLE public.events ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved'`,
       [],
     ).catch(() => { /* events table may not exist yet — ignore */ });
   }

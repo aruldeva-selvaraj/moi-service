@@ -9,8 +9,8 @@ export type PaperSize = '58' | '80';
 export class ReceiptService {
   private doc = inject(DOCUMENT);
 
-  printReceipt(entry: MoiEntry, event: Event, paperSize: PaperSize = '80'): void {
-    const html = this.buildReceiptHtml(entry, event, paperSize);
+  printReceipt(entry: MoiEntry, event: Event, paperSize: PaperSize = '80', receiptNo?: number): void {
+    const html = this.buildReceiptHtml(entry, event, paperSize, receiptNo);
     const win = this.doc.defaultView?.open(
       '', '_blank',
       `width=420,height=650,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes`
@@ -96,8 +96,8 @@ export class ReceiptService {
     }, 400);
   }
 
-  printEntryTable(entries: MoiEntry[], event: Event, side: 'groom' | 'bride' | 'both'): void {
-    const html = this.buildEntryTableHtml(entries, event, side);
+  printEntryTable(entries: MoiEntry[], event: Event): void {
+    const html = this.buildEntryTableHtml(entries, event);
     const win = this.doc.defaultView?.open(
       '', '_blank',
       `width=960,height=750,toolbar=no,location=no,directories=no,status=no,menubar=yes,scrollbars=yes`
@@ -708,7 +708,7 @@ export class ReceiptService {
 </html>`;
   }
 
-  private buildReceiptHtml(entry: MoiEntry, event: Event, paperSize: PaperSize): string {
+  private buildReceiptHtml(entry: MoiEntry, event: Event, paperSize: PaperSize, receiptNo?: number): string {
     const cfg = getEventConfig(event.event_type);
     const title = getEventTitle(event);
 
@@ -821,7 +821,7 @@ export class ReceiptService {
   <div class="sline">--------------------------------</div>
 
   <table>
-    ${entry.id ? row('Receipt No', '#' + e(String(entry.id))) : ''}
+    ${row('Receipt No', '#' + e(String(receiptNo ?? entry.id)))}
     ${row('Printed', printDate + ' ' + printTime)}
   </table>
 
@@ -859,71 +859,127 @@ export class ReceiptService {
 </html>`;
   }
 
-  private buildEntryTableHtml(entries: MoiEntry[], event: Event, side: 'groom' | 'bride' | 'both'): string {
-    const cfg  = getEventConfig(event.event_type);
-    const e    = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const fmt  = (n: number) => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const now  = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-
-    const filtered = side === 'both' ? entries : entries.filter(en => en.side === side);
-    const sideLabel = side === 'groom' ? cfg.sideALabel : side === 'bride' ? cfg.sideBLabel : 'All Entries';
-    const total     = filtered.reduce((s, en) => s + en.amount, 0);
+  private buildEntryTableHtml(entries: MoiEntry[], event: Event): string {
+    const cfg = getEventConfig(event.event_type);
+    const esc = (s: string | undefined | null) =>
+      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const fmt = (n: number) =>
+      new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(n);
+    const now = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
     const eventTitle = event.secondary_name && cfg.showSecondary
-      ? `${e(event.primary_name)} &hearts; ${e(event.secondary_name)}`
-      : e(event.primary_name);
+      ? `${esc(event.primary_name)} &hearts; ${esc(event.secondary_name)}`
+      : esc(event.primary_name);
 
-    const payIcon: Record<string, string> = { cash: 'Cash', cheque: 'Cheque', online: 'Online/UPI', dd: 'DD' };
+    const groomEntries = entries.filter(x => x.side === 'groom');
+    const brideEntries = entries.filter(x => x.side === 'bride');
+    const bothEntries  = entries.filter(x => x.side === 'both');
+    const groomTotal   = groomEntries.reduce((s, x) => s + x.amount, 0);
+    const brideTotal   = brideEntries.reduce((s, x) => s + x.amount, 0);
+    const bothTotal    = bothEntries.reduce((s, x) => s + x.amount, 0);
+    const grandTotal   = groomTotal + brideTotal + bothTotal;
 
-    const rows = filtered.map((en, i) => `
-      <tr>
-        <td class="c">${i + 1}</td>
-        <td class="name">${e(en.guest_name)}</td>
-        <td>${e(en.relationship ?? '-')}</td>
-        <td>${e(en.city ?? '-')}</td>
-        <td class="c">${payIcon[en.payment_mode] ?? e(en.payment_mode)}</td>
-        <td class="amt">${fmt(en.amount)}</td>
-      </tr>`).join('');
+    const buildRows = (list: MoiEntry[]): string => {
+      if (!list.length) {
+        return `<tr><td colspan="4" class="empty-row">No entries</td></tr>`;
+      }
+      return list.map((x, i) => `
+        <tr>
+          <td class="c-sno">${i + 1}</td>
+          <td class="c-name">${esc(x.guest_name)}</td>
+          <td class="c-city">${esc(x.city || '-')}</td>
+          <td class="c-amt">${fmt(x.amount)}</td>
+        </tr>`).join('');
+    };
+
+    const buildSection = (label: string, hdrColor: string, altBg: string, list: MoiEntry[], total: number): string => `
+      <div class="section">
+        <div class="sec-hdr" style="background:${hdrColor}">
+          <span class="sec-title">${label}</span>
+          <span class="sec-count">${list.length} ${list.length === 1 ? 'Guest' : 'Guests'}</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="c-sno">S.No</th>
+              <th class="c-name">Name</th>
+              <th class="c-city">City</th>
+              <th class="c-amt">Amount</th>
+            </tr>
+          </thead>
+          <tbody style="--alt:${altBg}">
+            ${buildRows(list)}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="ft-lbl" style="border-top-color:${hdrColor}">${label} Total (${list.length})</td>
+              <td class="ft-amt" style="border-top-color:${hdrColor};color:${hdrColor}">${fmt(total)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>`;
 
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>${sideLabel} — ${eventTitle}</title>
+<title>Moi Table — ${eventTitle}</title>
 <style>
-  @page { size: A4 portrait; margin: 18mm 14mm 14mm 14mm; }
+  @page { size: A4 portrait; margin: 14mm 14mm 12mm 14mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5pt; color: #1a1a1a; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a1a; background: #fff; }
 
-  /* ── Header ── */
-  .hdr { text-align: center; border-bottom: 2.5px solid #7b1fa2; padding-bottom: 10px; margin-bottom: 10px; }
-  .app-name { font-size: 22pt; font-weight: 800; color: #7b1fa2; letter-spacing: 2px; }
-  .app-slogan { font-size: 8pt; color: #888; letter-spacing: 1px; margin-top: 1px; }
-  .event-title { font-size: 13pt; font-weight: 700; color: #2c2c2c; margin-top: 8px; }
-  .event-meta { font-size: 9pt; color: #555; margin-top: 4px; display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
-  .event-meta span { white-space: nowrap; }
-  .side-badge {
-    display: inline-block; margin-top: 7px; padding: 3px 14px;
-    background: #7b1fa2; color: #fff; border-radius: 20px; font-size: 9pt; font-weight: 600; letter-spacing: 0.5px;
-  }
+  /* ── Page Header ── */
+  .page-hdr { text-align: center; border-bottom: 3px solid #4a148c; padding-bottom: 8px; margin-bottom: 12px; }
+  .app-name { font-size: 18pt; font-weight: 900; color: #4a148c; letter-spacing: 3px; }
+  .app-sub  { font-size: 7.5pt; color: #888; letter-spacing: 1px; margin-top: 1px; }
+  .ev-title { font-size: 14pt; font-weight: 700; color: #1a1a1a; margin-top: 7px; }
+  .ev-meta  { font-size: 8.5pt; color: #555; margin-top: 4px; }
+  .ev-meta span + span::before { content: ' · '; color: #bbb; }
+  .print-info { font-size: 7.5pt; color: #999; margin-top: 4px; }
+
+  /* ── Summary Strip ── */
+  .summary-strip { display: flex; gap: 8px; margin-bottom: 10px; }
+  .sum-chip { flex: 1; border: 1.5px solid #ccc; border-radius: 3px; padding: 5px 8px; text-align: center; }
+  .sum-chip .sv { font-size: 10pt; font-weight: 700; font-family: 'Courier New', monospace; }
+  .sum-chip .sl { font-size: 7pt; color: #666; margin-top: 2px; }
+
+  /* ── Section ── */
+  .section { margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
+  .sec-hdr { display: flex; justify-content: space-between; align-items: center;
+             color: #fff; padding: 5px 10px; border-radius: 2px 2px 0 0; }
+  .sec-title { font-size: 11pt; font-weight: 700; letter-spacing: 0.5px; }
+  .sec-count { font-size: 8.5pt; opacity: 0.9; }
 
   /* ── Table ── */
-  table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-  thead tr { background: #7b1fa2; color: #fff; }
-  th { padding: 7px 8px; font-size: 9.5pt; font-weight: 600; text-align: left; }
-  th.c, td.c { text-align: center; }
-  th.amt, td.amt { text-align: right; }
-  td { padding: 6px 8px; font-size: 9.5pt; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
-  td.name { font-weight: 600; }
-  tr:nth-child(even) td { background: #faf5ff; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #37474f; color: #fff; }
+  th { padding: 5px 8px; font-size: 8.5pt; font-weight: 700; text-align: left; }
+  td { padding: 5px 8px; font-size: 9pt; border-bottom: 1px solid #ececec; vertical-align: middle; }
+  tbody tr:nth-child(even) td { background: #f7f7f7; }
 
-  /* ── Total row ── */
-  tfoot tr td { border-top: 2px solid #7b1fa2; border-bottom: none; padding: 7px 8px; }
-  tfoot .lbl  { font-weight: 700; font-size: 10pt; color: #7b1fa2; }
-  tfoot .total-val { font-weight: 800; font-size: 11pt; color: #7b1fa2; text-align: right; }
+  .c-sno  { width: 8%;  text-align: center; color: #999; }
+  .c-name { width: 45%; font-weight: 600; }
+  .c-city { width: 27%; color: #444; }
+  .c-amt  { width: 20%; text-align: right; font-weight: 700; font-family: 'Courier New', monospace; }
+
+  .empty-row { text-align: center; color: #bbb; font-style: italic; padding: 8px; }
+
+  /* ── Section Footer ── */
+  tfoot tr td { border-top: 2px solid; border-bottom: none; background: #fafafa !important; padding: 6px 8px; }
+  .ft-lbl { font-weight: 700; font-size: 9pt; text-align: right; }
+  .ft-amt { font-weight: 800; font-size: 10pt; text-align: right; font-family: 'Courier New', monospace; }
+
+  /* ── Grand Total Bar ── */
+  .grand-bar { display: flex; justify-content: space-between; align-items: center;
+               background: #1a1a1a; color: #fff; padding: 8px 12px; margin-top: 4px; border-radius: 2px; }
+  .grand-lbl { font-size: 11pt; font-weight: 700; }
+  .grand-val { font-size: 13pt; font-weight: 900; font-family: 'Courier New', monospace; }
 
   /* ── Footer ── */
-  .footer { margin-top: 14px; text-align: center; font-size: 8pt; color: #aaa; border-top: 1px solid #eee; padding-top: 6px; }
+  .footer { text-align: center; font-size: 7pt; color: #bbb; margin-top: 10px;
+            border-top: 1px solid #eee; padding-top: 5px; }
 
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -933,39 +989,55 @@ export class ReceiptService {
 </head>
 <body>
 
-<div class="hdr">
+<div class="page-hdr">
   <div class="app-name">MOIFY</div>
-  <div class="app-slogan">Smart Digital Wedding Gift Ledger</div>
-  <div class="event-title">${cfg.emoji} ${eventTitle}</div>
-  <div class="event-meta">
-    ${event.family_name ? `<span>&#128106; ${e(event.family_name)}</span>` : ''}
-    ${event.venue       ? `<span>&#128205; ${e(event.venue)}${event.city ? ', ' + e(event.city) : ''}</span>` : ''}
-    <span>&#128197; ${new Date(event.event_date).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</span>
+  <div class="app-sub">Smart Digital Wedding Gift Ledger</div>
+  <div class="ev-title">${cfg.emoji} ${eventTitle}</div>
+  <div class="ev-meta">
+    ${event.family_name ? `<span>${esc(event.family_name)}</span>` : ''}
+    <span>${eventDate}</span>
+    ${event.venue ? `<span>${esc(event.venue)}${event.city ? ', ' + esc(event.city) : ''}</span>` : ''}
   </div>
-  <div class="side-badge">${sideLabel} &mdash; ${filtered.length} ${filtered.length === 1 ? 'Guest' : 'Guests'}</div>
+  <div class="print-info">Moi Table Register &nbsp;&bull;&nbsp; Printed: ${now} &nbsp;&bull;&nbsp; Total: ${entries.length} guests</div>
 </div>
 
-<table>
-  <thead>
-    <tr>
-      <th class="c" style="width:42px">S.No</th>
-      <th>Name</th>
-      <th>Relationship</th>
-      <th>City</th>
-      <th class="c">Payment</th>
-      <th class="amt">Amount</th>
-    </tr>
-  </thead>
-  <tbody>${rows}</tbody>
-  <tfoot>
-    <tr>
-      <td colspan="5" class="lbl">Total &mdash; ${filtered.length} ${filtered.length === 1 ? 'guest' : 'guests'}</td>
-      <td class="total-val">${fmt(total)}</td>
-    </tr>
-  </tfoot>
-</table>
+<div class="summary-strip">
+  <div class="sum-chip" style="border-color:#4a148c">
+    <div class="sv" style="color:#4a148c">${entries.length}</div>
+    <div class="sl">Total Guests</div>
+  </div>
+  <div class="sum-chip" style="border-color:#1565c0">
+    <div class="sv" style="color:#1565c0">${groomEntries.length}</div>
+    <div class="sl">${esc(cfg.sideALabel)}</div>
+  </div>
+  <div class="sum-chip" style="border-color:#880e4f">
+    <div class="sv" style="color:#880e4f">${brideEntries.length}</div>
+    <div class="sl">${esc(cfg.sideBLabel)}</div>
+  </div>
+  ${bothEntries.length > 0 ? `
+  <div class="sum-chip" style="border-color:#1b5e20">
+    <div class="sv" style="color:#1b5e20">${bothEntries.length}</div>
+    <div class="sl">Both</div>
+  </div>` : ''}
+  <div class="sum-chip" style="border-color:#222">
+    <div class="sv">${fmt(grandTotal)}</div>
+    <div class="sl">Grand Total</div>
+  </div>
+</div>
 
-<div class="footer">Generated by Moify &nbsp;|&nbsp; ${now}</div>
+${buildSection(cfg.sideALabel + ' Side', '#1565c0', '#e3f2fd', groomEntries, groomTotal)}
+${buildSection(cfg.sideBLabel + ' Side', '#880e4f', '#fce4ec', brideEntries, brideTotal)}
+${bothEntries.length > 0 ? buildSection('Both', '#1b5e20', '#e8f5e9', bothEntries, bothTotal) : ''}
+
+<div class="grand-bar">
+  <div class="grand-lbl">Grand Total &mdash; ${entries.length} ${entries.length === 1 ? 'Guest' : 'Guests'}</div>
+  <div class="grand-val">${fmt(grandTotal)}</div>
+</div>
+
+<div class="footer">
+  ${eventTitle} &mdash; ${esc(cfg.label)} Moi Table Register &mdash; Moify
+</div>
+
 </body>
 </html>`;
   }

@@ -146,7 +146,8 @@ export class WeddingDetailComponent implements OnInit {
         this.snackBar.open('Moi recorded! Printing receipt... 🖨️', 'Close', {
           duration: 4000, panelClass: 'success-snackbar',
         });
-        this.receiptService.printReceipt(entry, this.event()!, this.paperSize());
+        const receiptNo = (this.event()?.moi_count ?? 0) + 1;
+        this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo);
         this.moiForm.reset(this.defaultMoiValues);
         this.submitting.set(false);
         this.loadEvent();
@@ -161,7 +162,9 @@ export class WeddingDetailComponent implements OnInit {
 
   printEntry(entry: MoiEntry): void {
     if (this.event()) {
-      this.receiptService.printReceipt(entry, this.event()!, this.paperSize());
+      const idx = this.entries().findIndex(e => e.id === entry.id);
+      const receiptNo = idx >= 0 ? idx + 1 : undefined;
+      this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo);
     }
   }
 

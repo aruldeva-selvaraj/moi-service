@@ -32,4 +32,12 @@ export class EventService {
   getReport(id: number): Observable<EventReport> {
     return this.http.get<EventReport>(`${this.baseUrl}/${id}/report`);
   }
+
+  approve(id: number): Observable<Event> {
+    return this.http.patch<Event>(`${this.baseUrl}/${id}/approve`, {});
+  }
+
+  reject(id: number): Observable<{success: boolean}> {
+    return this.http.patch<{success: boolean}>(`${this.baseUrl}/${id}/reject`, {});
+  }
 }

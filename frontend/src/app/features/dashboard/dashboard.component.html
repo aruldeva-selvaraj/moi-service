@@ -8,13 +8,24 @@
     <app-loading-spinner message="Loading dashboard..." />
   } @else {
 
-    <!-- Event Selector Row -->
+    <!-- Pending Approvals Alert (admin) -->
+    @if (auth.isAdmin() && pendingCount() > 0) {
+      <div class="pending-alert">
+        <mat-icon>pending_actions</mat-icon>
+        <span>
+          <strong>{{ pendingCount() }}</strong> event(s) awaiting your approval.
+        </span>
+        <a mat-stroked-button routerLink="/events" class="pending-alert-btn">Review Now →</a>
+      </div>
+    }
+
+    <!-- Event Selector Row — only approved events -->
     <div class="event-selector-row">
       <mat-form-field appearance="outline" class="event-select">
-        <mat-label>{{ auth.isAdmin() ? 'Select Event (All Users)' : 'Select My Event' }}</mat-label>
+        <mat-label>{{ auth.isAdmin() ? 'Select Approved Event' : 'Select My Event' }}</mat-label>
         <mat-select [value]="selectedEventId()" (selectionChange)="onEventChange($event.value)">
           <mat-option [value]="null">— All Events —</mat-option>
-          @for (ev of events(); track ev.id) {
+          @for (ev of approvedEvents(); track ev.id) {
             <mat-option [value]="ev.id">
               {{ getEventEmoji(ev) }} {{ getEventTitle(ev) }} · {{ ev.event_date | date:'dd MMM yyyy' }}
             </mat-option>
@@ -157,16 +168,16 @@
       <a mat-button routerLink="/events" color="primary">View All →</a>
     </div>
 
-    @if (events().length === 0) {
+    @if (approvedEvents().length === 0) {
       <app-empty-state
         icon="🎉"
-        title="No events yet"
-        message="Start by adding a new event — wedding, birthday, baby shower, and more"
+        title="No approved events yet"
+        [message]="auth.isAdmin() ? 'Approve pending events or add a new one to get started' : 'Start by adding a new event — it will appear here once approved'"
         actionLabel="Add First Event"
         actionLink="/events/new" />
     } @else {
       <div class="grid-3">
-        @for (ev of events().slice(0, 6); track ev.id) {
+        @for (ev of approvedEvents().slice(0, 6); track ev.id) {
           <div class="wedding-card" [routerLink]="['/events', ev.id]">
             <div class="card-header">
               <div>

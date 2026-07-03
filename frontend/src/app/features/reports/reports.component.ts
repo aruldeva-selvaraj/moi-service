@@ -9,7 +9,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { EventService } from '../../core/services/event.service';
 import { MoiService } from '../../core/services/moi.service';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/models/event.model';
@@ -23,7 +22,7 @@ import { StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent } from 
   imports: [
     CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe, PercentPipe,
     MatFormFieldModule, MatSelectModule, MatButtonModule, MatIconModule,
-    MatProgressSpinnerModule, MatTableModule, MatTooltipModule, MatButtonToggleModule,
+    MatProgressSpinnerModule, MatTableModule, MatTooltipModule,
     StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent,
   ],
   templateUrl: './reports.component.html',
@@ -40,7 +39,6 @@ export class ReportsComponent implements OnInit {
   relationshipData = signal<RelationshipReport[]>([]);
   allEntries = signal<MoiEntry[]>([]);
   selectedEventId: number | null = null;
-  printSide: 'groom' | 'bride' | 'both' = 'both';
 
   ngOnInit() {
     this.eventService.getAll().subscribe({
@@ -121,11 +119,7 @@ export class ReportsComponent implements OnInit {
   printTableReport(): void {
     const ev = this.getSelectedEvent();
     if (ev && this.allEntries().length > 0) {
-      this.receiptService.printEntryTable(this.allEntries(), ev, this.printSide);
+      this.receiptService.printEntryTable(this.allEntries(), ev);
     }
-  }
-
-  printReport() {
-    window.print();
   }
 }

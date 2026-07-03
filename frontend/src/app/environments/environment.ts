@@ -1,5 +1,4 @@
 export const environment = {
   production: false,
-  backend: 'python' as 'python' | 'node',
-  apiUrl: 'http://localhost:8000'
+  apiUrl: 'http://localhost:3000'
 };

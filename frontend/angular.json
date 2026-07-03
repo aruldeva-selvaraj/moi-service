@@ -57,39 +57,7 @@
               ],
               "outputHashing": "all"
             },
-            "production-node": {
-              "fileReplacements": [
-                {
-                  "replace": "src/app/environments/environment.ts",
-                  "with": "src/app/environments/environment.prod-node.ts"
-                }
-              ],
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
-                }
-              ],
-              "outputHashing": "all"
-            },
             "development": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true
-            },
-            "node": {
-              "fileReplacements": [
-                {
-                  "replace": "src/app/environments/environment.ts",
-                  "with": "src/app/environments/environment.node.ts"
-                }
-              ],
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
@@ -103,22 +71,13 @@
             "production": {
               "buildTarget": "moi-wedding:build:production"
             },
-            "production-node": {
-              "buildTarget": "moi-wedding:build:production-node"
-            },
             "development": {
               "buildTarget": "moi-wedding:build:development"
-            },
-            "node": {
-              "buildTarget": "moi-wedding:build:node"
             }
           },
           "defaultConfiguration": "development"
         }
       }
     }
-  },
-  "cli": {
-    "analytics": false
   }
 }

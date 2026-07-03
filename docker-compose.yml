@@ -17,30 +17,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Python / FastAPI backend ─────────────────────────────
-  api-python:
-    profiles: ["python"]
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: moi_api_python
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-moi_wedding_db}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:3000}
-    ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-
-  # ── Node.js / LoopBack 4 backend ─────────────────────────
-  api-node:
-    profiles: ["node"]
+  api:
     build:
       context: ./backend-node
       dockerfile: Dockerfile
-    container_name: moi_api_node
+    container_name: moi_api
     restart: unless-stopped
     environment:
       DB_HOST: db
@@ -51,7 +32,9 @@ services:
       DB_SSL: "false"
       PORT: 3000
       HOST: "0.0.0.0"
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:3000}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-moify_jwt_secret_change_in_prod}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
     ports:
       - "3000:3000"
     depends_on:

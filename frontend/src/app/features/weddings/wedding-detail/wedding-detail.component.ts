@@ -18,6 +18,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { EventService } from '../../../core/services/event.service';
 import { MoiService } from '../../../core/services/moi.service';
 import { ReceiptService, PaperSize } from '../../../core/services/receipt.service';
+import { VoiceRecognitionService } from '../../../core/services/voice-recognition.service';
 import { Event, getEventConfig, getEventTitle, EventTypeConfig } from '../../../core/models/event.model';
 import { MoiEntry, MoiEntryCreate, MoiFilter } from '../../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent } from '../../../shared/components/index';
@@ -43,6 +44,7 @@ export class WeddingDetailComponent implements OnInit {
   private readonly receiptService = inject(ReceiptService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly fb = inject(FormBuilder);
+  readonly voice = inject(VoiceRecognitionService);
 
   eventId!: number;
   loading = signal(true);
@@ -209,5 +211,37 @@ export class WeddingDetailComponent implements OnInit {
 
   printMoiList() {
     window.print();
+  }
+
+  startVoice(field: 'guest_name' | 'city' | 'amount'): void {
+    if (this.voice.activeField() === field) {
+      this.voice.stopListening();
+      return;
+    }
+
+    const onError = (msg: string) => {
+      this.snackBar.open(msg, 'Close', { duration: 4000, panelClass: 'error-snackbar' });
+    };
+
+    this.voice.startListening(
+      field,
+      (transcript) => {
+        if (field === 'amount') {
+          const num = this.voice.parseAmount(transcript);
+          if (num !== null) {
+            this.moiForm.get('amount')?.setValue(num);
+            this.snackBar.open(`Amount set: ₹${num}`, 'Close', { duration: 2000, panelClass: 'success-snackbar' });
+          } else {
+            onError(`Could not parse amount from: "${transcript}"`);
+          }
+        } else {
+          this.moiForm.get(field)?.setValue(transcript);
+          this.snackBar.open(`${field === 'guest_name' ? 'Guest name' : 'City'} set: ${transcript}`, 'Close', {
+            duration: 2000, panelClass: 'success-snackbar',
+          });
+        }
+      },
+      onError
+    );
   }
 }

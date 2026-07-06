@@ -73,6 +73,12 @@
                   <mat-label>Guest Name *</mat-label>
                   <input matInput formControlName="guest_name" placeholder="Enter guest's name">
                   <mat-icon matPrefix>person</mat-icon>
+                  <button mat-icon-button matSuffix type="button"
+                    [class.voice-active]="voice.activeField() === 'guest_name'"
+                    [matTooltip]="voice.activeField() === 'guest_name' ? 'Listening… click to stop' : 'Voice input for Guest Name'"
+                    (click)="startVoice('guest_name')">
+                    <mat-icon>{{ voice.activeField() === 'guest_name' ? 'mic' : 'mic_none' }}</mat-icon>
+                  </button>
                   @if (moiForm.get('guest_name')?.hasError('required') && moiForm.get('guest_name')?.touched) {
                     <mat-error>Guest name is required</mat-error>
                   }
@@ -90,6 +96,12 @@
                   <mat-label>Amount (₹) *</mat-label>
                   <input matInput type="number" formControlName="amount" placeholder="0" min="1">
                   <mat-icon matPrefix>currency_rupee</mat-icon>
+                  <button mat-icon-button matSuffix type="button"
+                    [class.voice-active]="voice.activeField() === 'amount'"
+                    [matTooltip]="voice.activeField() === 'amount' ? 'Listening… click to stop' : 'Voice input for Amount (say the number)'"
+                    (click)="startVoice('amount')">
+                    <mat-icon>{{ voice.activeField() === 'amount' ? 'mic' : 'mic_none' }}</mat-icon>
+                  </button>
                   @if (moiForm.get('amount')?.hasError('required') && moiForm.get('amount')?.touched) {
                     <mat-error>Amount is required</mat-error>
                   }
@@ -141,6 +153,12 @@
                   <mat-label>Guest City</mat-label>
                   <input matInput formControlName="city" placeholder="e.g., Chennai">
                   <mat-icon matPrefix>location_city</mat-icon>
+                  <button mat-icon-button matSuffix type="button"
+                    [class.voice-active]="voice.activeField() === 'city'"
+                    [matTooltip]="voice.activeField() === 'city' ? 'Listening… click to stop' : 'Voice input for City'"
+                    (click)="startVoice('city')">
+                    <mat-icon>{{ voice.activeField() === 'city' ? 'mic' : 'mic_none' }}</mat-icon>
+                  </button>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -163,6 +181,17 @@
                   <mat-icon matPrefix>notes</mat-icon>
                 </mat-form-field>
               </div>
+
+              @if (voice.isListening()) {
+                <div class="voice-listening-banner">
+                  <span class="voice-pulse-dot"></span>
+                  <mat-icon>mic</mat-icon>
+                  Listening for <strong>{{ voice.activeField() === 'guest_name' ? 'Guest Name' : voice.activeField() === 'city' ? 'City' : 'Amount' }}</strong>… speak clearly
+                  <button mat-icon-button type="button" matTooltip="Stop listening" (click)="voice.stopListening()">
+                    <mat-icon>mic_off</mat-icon>
+                  </button>
+                </div>
+              }
 
               <div class="form-actions">
                 <div class="paper-size-selector">

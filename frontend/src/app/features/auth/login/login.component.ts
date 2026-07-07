@@ -24,6 +24,20 @@ export class LoginComponent implements OnInit, OnDestroy {
   petals: { left: number; delay: number; duration: number; size: number; color: string }[] = [];
   private redirectTimer?: ReturnType<typeof setTimeout>;
 
+  // ── Forgot password state ──────────────────────────────────────────────────
+  forgotStep: 'off' | 'lookup' | 'confirm' | 'done' = 'off';
+  fpIdentifier = '';
+  fpMaskedName = '';
+  fpAdminUsername = '';
+  fpAdminPassword = '';
+  fpNewPassword = '';
+  fpConfirmPassword = '';
+  fpShowAdminPw = false;
+  fpShowNewPw = false;
+  fpShowConfirmPw = false;
+  fpLoading = false;
+  fpError = '';
+
   ngOnInit() {
     if (this.auth.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
@@ -75,5 +89,72 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.loginState = 'idle';
       this.errorMsg = '';
     }
+  }
+
+  // ── Forgot password methods ────────────────────────────────────────────────
+  showForgot() {
+    this.forgotStep = 'lookup';
+    this.fpIdentifier = '';
+    this.fpMaskedName = '';
+    this.fpAdminUsername = '';
+    this.fpAdminPassword = '';
+    this.fpNewPassword = '';
+    this.fpConfirmPassword = '';
+    this.fpError = '';
+  }
+
+  backToLogin() {
+    this.forgotStep = 'off';
+    this.fpError = '';
+  }
+
+  async lookupUser() {
+    if (!this.fpIdentifier.trim()) {
+      this.fpError = 'Please enter your username or mobile number.';
+      return;
+    }
+    this.fpLoading = true;
+    this.fpError = '';
+    const res = await this.auth.lookupUser(this.fpIdentifier.trim());
+    this.fpLoading = false;
+    if (!res.found) {
+      this.fpError = 'No account found with that username or mobile number.';
+      return;
+    }
+    this.fpMaskedName = res.masked_name ?? '';
+    this.forgotStep = 'confirm';
+  }
+
+  async resetPassword() {
+    if (!this.fpAdminUsername.trim() || !this.fpAdminPassword) {
+      this.fpError = 'Enter admin username and password.';
+      return;
+    }
+    if (!this.fpNewPassword) {
+      this.fpError = 'Enter a new password.';
+      return;
+    }
+    if (this.fpNewPassword.length < 6) {
+      this.fpError = 'New password must be at least 6 characters.';
+      return;
+    }
+    if (this.fpNewPassword !== this.fpConfirmPassword) {
+      this.fpError = 'Passwords do not match.';
+      return;
+    }
+    this.fpLoading = true;
+    this.fpError = '';
+    const res = await this.auth.adminResetPassword(
+      this.fpAdminUsername.trim(),
+      this.fpAdminPassword,
+      this.fpIdentifier.trim(),
+      this.fpNewPassword,
+    );
+    this.fpLoading = false;
+    if (!res.ok) {
+      this.fpError = res.error ?? 'Reset failed. Please try again.';
+      return;
+    }
+    this.forgotStep = 'done';
   }
 }

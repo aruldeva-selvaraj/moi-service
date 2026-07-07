@@ -13,7 +13,7 @@ import { EventService } from '../../core/services/event.service';
 import { MoiService } from '../../core/services/moi.service';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/models/event.model';
 import { RelationshipReport, MoiEntry } from '../../core/models/moi.model';
-import { ReceiptService } from '../../core/services/receipt.service';
+import { ReceiptService, PrintSide } from '../../core/services/receipt.service';
 import { StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../shared/components/index';
 
 @Component({
@@ -39,6 +39,7 @@ export class ReportsComponent implements OnInit {
   relationshipData = signal<RelationshipReport[]>([]);
   allEntries = signal<MoiEntry[]>([]);
   selectedEventId: number | null = null;
+  showPrintModal = signal(false);
 
   ngOnInit() {
     this.eventService.getAll().subscribe({
@@ -94,17 +95,25 @@ export class ReportsComponent implements OnInit {
     }
   }
 
-  printGuestList(): void {
-    const ev = this.getSelectedEvent();
-    if (ev && this.allEntries().length > 0) {
-      this.receiptService.printGuestList(this.allEntries(), ev);
+  openA4PrintModal(): void {
+    if (this.allEntries().length > 0) {
+      this.showPrintModal.set(true);
     }
   }
 
-  printConsolidated(): void {
+  printA4WithSide(side: PrintSide): void {
+    this.showPrintModal.set(false);
     const ev = this.getSelectedEvent();
-    if (ev && this.allEntries().length > 0) {
-      this.receiptService.printConsolidatedSheet(this.allEntries(), ev);
+    if (ev) {
+      this.receiptService.printA4Sheet(this.allEntries(), ev, side);
+    }
+  }
+
+  downloadA4WithSide(side: PrintSide): void {
+    this.showPrintModal.set(false);
+    const ev = this.getSelectedEvent();
+    if (ev) {
+      this.receiptService.downloadA4Sheet(this.allEntries(), ev, side);
     }
   }
 
@@ -113,13 +122,6 @@ export class ReportsComponent implements OnInit {
     const report = this.eventReport();
     if (ev && report) {
       this.receiptService.printEventReport(report, ev);
-    }
-  }
-
-  printTableReport(): void {
-    const ev = this.getSelectedEvent();
-    if (ev && this.allEntries().length > 0) {
-      this.receiptService.printEntryTable(this.allEntries(), ev);
     }
   }
 }

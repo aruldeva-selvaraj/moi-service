@@ -17,7 +17,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { EventService } from '../../../core/services/event.service';
 import { MoiService } from '../../../core/services/moi.service';
-import { ReceiptService, PaperSize } from '../../../core/services/receipt.service';
+import { ReceiptService, PaperSize, PrintSide } from '../../../core/services/receipt.service';
 import { VoiceRecognitionService } from '../../../core/services/voice-recognition.service';
 import { Event, getEventConfig, getEventTitle, EventTypeConfig } from '../../../core/models/event.model';
 import { MoiEntry, MoiEntryCreate, MoiFilter } from '../../../core/models/moi.model';
@@ -54,6 +54,7 @@ export class WeddingDetailComponent implements OnInit {
   entries = signal<MoiEntry[]>([]);
   totalEntries = signal(0);
   paperSize = signal<PaperSize>('80');
+  showPrintModal = signal(false);
 
   eventConfig = computed<EventTypeConfig>(() => getEventConfig(this.event()?.event_type ?? 'wedding'));
   eventTitle = computed(() => {
@@ -197,15 +198,23 @@ export class WeddingDetailComponent implements OnInit {
     return { groom: 'badge-groom', bride: 'badge-bride', both: 'badge-both' }[side] || '';
   }
 
-  printGuestListA4(): void {
-    if (this.event()) {
-      this.receiptService.printGuestList(this.entries(), this.event()!);
+  openA4PrintModal(): void {
+    if (this.entries().length > 0) {
+      this.showPrintModal.set(true);
     }
   }
 
-  printConsolidatedA4(): void {
+  printA4WithSide(side: PrintSide): void {
+    this.showPrintModal.set(false);
     if (this.event()) {
-      this.receiptService.printConsolidatedSheet(this.entries(), this.event()!);
+      this.receiptService.printA4Sheet(this.entries(), this.event()!, side);
+    }
+  }
+
+  downloadA4WithSide(side: PrintSide): void {
+    this.showPrintModal.set(false);
+    if (this.event()) {
+      this.receiptService.downloadA4Sheet(this.entries(), this.event()!, side);
     }
   }
 

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, AfterViewInit, DOCUMENT } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter, map } from 'rxjs/operators';
@@ -11,28 +11,13 @@ import { ThemeService } from './core/services/theme.service';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, CommonModule, NavComponent, ThemePickerComponent],
-  template: `
-    @if (!isLoginPage()) {
-      <app-nav />
-    }
-    <main [class.main-content]="!isLoginPage()">
-      <router-outlet />
-    </main>
-    @if (!isLoginPage()) {
-      <app-theme-picker />
-    }
-  `,
-  styles: [`
-    .main-content {
-      min-height: calc(100vh - 64px);
-      background-color: var(--bg-page);
-      transition: background-color 0.4s ease;
-    }
-  `]
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
   private _theme = inject(ThemeService);
   private router = inject(Router);
+  private doc = inject(DOCUMENT);
 
   isLoginPage = toSignal(
     this.router.events.pipe(
@@ -41,4 +26,12 @@ export class AppComponent {
     ),
     { initialValue: false }
   );
+
+  ngAfterViewInit(): void {
+    const loader = this.doc.getElementById('app-init-loader');
+    if (loader) {
+      loader.classList.add('hidden');
+      setTimeout(() => loader.remove(), 450);
+    }
+  }
 }

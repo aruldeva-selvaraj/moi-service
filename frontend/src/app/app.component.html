@@ -1,0 +1,9 @@
+@if (!isLoginPage()) {
+  <app-nav />
+}
+<main [class.main-content]="!isLoginPage()">
+  <router-outlet />
+</main>
+@if (!isLoginPage()) {
+  <app-theme-picker />
+}

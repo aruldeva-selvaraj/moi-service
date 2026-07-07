@@ -4,6 +4,7 @@ import { MoiEntry } from '../models/moi.model';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../models/event.model';
 
 export type PaperSize = '58' | '80';
+export type PrintSide = 'groom' | 'bride' | 'both' | 'all';
 
 @Injectable({ providedIn: 'root' })
 export class ReceiptService {
@@ -38,8 +39,16 @@ export class ReceiptService {
     }, 400);
   }
 
-  printConsolidatedSheet(entries: MoiEntry[], event: Event): void {
-    const html = this.buildConsolidatedHtml(entries, event);
+  printA4Sheet(entries: MoiEntry[], event: Event, side: PrintSide = 'all'): void {
+    this.openA4Window(entries, event, side, 'print');
+  }
+
+  downloadA4Sheet(entries: MoiEntry[], event: Event, side: PrintSide = 'all'): void {
+    this.openA4Window(entries, event, side, 'download');
+  }
+
+  private openA4Window(entries: MoiEntry[], event: Event, side: PrintSide, mode: 'print' | 'download'): void {
+    const html = this.buildA4Html(entries, event, side, mode);
     const win = this.doc.defaultView?.open(
       '', '_blank',
       `width=960,height=750,toolbar=no,location=no,directories=no,status=no,menubar=yes,scrollbars=yes`
@@ -60,69 +69,13 @@ export class ReceiptService {
     win.document.write(html);
     win.document.close();
     win.focus();
-    setTimeout(() => {
-      win.print();
-      win.onafterprint = () => win.close();
-      setTimeout(() => { try { win.close(); } catch { /* already closed */ } }, 30000);
-    }, 400);
-  }
-
-  printGuestList(entries: MoiEntry[], event: Event): void {
-    const html = this.buildGuestListHtml(entries, event);
-    const win = this.doc.defaultView?.open(
-      '', '_blank',
-      `width=1100,height=750,toolbar=no,location=no,directories=no,status=no,menubar=yes,scrollbars=yes`
-    );
-    if (!win) {
-      const frame = this.doc.createElement('iframe');
-      frame.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:0;';
-      this.doc.body.appendChild(frame);
-      frame.contentDocument!.write(html);
-      frame.contentDocument!.close();
-      frame.contentWindow?.focus();
+    if (mode === 'print') {
       setTimeout(() => {
-        frame.contentWindow?.print();
-        setTimeout(() => frame.remove(), 1000);
-      }, 300);
-      return;
+        win.print();
+        win.onafterprint = () => win.close();
+        setTimeout(() => { try { win.close(); } catch { /* already closed */ } }, 30000);
+      }, 400);
     }
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    setTimeout(() => {
-      win.print();
-      win.onafterprint = () => win.close();
-      setTimeout(() => { try { win.close(); } catch { /* already closed */ } }, 30000);
-    }, 400);
-  }
-
-  printEntryTable(entries: MoiEntry[], event: Event): void {
-    const html = this.buildEntryTableHtml(entries, event);
-    const win = this.doc.defaultView?.open(
-      '', '_blank',
-      `width=960,height=750,toolbar=no,location=no,directories=no,status=no,menubar=yes,scrollbars=yes`
-    );
-    if (!win) {
-      const frame = this.doc.createElement('iframe');
-      frame.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:0;';
-      this.doc.body.appendChild(frame);
-      frame.contentDocument!.write(html);
-      frame.contentDocument!.close();
-      frame.contentWindow?.focus();
-      setTimeout(() => {
-        frame.contentWindow?.print();
-        setTimeout(() => frame.remove(), 1000);
-      }, 300);
-      return;
-    }
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    setTimeout(() => {
-      win.print();
-      win.onafterprint = () => win.close();
-      setTimeout(() => { try { win.close(); } catch { /* already closed */ } }, 30000);
-    }, 400);
   }
 
   printEventReport(report: EventReport, event: Event): void {
@@ -149,6 +102,434 @@ export class ReceiptService {
       win.onafterprint = () => win.close();
       setTimeout(() => { try { win.close(); } catch { /* already closed */ } }, 30000);
     }, 500);
+  }
+
+  private buildA4Html(entries: MoiEntry[], event: Event, side: PrintSide, mode: 'print' | 'download' = 'print'): string {
+    const cfg = getEventConfig(event.event_type);
+    const title = getEventTitle(event);
+
+    const esc = (s: string | number | undefined): string =>
+      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    const fmt = (n: number) => new Intl.NumberFormat('en-IN', {
+      style: 'currency', currency: 'INR', minimumFractionDigits: 0,
+    }).format(n);
+
+    const payLabel: Record<string, string> = { cash: 'Cash', cheque: 'Cheque', online: 'Online', dd: 'DD' };
+
+    const sideLabel =
+      side === 'groom' ? cfg.sideALabel :
+      side === 'bride' ? cfg.sideBLabel :
+      side === 'both'  ? 'Both' : 'All Guests';
+
+    const filtered = side === 'all' ? entries : entries.filter(x => x.side === side);
+    const showSideCol = side === 'all';
+
+    const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    });
+    const printDate = new Date().toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+    });
+
+    const grandTotal = filtered.reduce((s, x) => s + x.amount, 0);
+    const totalQty = filtered.length;
+
+    const sideDisplay = (s: string) =>
+      s === 'groom' ? cfg.sideALabel : s === 'bride' ? cfg.sideBLabel : 'Both';
+
+    const rows = filtered.map((x, i) => `
+      <tr>
+        <td class="center">${i + 1}</td>
+        <td class="col-name">
+          ${esc(x.guest_name)}
+          ${x.phone ? `<span class="phone">${esc(x.phone)}</span>` : ''}
+        </td>
+        <td class="col-rel">${esc(x.relationship || '')}</td>
+        <td>${esc(x.city || '')}</td>
+        ${showSideCol ? `<td class="center">${esc(sideDisplay(x.side))}</td>` : ''}
+        <td class="right col-amt">${esc(fmt(x.amount))}</td>
+        <td class="center">${payLabel[x.payment_mode] ?? x.payment_mode}</td>
+      </tr>`).join('');
+
+    const emptyCount = Math.max(0, 15 - filtered.length);
+    const blankRows = Array(emptyCount).fill(null).map((_, i) => `
+      <tr class="empty-row">
+        <td class="center">${filtered.length + i + 1}</td>
+        <td></td><td></td><td></td>
+        ${showSideCol ? '<td></td>' : ''}
+        <td></td><td></td>
+      </tr>`).join('');
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Moi Register — ${esc(title)}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @page { size: A4 portrait; margin: 12mm 10mm; }
+
+    html {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    @media print {
+      @page { margin: 12mm 10mm; }
+      html, body { margin: 0; padding: 0; }
+      .download-bar { display: none !important; }
+    }
+
+    /* ── Download toolbar (screen only) ── */
+    .download-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: #4a148c;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .download-bar span { opacity: 0.9; }
+
+    .download-bar button {
+      background: #fff;
+      color: #4a148c;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .download-bar button:hover { background: #f3e5f5; }
+
+    body.has-download-bar .page { margin-top: 56px; }
+
+    body {
+      font-family: 'Segoe UI', 'Noto Sans', Arial, sans-serif;
+      font-size: 12px;
+      color: #222;
+      background: #fff;
+    }
+
+    .page {
+      width: 190mm;
+      min-height: 270mm;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      border-bottom: 3px solid #4a148c;
+      padding-bottom: 10px;
+      margin-bottom: 6px;
+    }
+
+    .header-info { flex: 1; }
+
+    .app-name {
+      font-size: 28px;
+      font-weight: 800;
+      color: #4a148c;
+      letter-spacing: 1.5px;
+      line-height: 1.1;
+    }
+
+    .app-tagline {
+      font-size: 12px;
+      color: #555;
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .event-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-top: 6px;
+    }
+
+    .event-meta {
+      font-size: 10.5px;
+      color: #444;
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    .header-right { text-align: right; }
+
+    .header-right div {
+      font-size: 11px;
+      color: #333;
+      margin-bottom: 3px;
+    }
+
+    .header-right strong { color: #4a148c; }
+
+    /* ── Title strip ── */
+    .title-strip {
+      background: #4a148c;
+      color: #fff;
+      text-align: center;
+      padding: 7px 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin: 10px 0;
+    }
+
+    /* ── Meta row ── */
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0 8px;
+      font-size: 11.5px;
+    }
+
+    .meta-row strong { color: #4a148c; }
+
+    /* ── Table ── */
+    .reg-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-bottom: 1px solid #bbb;
+    }
+
+    .reg-table thead th,
+    .reg-table tbody td {
+      border-top: none;
+      border-bottom: none;
+      border-left: 1px solid #bbb;
+      padding: 4px 6px;
+      font-size: 11px;
+      line-height: 1.2;
+      vertical-align: middle;
+    }
+
+    .reg-table thead th:last-child,
+    .reg-table tbody td:last-child {
+      border-right: 1px solid #bbb;
+    }
+
+    .reg-table thead th {
+      background: #4a148c;
+      color: #fff;
+      font-weight: 600;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 6px;
+    }
+
+    .reg-table .empty-row td { height: 26px; padding: 7px 8px; }
+
+    .phone {
+      display: block;
+      font-size: 9px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .col-name { font-weight: 500; }
+    .col-rel  { font-style: italic; color: #555; }
+    .col-amt  { font-weight: 700; font-family: 'Courier New', Courier, monospace; }
+
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6px 0 10px;
+      padding: 6px 8px;
+      background: #f8f9ff;
+      border-top: 1px solid #bbb;
+      border-bottom: 1px solid #bbb;
+      font-size: 11px;
+    }
+
+    .center { text-align: center; }
+    .right  { text-align: right; }
+
+    /* ── Total section ── */
+    .total-section {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0;
+    }
+
+    .total-box {
+      width: 260px;
+      border: 2px solid #4a148c;
+      border-top: none;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      line-height: 1.3;
+      border-top: 1px solid #ddd;
+    }
+
+    .total-row.grand {
+      background: #4a148c;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 10px;
+      border-top: none;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 30px;
+      padding-top: 10px;
+    }
+
+    .footer-left { font-size: 9.5px; color: #888; }
+    .footer-right { text-align: center; }
+
+    .stamp-area {
+      width: 180px;
+      height: 60px;
+      border-bottom: 2px solid #333;
+      margin-bottom: 4px;
+    }
+
+    .footer-right p {
+      font-size: 11px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .footer-right .for-label {
+      font-size: 10px;
+      color: #666;
+      font-weight: 400;
+      margin-bottom: 2px;
+    }
+
+    /* ── Decorative bottom bar ── */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4a148c 0%, #7b1fa2 50%, #4a148c 100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="header-info">
+        <div class="app-name">MOIFY</div>
+        <div class="app-tagline">Smart Digital Gift Ledger</div>
+        <div class="event-name">${cfg.emoji} ${esc(title)}</div>
+        <div class="event-meta">
+          ${eventDate}${event.venue ? ' &bull; ' + esc(event.venue) : ''}${event.city ? ', ' + esc(event.city) : ''}
+          ${event.family_name ? '<br>' + esc(event.family_name) : ''}
+        </div>
+      </div>
+      <div class="header-right">
+        <div><strong>Printed:</strong> ${printDate}</div>
+        <div><strong>Side:</strong> ${esc(sideLabel)}</div>
+        <div><strong>Total Guests:</strong> ${totalQty}</div>
+        <div><strong>Grand Total:</strong> ${esc(fmt(grandTotal))}</div>
+      </div>
+    </div>
+
+    <div class="title-strip">MOI GUEST REGISTER &mdash; ${esc(sideLabel)}</div>
+
+    <div class="meta-row">
+      <span><strong>Event:</strong> ${esc(title)}</span>
+      <span><strong>Date:</strong> ${eventDate}</span>
+    </div>
+
+    <table class="reg-table">
+      <thead>
+        <tr>
+          <th style="width:30px">S.No</th>
+          <th style="min-width:150px">Guest Name</th>
+          <th style="width:100px">Relationship</th>
+          <th style="width:80px">City</th>
+          ${showSideCol ? '<th style="width:70px">Side</th>' : ''}
+          <th style="width:90px">Amount</th>
+          <th style="width:70px">Payment</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        ${blankRows}
+      </tbody>
+    </table>
+
+    <div class="table-footer">
+      <span style="width:60%;text-align:left"><strong>Total</strong></span>
+      <span style="width:40%;text-align:right"><strong>${totalQty} ${totalQty === 1 ? 'Guest' : 'Guests'}</strong></span>
+    </div>
+
+    <div class="total-section">
+      <div class="total-box">
+        <div class="total-row">
+          <span>Total Guests</span>
+          <span>${totalQty}</span>
+        </div>
+        <div class="total-row grand">
+          <span>Grand Total</span>
+          <span>${esc(fmt(grandTotal))}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-left">
+        <p>Generated by Moify &mdash; Smart Digital Gift Ledger</p>
+      </div>
+      <div class="footer-right">
+        <div class="stamp-area"></div>
+        <p class="for-label">For ${esc(title)}</p>
+        <p>Authorized Signatory</p>
+      </div>
+    </div>
+
+    <div class="bottom-bar"></div>
+  </div>
+
+  ${mode === 'download' ? `
+  <div class="download-bar">
+    <span>📄 Your PDF is ready — click <strong>Save as PDF</strong>, then choose <em>Save as PDF</em> as the destination.</span>
+    <button onclick="window.print()">⬇ Save as PDF</button>
+  </div>
+  <script>
+    document.body.classList.add('has-download-bar');
+  </script>` : `
+  <script>
+    window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
+  </script>`}
+</body>
+</html>`;
   }
 
   private buildEventReportHtml(report: EventReport, event: Event): string {
@@ -272,438 +653,6 @@ export class ReceiptService {
 </div>
 
 <div class="footer">Generated by Moify &nbsp;|&nbsp; ${now}</div>
-</body>
-</html>`;
-  }
-
-  private buildGuestListHtml(entries: MoiEntry[], event: Event): string {
-    const cfg = getEventConfig(event.event_type);
-    const title = getEventTitle(event);
-
-    const e = (s: string | number | undefined): string =>
-      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-    const fmt = (n: number) => new Intl.NumberFormat('en-IN', {
-      style: 'currency', currency: 'INR', minimumFractionDigits: 0,
-    }).format(n);
-
-    const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
-
-    const now = new Date();
-    const printDateTime = now.toLocaleString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: true,
-    });
-    const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', {
-      day: '2-digit', month: 'long', year: 'numeric',
-    });
-
-    const sideAEntries = entries.filter(x => x.side === 'groom');
-    const sideBEntries = entries.filter(x => x.side === 'bride');
-    const bothEntries  = entries.filter(x => x.side === 'both');
-    const grandTotal   = entries.reduce((s, x) => s + x.amount, 0);
-    const cashTotal    = entries.filter(x => x.payment_mode === 'cash').reduce((s, x) => s + x.amount, 0);
-    const onlineTotal  = entries.filter(x => x.payment_mode === 'online').reduce((s, x) => s + x.amount, 0);
-    const chequeTotal  = entries.filter(x => x.payment_mode === 'cheque' || x.payment_mode === 'dd').reduce((s, x) => s + x.amount, 0);
-
-    const payLabel: Record<string, string> = { cash: 'Cash', cheque: 'Cheque', online: 'Online', dd: 'DD' };
-
-    const thead = `<thead>
-      <tr>
-        <th class="c-sno">#</th>
-        <th class="c-name">Guest Name / Phone</th>
-        <th class="c-rel">Relationship</th>
-        <th class="c-city">City</th>
-        <th class="c-amt">Amount</th>
-        <th class="c-pay">Payment</th>
-        <th class="c-ref">Ref / Cheque No</th>
-        <th class="c-rcvd">Received By</th>
-        <th class="c-notes">Notes</th>
-        <th class="c-date">Date</th>
-      </tr>
-    </thead>`;
-
-    const buildRows = (list: MoiEntry[]): string => {
-      if (!list.length) {
-        return `<tr><td colspan="10" class="empty-row">No entries</td></tr>`;
-      }
-      return list.map((x, i) => {
-        const ref = x.cheque_number || x.transaction_ref || '';
-        return `<tr>
-          <td class="c-sno">${i + 1}</td>
-          <td class="c-name">
-            <span class="name">${e(x.guest_name)}</span>
-            ${x.phone ? `<span class="phone">${e(x.phone)}</span>` : ''}
-          </td>
-          <td class="c-rel">${e(x.relationship || '')}</td>
-          <td class="c-city">${e(x.city || '')}</td>
-          <td class="c-amt">${e(fmt(x.amount))}</td>
-          <td class="c-pay">${e(payLabel[x.payment_mode] ?? x.payment_mode)}</td>
-          <td class="c-ref">${e(ref)}</td>
-          <td class="c-rcvd">${e(x.received_by || '')}</td>
-          <td class="c-notes">${e(x.notes || '')}</td>
-          <td class="c-date">${e(fmtDate(x.created_at))}</td>
-        </tr>`;
-      }).join('');
-    };
-
-    const buildSection = (
-      label: string, emoji: string,
-      hdrBg: string, subBg: string, accentColor: string,
-      list: MoiEntry[]
-    ): string => {
-      const subtotal = list.reduce((s, x) => s + x.amount, 0);
-      return `
-      <div class="section">
-        <div class="sec-hdr" style="background:${hdrBg}">
-          <span class="sec-title">${emoji} ${label}</span>
-          <span class="sec-meta">${list.length} ${list.length === 1 ? 'guest' : 'guests'} &nbsp;|&nbsp; Sub-total: <b>${e(fmt(subtotal))}</b></span>
-        </div>
-        <table>
-          ${thead}
-          <tbody style="--accent:${accentColor};--sub-bg:${subBg}">
-            ${buildRows(list)}
-            <tr class="sub-total-row" style="border-top-color:${hdrBg}">
-              <td colspan="4" class="total-label">Sub Total (${list.length} ${list.length === 1 ? 'entry' : 'entries'}):</td>
-              <td class="total-val" style="color:${hdrBg}">${e(fmt(subtotal))}</td>
-              <td colspan="5"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>`;
-    };
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Guest List — ${e(title)}</title>
-  <style>
-    @page { size: A4 landscape; margin: 9mm 12mm; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #1a1a1a; background: #fff; }
-
-    .hdr { display: flex; justify-content: space-between; align-items: flex-start;
-           border-bottom: 2.5px solid #1a1a1a; padding-bottom: 3mm; margin-bottom: 3.5mm; }
-    .hdr-left .event-badge { font-size: 8pt; background: #f0f0f0; padding: 1mm 2.5mm;
-                             border-radius: 1mm; display: inline-block; margin-bottom: 1.5mm; }
-    .hdr-left .couple { font-size: 16pt; font-weight: bold; }
-    .hdr-left .heart  { color: #c0392b; }
-    .hdr-left .meta   { font-size: 8pt; color: #555; margin-top: 1.5mm; }
-    .hdr-left .meta span + span::before { content: ' • '; color: #ccc; margin: 0 3px; }
-    .hdr-right { text-align: right; font-size: 7.5pt; color: #888; line-height: 1.8; }
-
-    .strip { display: flex; gap: 2.5mm; margin-bottom: 3.5mm; }
-    .chip  { flex: 1; border: 1px solid #ddd; border-radius: 1mm; padding: 1.5mm 2mm; text-align: center; }
-    .chip .cv { font-size: 10pt; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
-    .chip .cl { font-size: 6.5pt; color: #666; margin-top: 0.5mm; }
-
-    .section { margin-bottom: 5mm; break-inside: avoid; }
-    .sec-hdr  { display: flex; justify-content: space-between; align-items: center;
-                color: #fff; padding: 2mm 3mm; }
-    .sec-title { font-size: 10.5pt; font-weight: bold; }
-    .sec-meta  { font-size: 8pt; opacity: 0.9; }
-
-    table { width: 100%; border-collapse: collapse; }
-    thead tr { background: #37474f; color: #fff; }
-    th { padding: 1.8mm 1.5mm; font-size: 7.5pt; font-weight: bold; text-align: left; white-space: nowrap; }
-    td { padding: 1.5mm 1.5mm; font-size: 8pt; border-bottom: 1px solid #eee; vertical-align: top; }
-    tr:nth-child(even) td { background: #f8f9fa; }
-
-    .c-sno  { width: 3%;  text-align: center; color: #aaa; }
-    .c-name { width: 18%; }
-    .c-rel  { width: 11%; font-style: italic; color: #555; }
-    .c-city { width: 9%;  }
-    .c-amt  { width: 10%; text-align: right; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
-    .c-pay  { width: 8%;  }
-    .c-ref  { width: 12%; font-size: 7.5pt; color: #555; }
-    .c-rcvd { width: 11%; font-size: 7.5pt; }
-    .c-notes{ width: 12%; font-size: 7.5pt; color: #666; font-style: italic; }
-    .c-date { width: 6%;  font-size: 7.5pt; color: #777; white-space: nowrap; }
-
-    .name  { display: block; font-weight: 600; }
-    .phone { display: block; font-size: 7pt; color: #888; margin-top: 0.5mm; }
-    .empty-row { text-align: center; color: #bbb; font-style: italic; padding: 4mm; }
-
-    .sub-total-row td { background: #f0f7ff !important; font-weight: bold; border-top: 2px solid; }
-    .total-label { text-align: right; font-size: 8.5pt; }
-    .total-val   { text-align: right; font-size: 9pt; font-family: 'Courier New', Courier, monospace; }
-
-    .grand-bar { display: flex; justify-content: space-between; align-items: baseline;
-                 background: #1a1a1a; color: #fff; padding: 2.5mm 4mm; margin-top: 1mm; }
-    .grand-label { font-size: 10pt; font-weight: bold; }
-    .grand-val   { font-size: 13pt; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
-
-    .footer { text-align: center; font-size: 7pt; color: #bbb; margin-top: 4mm;
-              border-top: 1px solid #eee; padding-top: 2mm; }
-
-    @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="hdr">
-    <div class="hdr-left">
-      <div class="event-badge">${cfg.emoji} ${e(cfg.label)}</div>
-      <div class="couple">${e(title)}</div>
-      <div class="meta">
-        ${event.family_name ? `<span>${e(event.family_name)}</span>` : ''}
-        <span>${eventDate}</span>
-        ${event.venue ? `<span>${e(event.venue)}</span>` : ''}
-        ${event.city ? `<span>${e(event.city)}</span>` : ''}
-      </div>
-    </div>
-    <div class="hdr-right">
-      <div><b>Guest Detail Register</b></div>
-      <div>Printed: ${e(printDateTime)}</div>
-      <div>Total: <b>${entries.length} guests</b></div>
-    </div>
-  </div>
-
-  <div class="strip">
-    <div class="chip">
-      <div class="cv">${entries.length}</div><div class="cl">Total Guests</div>
-    </div>
-    <div class="chip" style="border-color:#1e3a5f">
-      <div class="cv" style="color:#1e3a5f">${sideAEntries.length}</div>
-      <div class="cl">${e(cfg.sideALabel)}</div>
-    </div>
-    <div class="chip" style="border-color:#6b1a2a">
-      <div class="cv" style="color:#6b1a2a">${sideBEntries.length}</div>
-      <div class="cl">${e(cfg.sideBLabel)}</div>
-    </div>
-    ${bothEntries.length > 0 ? `
-    <div class="chip" style="border-color:#1a5c3a">
-      <div class="cv" style="color:#1a5c3a">${bothEntries.length}</div>
-      <div class="cl">Both</div>
-    </div>` : ''}
-    <div class="chip" style="border-color:#333">
-      <div class="cv">${e(fmt(grandTotal))}</div><div class="cl">Grand Total</div>
-    </div>
-    <div class="chip">
-      <div class="cv">${e(fmt(cashTotal))}</div><div class="cl">Cash</div>
-    </div>
-    <div class="chip">
-      <div class="cv">${e(fmt(onlineTotal))}</div><div class="cl">Online</div>
-    </div>
-    <div class="chip">
-      <div class="cv">${e(fmt(chequeTotal))}</div><div class="cl">Cheque / DD</div>
-    </div>
-  </div>
-
-  ${buildSection(cfg.sideALabel, cfg.sideAEmoji, '#1e3a5f', '#eef2f8', '#1e3a5f', sideAEntries)}
-  ${buildSection(cfg.sideBLabel, cfg.sideBEmoji, '#6b1a2a', '#f8eef0', '#6b1a2a', sideBEntries)}
-  ${bothEntries.length > 0 ? buildSection('Both', '&#129351;', '#1a5c3a', '#eef7f1', '#1a5c3a', bothEntries) : ''}
-
-  <div class="grand-bar">
-    <div class="grand-label">Grand Total &mdash; ${entries.length} ${entries.length === 1 ? 'Guest' : 'Guests'}</div>
-    <div class="grand-val">${e(fmt(grandTotal))}</div>
-  </div>
-
-  <div class="footer">
-    ${e(title)} &mdash; ${e(cfg.label)} Guest Detail Register &mdash; Moify
-  </div>
-
-</body>
-</html>`;
-  }
-
-  private buildConsolidatedHtml(entries: MoiEntry[], event: Event): string {
-    const cfg = getEventConfig(event.event_type);
-    const title = getEventTitle(event);
-
-    const e = (s: string | number | undefined): string =>
-      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-    const fmt = (n: number) => new Intl.NumberFormat('en-IN', {
-      style: 'currency', currency: 'INR', minimumFractionDigits: 0,
-    }).format(n);
-
-    const now = new Date();
-    const printDateTime = now.toLocaleString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: true,
-    });
-    const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', {
-      day: '2-digit', month: 'long', year: 'numeric',
-    });
-
-    const sideAEntries = entries.filter(x => x.side === 'groom');
-    const sideBEntries = entries.filter(x => x.side === 'bride');
-    const bothEntries  = entries.filter(x => x.side === 'both');
-
-    const sideATotal = sideAEntries.reduce((s, x) => s + x.amount, 0);
-    const sideBTotal = sideBEntries.reduce((s, x) => s + x.amount, 0);
-    const bothTotal  = bothEntries.reduce((s, x) => s + x.amount, 0);
-    const grandTotal = sideATotal + sideBTotal + bothTotal;
-
-    const paymentLabel: Record<string, string> = { cash: 'Cash', cheque: 'Cheque', online: 'Online', dd: 'DD' };
-
-    const buildRows = (list: MoiEntry[]): string => {
-      if (!list.length) {
-        return `<tr><td colspan="8" style="text-align:center;color:#bbb;padding:4mm;font-style:italic;">No entries</td></tr>`;
-      }
-      return list.map((x, i) => `
-        <tr>
-          <td class="sno">${i + 1}</td>
-          <td class="col-name">${e(x.guest_name)}</td>
-          <td class="col-rel">${e(x.relationship || '')}</td>
-          <td class="col-city">${e(x.city || '')}</td>
-          <td class="col-amount">${e(fmt(x.amount))}</td>
-          <td class="col-payment">${e(paymentLabel[x.payment_mode] || x.payment_mode)}</td>
-          <td class="col-received">${e(x.received_by || '')}</td>
-          <td class="col-ref">${e(x.cheque_number || x.transaction_ref || '')}</td>
-        </tr>`).join('');
-    };
-
-    const buildSection = (label: string, emoji: string, color: string, list: MoiEntry[], total: number): string => `
-      <div class="section">
-        <div class="section-header" style="background:${color}">
-          <span class="section-title">${emoji} ${label}</span>
-          <span class="section-count">${list.length} ${list.length === 1 ? 'entry' : 'entries'}</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th class="sno">#</th>
-              <th class="col-name">Guest Name</th>
-              <th class="col-rel">Relationship</th>
-              <th class="col-city">City</th>
-              <th class="col-amount">Amount</th>
-              <th class="col-payment">Payment</th>
-              <th class="col-received">Received By</th>
-              <th class="col-ref">Ref / Cheque No</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${buildRows(list)}
-            <tr class="total-row" style="border-top-color:${color}">
-              <td colspan="4" class="total-label">Sub Total (${list.length} ${list.length === 1 ? 'entry' : 'entries'}):</td>
-              <td class="total-amount" style="color:${color}">${e(fmt(total))}</td>
-              <td colspan="3"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>`;
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Moi Register — ${e(title)}</title>
-  <style>
-    @page { size: A4 portrait; margin: 12mm 14mm; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a1a; background: #fff; }
-
-    .page-header { text-align: center; padding-bottom: 4mm; border-bottom: 2.5px solid #1a1a1a; margin-bottom: 6mm; }
-    .event-badge { font-size: 9pt; background: #f0f0f0; padding: 1mm 3mm; border-radius: 1mm;
-                   display: inline-block; margin-bottom: 2mm; }
-    .event-title { font-size: 20pt; font-weight: bold; letter-spacing: 1px; }
-    .heart { color: #c0392b; margin: 0 4px; }
-    .header-sub { font-size: 9.5pt; color: #444; margin-top: 2mm; }
-    .header-sub span + span::before { content: ' • '; color: #ccc; margin: 0 4px; }
-    .print-note { font-size: 8pt; color: #888; margin-top: 2mm; }
-
-    .section { margin-bottom: 5mm; break-inside: avoid; }
-    .section-header { display: flex; justify-content: space-between; align-items: center;
-                      color: #fff; padding: 2mm 3mm; }
-    .section-title { font-size: 11pt; font-weight: bold; }
-    .section-count { font-size: 8.5pt; opacity: 0.85; }
-
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #ecf0f1; padding: 1.5mm 2mm; text-align: left; font-size: 8.5pt;
-         font-weight: bold; border: 1px solid #bdc3c7; }
-    td { padding: 1.5mm 2mm; font-size: 8.5pt; border: 1px solid #ddd; vertical-align: top; }
-    tr:nth-child(even) td { background: #fafafa; }
-
-    .sno          { width: 5%; text-align: center; color: #999; }
-    .col-name     { width: 17%; font-weight: 600; }
-    .col-rel      { width: 13%; color: #555; font-style: italic; font-size: 8pt; }
-    .col-city     { width: 9%; }
-    .col-amount   { width: 12%; text-align: right; font-weight: bold;
-                    font-family: 'Courier New', Courier, monospace; }
-    .col-payment  { width: 9%; text-align: center; }
-    .col-received { width: 13%; font-size: 8pt; }
-    .col-ref      { width: 22%; font-size: 7.5pt; color: #666; }
-
-    .total-row td    { background: #f0f7ff !important; font-weight: bold; border-top: 2px solid; }
-    .total-label     { text-align: right; font-size: 9pt; }
-    .total-amount    { text-align: right; font-size: 10pt; font-family: 'Courier New', Courier, monospace; }
-
-    .summary { margin-top: 5mm; break-inside: avoid; }
-    .summary-title { font-size: 11pt; font-weight: bold; text-align: center;
-                     border-bottom: 1.5px solid #ccc; padding-bottom: 1.5mm; margin-bottom: 3mm; }
-    .summary-grid  { display: flex; gap: 4mm; }
-    .summary-card  { flex: 1; border: 1.5px solid #2c3e50; border-radius: 1mm; padding: 3mm; text-align: center; }
-    .summary-value { font-size: 13pt; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
-    .summary-label { font-size: 8pt; color: #555; margin-top: 1mm; }
-    .grand-row  { display: flex; justify-content: space-between; align-items: baseline;
-                  border-top: 2px solid #1a1a1a; margin-top: 4mm; padding-top: 3mm; }
-    .grand-label { font-size: 12pt; font-weight: bold; }
-    .grand-value { font-size: 17pt; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
-
-    .footer { text-align: center; font-size: 7.5pt; color: #aaa;
-              margin-top: 8mm; border-top: 1px solid #eee; padding-top: 3mm; }
-
-    @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="page-header">
-    <div class="event-badge">${cfg.emoji} ${e(cfg.label)}</div>
-    <div class="event-title">${e(title)}</div>
-    <div class="header-sub">
-      ${event.family_name ? `<span>${e(event.family_name)}</span>` : ''}
-      <span>${eventDate}</span>
-      ${event.venue ? `<span>${e(event.venue)}</span>` : ''}
-      ${event.city ? `<span>${e(event.city)}</span>` : ''}
-    </div>
-    <div class="print-note">
-      Moi Consolidated Register &nbsp;&bull;&nbsp;
-      Printed: ${e(printDateTime)} &nbsp;&bull;&nbsp;
-      Total: ${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}
-    </div>
-  </div>
-
-  ${buildSection(cfg.sideALabel, cfg.sideAEmoji, '#1e3a5f', sideAEntries, sideATotal)}
-  ${buildSection(cfg.sideBLabel, cfg.sideBEmoji, '#6b1a2a', sideBEntries, sideBTotal)}
-  ${bothEntries.length > 0 ? buildSection('Both', '&#129351;', '#1a5c3a', bothEntries, bothTotal) : ''}
-
-  <div class="summary">
-    <div class="summary-title">Summary</div>
-    <div class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-value">${e(fmt(sideATotal))}</div>
-        <div class="summary-label">${e(cfg.sideALabel)} &mdash; ${sideAEntries.length} entries</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-value">${e(fmt(sideBTotal))}</div>
-        <div class="summary-label">${e(cfg.sideBLabel)} &mdash; ${sideBEntries.length} entries</div>
-      </div>
-      ${bothEntries.length > 0 ? `
-      <div class="summary-card">
-        <div class="summary-value">${e(fmt(bothTotal))}</div>
-        <div class="summary-label">Both &mdash; ${bothEntries.length} entries</div>
-      </div>` : ''}
-    </div>
-    <div class="grand-row">
-      <div class="grand-label">Grand Total</div>
-      <div class="grand-value">${e(fmt(grandTotal))}</div>
-    </div>
-  </div>
-
-  <div class="footer">
-    ${e(title)} ${e(cfg.label)} &mdash; Moify &mdash; Consolidated Register
-  </div>
-
 </body>
 </html>`;
   }
@@ -855,189 +804,6 @@ export class ReceiptService {
   </div>
 
   <div class="dline">================================</div>
-</body>
-</html>`;
-  }
-
-  private buildEntryTableHtml(entries: MoiEntry[], event: Event): string {
-    const cfg = getEventConfig(event.event_type);
-    const esc = (s: string | undefined | null) =>
-      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const fmt = (n: number) =>
-      new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(n);
-    const now = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
-
-    const eventTitle = event.secondary_name && cfg.showSecondary
-      ? `${esc(event.primary_name)} &hearts; ${esc(event.secondary_name)}`
-      : esc(event.primary_name);
-
-    const groomEntries = entries.filter(x => x.side === 'groom');
-    const brideEntries = entries.filter(x => x.side === 'bride');
-    const bothEntries  = entries.filter(x => x.side === 'both');
-    const groomTotal   = groomEntries.reduce((s, x) => s + x.amount, 0);
-    const brideTotal   = brideEntries.reduce((s, x) => s + x.amount, 0);
-    const bothTotal    = bothEntries.reduce((s, x) => s + x.amount, 0);
-    const grandTotal   = groomTotal + brideTotal + bothTotal;
-
-    const buildRows = (list: MoiEntry[]): string => {
-      if (!list.length) {
-        return `<tr><td colspan="4" class="empty-row">No entries</td></tr>`;
-      }
-      return list.map((x, i) => `
-        <tr>
-          <td class="c-sno">${i + 1}</td>
-          <td class="c-name">${esc(x.guest_name)}</td>
-          <td class="c-city">${esc(x.city || '-')}</td>
-          <td class="c-amt">${fmt(x.amount)}</td>
-        </tr>`).join('');
-    };
-
-    const buildSection = (label: string, hdrColor: string, altBg: string, list: MoiEntry[], total: number): string => `
-      <div class="section">
-        <div class="sec-hdr" style="background:${hdrColor}">
-          <span class="sec-title">${label}</span>
-          <span class="sec-count">${list.length} ${list.length === 1 ? 'Guest' : 'Guests'}</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th class="c-sno">S.No</th>
-              <th class="c-name">Name</th>
-              <th class="c-city">City</th>
-              <th class="c-amt">Amount</th>
-            </tr>
-          </thead>
-          <tbody style="--alt:${altBg}">
-            ${buildRows(list)}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="3" class="ft-lbl" style="border-top-color:${hdrColor}">${label} Total (${list.length})</td>
-              <td class="ft-amt" style="border-top-color:${hdrColor};color:${hdrColor}">${fmt(total)}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>`;
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Moi Table — ${eventTitle}</title>
-<style>
-  @page { size: A4 portrait; margin: 14mm 14mm 12mm 14mm; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a1a; background: #fff; }
-
-  /* ── Page Header ── */
-  .page-hdr { text-align: center; border-bottom: 3px solid #4a148c; padding-bottom: 8px; margin-bottom: 12px; }
-  .app-name { font-size: 18pt; font-weight: 900; color: #4a148c; letter-spacing: 3px; }
-  .app-sub  { font-size: 7.5pt; color: #888; letter-spacing: 1px; margin-top: 1px; }
-  .ev-title { font-size: 14pt; font-weight: 700; color: #1a1a1a; margin-top: 7px; }
-  .ev-meta  { font-size: 8.5pt; color: #555; margin-top: 4px; }
-  .ev-meta span + span::before { content: ' · '; color: #bbb; }
-  .print-info { font-size: 7.5pt; color: #999; margin-top: 4px; }
-
-  /* ── Summary Strip ── */
-  .summary-strip { display: flex; gap: 8px; margin-bottom: 10px; }
-  .sum-chip { flex: 1; border: 1.5px solid #ccc; border-radius: 3px; padding: 5px 8px; text-align: center; }
-  .sum-chip .sv { font-size: 10pt; font-weight: 700; font-family: 'Courier New', monospace; }
-  .sum-chip .sl { font-size: 7pt; color: #666; margin-top: 2px; }
-
-  /* ── Section ── */
-  .section { margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
-  .sec-hdr { display: flex; justify-content: space-between; align-items: center;
-             color: #fff; padding: 5px 10px; border-radius: 2px 2px 0 0; }
-  .sec-title { font-size: 11pt; font-weight: 700; letter-spacing: 0.5px; }
-  .sec-count { font-size: 8.5pt; opacity: 0.9; }
-
-  /* ── Table ── */
-  table { width: 100%; border-collapse: collapse; }
-  thead tr { background: #37474f; color: #fff; }
-  th { padding: 5px 8px; font-size: 8.5pt; font-weight: 700; text-align: left; }
-  td { padding: 5px 8px; font-size: 9pt; border-bottom: 1px solid #ececec; vertical-align: middle; }
-  tbody tr:nth-child(even) td { background: #f7f7f7; }
-
-  .c-sno  { width: 8%;  text-align: center; color: #999; }
-  .c-name { width: 45%; font-weight: 600; }
-  .c-city { width: 27%; color: #444; }
-  .c-amt  { width: 20%; text-align: right; font-weight: 700; font-family: 'Courier New', monospace; }
-
-  .empty-row { text-align: center; color: #bbb; font-style: italic; padding: 8px; }
-
-  /* ── Section Footer ── */
-  tfoot tr td { border-top: 2px solid; border-bottom: none; background: #fafafa !important; padding: 6px 8px; }
-  .ft-lbl { font-weight: 700; font-size: 9pt; text-align: right; }
-  .ft-amt { font-weight: 800; font-size: 10pt; text-align: right; font-family: 'Courier New', monospace; }
-
-  /* ── Grand Total Bar ── */
-  .grand-bar { display: flex; justify-content: space-between; align-items: center;
-               background: #1a1a1a; color: #fff; padding: 8px 12px; margin-top: 4px; border-radius: 2px; }
-  .grand-lbl { font-size: 11pt; font-weight: 700; }
-  .grand-val { font-size: 13pt; font-weight: 900; font-family: 'Courier New', monospace; }
-
-  /* ── Footer ── */
-  .footer { text-align: center; font-size: 7pt; color: #bbb; margin-top: 10px;
-            border-top: 1px solid #eee; padding-top: 5px; }
-
-  @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    thead { display: table-header-group; }
-  }
-</style>
-</head>
-<body>
-
-<div class="page-hdr">
-  <div class="app-name">MOIFY</div>
-  <div class="app-sub">Smart Digital Wedding Gift Ledger</div>
-  <div class="ev-title">${cfg.emoji} ${eventTitle}</div>
-  <div class="ev-meta">
-    ${event.family_name ? `<span>${esc(event.family_name)}</span>` : ''}
-    <span>${eventDate}</span>
-    ${event.venue ? `<span>${esc(event.venue)}${event.city ? ', ' + esc(event.city) : ''}</span>` : ''}
-  </div>
-  <div class="print-info">Moi Table Register &nbsp;&bull;&nbsp; Printed: ${now} &nbsp;&bull;&nbsp; Total: ${entries.length} guests</div>
-</div>
-
-<div class="summary-strip">
-  <div class="sum-chip" style="border-color:#4a148c">
-    <div class="sv" style="color:#4a148c">${entries.length}</div>
-    <div class="sl">Total Guests</div>
-  </div>
-  <div class="sum-chip" style="border-color:#1565c0">
-    <div class="sv" style="color:#1565c0">${groomEntries.length}</div>
-    <div class="sl">${esc(cfg.sideALabel)}</div>
-  </div>
-  <div class="sum-chip" style="border-color:#880e4f">
-    <div class="sv" style="color:#880e4f">${brideEntries.length}</div>
-    <div class="sl">${esc(cfg.sideBLabel)}</div>
-  </div>
-  ${bothEntries.length > 0 ? `
-  <div class="sum-chip" style="border-color:#1b5e20">
-    <div class="sv" style="color:#1b5e20">${bothEntries.length}</div>
-    <div class="sl">Both</div>
-  </div>` : ''}
-  <div class="sum-chip" style="border-color:#222">
-    <div class="sv">${fmt(grandTotal)}</div>
-    <div class="sl">Grand Total</div>
-  </div>
-</div>
-
-${buildSection(cfg.sideALabel + ' Side', '#1565c0', '#e3f2fd', groomEntries, groomTotal)}
-${buildSection(cfg.sideBLabel + ' Side', '#880e4f', '#fce4ec', brideEntries, brideTotal)}
-${bothEntries.length > 0 ? buildSection('Both', '#1b5e20', '#e8f5e9', bothEntries, bothTotal) : ''}
-
-<div class="grand-bar">
-  <div class="grand-lbl">Grand Total &mdash; ${entries.length} ${entries.length === 1 ? 'Guest' : 'Guests'}</div>
-  <div class="grand-val">${fmt(grandTotal)}</div>
-</div>
-
-<div class="footer">
-  ${eventTitle} &mdash; ${esc(cfg.label)} Moi Table Register &mdash; Moify
-</div>
-
 </body>
 </html>`;
   }

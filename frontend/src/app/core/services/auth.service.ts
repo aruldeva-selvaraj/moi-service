@@ -98,6 +98,37 @@ export class AuthService {
     }
   }
 
+  async lookupUser(identifier: string): Promise<{ found: boolean; masked_name?: string; error?: string }> {
+    try {
+      return await firstValueFrom(
+        this.http.post<{ found: boolean; masked_name?: string }>(
+          `${this.apiBase}/api/auth/lookup-user`, { identifier }
+        )
+      );
+    } catch (err: unknown) {
+      return { found: false, error: this.extractError(err) };
+    }
+  }
+
+  async adminResetPassword(
+    admin_username: string,
+    admin_password: string,
+    target: string,
+    new_password: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    try {
+      await firstValueFrom(
+        this.http.post<{ success: boolean }>(
+          `${this.apiBase}/api/auth/admin-reset-password`,
+          { admin_username, admin_password, target, new_password }
+        )
+      );
+      return { ok: true };
+    } catch (err: unknown) {
+      return { ok: false, error: this.extractError(err) };
+    }
+  }
+
   getToken(): string | null {
     return sessionStorage.getItem(TOKEN_KEY);
   }

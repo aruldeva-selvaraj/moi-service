@@ -72,11 +72,18 @@ export class AuthController {
   ): Promise<object> {
     const {username, password} = body;
 
-    const identifier = username.trim().toLowerCase();
+    const raw = username.trim();
+    const identifier = raw.toLowerCase();
+    // Normalise mobile: strip +91 / leading 0 so 9789616611, +919789616611, 09789616611 all match
+    const mobileNorm = raw.replace(/^\+91/, '').replace(/^0(\d{10})$/, '$1').trim();
+
     const rows = await this.userRepo.query(
       `SELECT * FROM public.users
-       WHERE (lower(username) = $1 OR mobile_number = $1) AND is_active = TRUE LIMIT 1`,
-      [identifier],
+       WHERE (lower(username) = $1
+          OR trim(mobile_number) = $2
+          OR trim(mobile_number) = $1)
+         AND is_active = TRUE LIMIT 1`,
+      [identifier, mobileNorm],
     );
 
     if (rows.length === 0) {
@@ -262,7 +269,11 @@ export class AuthController {
       return {error: 'Username already exists'};
     }
 
-    const mobileVal = mobile_number?.trim() || null;
+    // Normalise: strip +91 / leading 0, keep only digits
+    const mobileVal = mobile_number?.trim()
+      .replace(/^\+91/, '')
+      .replace(/^0(\d{10})$/, '$1')
+      || null;
     if (mobileVal) {
       const mobileExists = await this.userRepo.query(
         'SELECT id FROM public.users WHERE mobile_number = $1 LIMIT 1',
@@ -284,6 +295,137 @@ export class AuthController {
 
     this.response.status(201);
     return {success: true, user: rows[0]};
+  }
+
+  // ── Lookup user by username or mobile (for forgot-password step 1) ─────────
+  @post('/api/auth/lookup-user', {
+    responses: {'200': {description: 'User lookup result'}},
+  })
+  async lookupUser(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['identifier'],
+            properties: {identifier: {type: 'string'}},
+          },
+        },
+      },
+    })
+    body: {identifier: string},
+  ): Promise<object> {
+    const raw = body.identifier?.trim() ?? '';
+    if (!raw) {
+      this.response.status(400);
+      return {found: false, error: 'Identifier is required'};
+    }
+    const identifier = raw.toLowerCase();
+    const mobileNorm = raw.replace(/^\+91/, '').replace(/^0(\d{10})$/, '$1').trim();
+
+    const rows = await this.userRepo.query(
+      `SELECT username, full_name FROM public.users
+       WHERE (lower(username) = $1 OR trim(mobile_number) = $2 OR trim(mobile_number) = $1)
+         AND is_active = TRUE LIMIT 1`,
+      [identifier, mobileNorm],
+    );
+
+    if (rows.length === 0) return {found: false};
+
+    const u = rows[0] as {username: string; full_name: string | null};
+    // Mask: show first 2 chars then ***
+    const maskStr = (s: string) =>
+      s.length <= 2 ? s + '***' : s.slice(0, 2) + '*'.repeat(Math.min(s.length - 2, 4));
+    const displayName = u.full_name
+      ? u.full_name.split(' ').map(maskStr).join(' ')
+      : maskStr(u.username);
+
+    return {found: true, masked_name: displayName};
+  }
+
+  // ── Admin reset password (admin auth required) ────────────────────────────
+  @post('/api/auth/admin-reset-password', {
+    responses: {
+      '200': {description: 'Password reset success'},
+      '400': {description: 'Validation error'},
+      '401': {description: 'Admin credentials invalid'},
+      '404': {description: 'Target user not found'},
+    },
+  })
+  async adminResetPassword(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['admin_username', 'admin_password', 'target', 'new_password'],
+            properties: {
+              admin_username: {type: 'string'},
+              admin_password: {type: 'string'},
+              target:         {type: 'string'},
+              new_password:   {type: 'string'},
+            },
+          },
+        },
+      },
+    })
+    body: {admin_username: string; admin_password: string; target: string; new_password: string},
+  ): Promise<object> {
+    const {admin_username, admin_password, target, new_password} = body;
+
+    if (!admin_username?.trim() || !admin_password || !target?.trim() || !new_password) {
+      this.response.status(400);
+      return {error: 'All fields are required'};
+    }
+    if (new_password.length < 6) {
+      this.response.status(400);
+      return {error: 'New password must be at least 6 characters'};
+    }
+
+    // Verify admin credentials
+    const adminRows = await this.userRepo.query(
+      `SELECT id, password_hash, role FROM public.users
+       WHERE lower(username) = $1 AND is_active = TRUE LIMIT 1`,
+      [admin_username.trim().toLowerCase()],
+    );
+    if (adminRows.length === 0) {
+      this.response.status(401);
+      return {error: 'Invalid admin credentials'};
+    }
+    const admin = adminRows[0] as {id: number; password_hash: string; role: string};
+    const adminMatch = await bcrypt.compare(admin_password, admin.password_hash);
+    if (!adminMatch) {
+      this.response.status(401);
+      return {error: 'Invalid admin credentials'};
+    }
+    if (!['admin', 'superadmin'].includes(admin.role)) {
+      this.response.status(401);
+      return {error: 'Only admin or superadmin can reset passwords'};
+    }
+
+    // Find target user
+    const raw = target.trim();
+    const targetId = raw.toLowerCase();
+    const mobileNorm = raw.replace(/^\+91/, '').replace(/^0(\d{10})$/, '$1').trim();
+    const targetRows = await this.userRepo.query(
+      `SELECT id, username FROM public.users
+       WHERE (lower(username) = $1 OR trim(mobile_number) = $2 OR trim(mobile_number) = $1)
+         AND is_active = TRUE LIMIT 1`,
+      [targetId, mobileNorm],
+    );
+    if (targetRows.length === 0) {
+      this.response.status(404);
+      return {error: 'User not found'};
+    }
+    const targetUser = targetRows[0] as {id: number; username: string};
+
+    const newHash = await bcrypt.hash(new_password, 12);
+    await this.userRepo.query(
+      'UPDATE public.users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [newHash, targetUser.id],
+    );
+
+    return {success: true, message: `Password reset for "${targetUser.username}" successfully`};
   }
 
   // ── Private: extract JWT payload from Authorization header ───────────────

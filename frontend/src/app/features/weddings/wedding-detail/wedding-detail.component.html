@@ -32,14 +32,10 @@
         <a mat-stroked-button [routerLink]="['/events', event()!.id, 'edit']">
           <mat-icon>edit</mat-icon> Edit
         </a>
-        <button mat-raised-button color="accent" (click)="printGuestListA4()"
-                matTooltip="Print full guest list with all details grouped by side (A4 Landscape)"
+        <button mat-raised-button color="accent" (click)="openA4PrintModal()"
+                matTooltip="Print A4 guest register — choose side to filter"
                 [disabled]="entries().length === 0">
-          <mat-icon>groups</mat-icon> Print Guest List
-        </button>
-        <button mat-stroked-button (click)="printConsolidatedA4()"
-                matTooltip="Print A4 consolidated register — split by side">
-          <mat-icon>picture_as_pdf</mat-icon> A4 Register
+          <mat-icon>print</mat-icon> Print A4
         </button>
         <button mat-stroked-button (click)="printMoiList()">
           <mat-icon>print</mat-icon> Print
@@ -324,3 +320,49 @@
     </mat-tab-group>
   }
 </div>
+
+<!-- Print A4 Side Filter Modal -->
+@if (showPrintModal()) {
+  <div class="print-modal-overlay" (click)="showPrintModal.set(false)">
+    <div class="print-modal" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Print / Download A4 Register</h3>
+      <p class="modal-subtitle">Select which side to include</p>
+
+      <p class="modal-section-label"><mat-icon class="label-icon">print</mat-icon> Print</p>
+      <div class="modal-options">
+        <button mat-raised-button class="side-btn groom-btn" (click)="printA4WithSide('groom')">
+          <mat-icon>face</mat-icon>
+          <span>{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }} Side</span>
+        </button>
+        <button mat-raised-button class="side-btn bride-btn" (click)="printA4WithSide('bride')">
+          <mat-icon>face_3</mat-icon>
+          <span>{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }} Side</span>
+        </button>
+        <button mat-raised-button class="side-btn all-btn" (click)="printA4WithSide('all')">
+          <mat-icon>groups</mat-icon>
+          <span>All Guests</span>
+        </button>
+      </div>
+
+      <div class="modal-divider"></div>
+
+      <p class="modal-section-label"><mat-icon class="label-icon">picture_as_pdf</mat-icon> Download PDF</p>
+      <div class="modal-options">
+        <button mat-stroked-button class="side-btn dl-groom-btn" (click)="downloadA4WithSide('groom')">
+          <mat-icon>download</mat-icon>
+          <span>{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }} Side</span>
+        </button>
+        <button mat-stroked-button class="side-btn dl-bride-btn" (click)="downloadA4WithSide('bride')">
+          <mat-icon>download</mat-icon>
+          <span>{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }} Side</span>
+        </button>
+        <button mat-stroked-button class="side-btn dl-all-btn" (click)="downloadA4WithSide('all')">
+          <mat-icon>download</mat-icon>
+          <span>All Guests</span>
+        </button>
+      </div>
+
+      <button mat-button class="cancel-btn" (click)="showPrintModal.set(false)">Cancel</button>
+    </div>
+  </div>
+}

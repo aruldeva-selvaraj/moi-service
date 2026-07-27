@@ -126,8 +126,8 @@
   background: #fff;
   border-radius: 12px;
   padding: 32px 28px 24px;
-  width: 400px;
-  max-width: 90vw;
+  width: 480px;
+  max-width: 94vw;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -238,4 +238,112 @@
 .cancel-btn {
   color: #888 !important;
   margin-top: 4px;
+}
+
+// ── Analytics Charts ──────────────────────────────────────────────────────────
+
+.charts-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.chart-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  padding: 16px 20px;
+  min-width: 180px;
+  flex: 0 0 auto;
+
+  &.chart-card-wide { flex: 1 1 260px; }
+}
+
+.chart-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.donut-svg {
+  width: 120px;
+  height: 120px;
+  display: block;
+  margin: 0 auto 10px;
+  transform: rotate(-90deg);
+}
+
+.donut-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  color: #444;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-label {
+  width: 80px;
+  font-size: 0.8rem;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.bar-track {
+  flex: 1;
+  height: 18px;
+  background: #f0f0f0;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 9px;
+  transition: width 0.5s ease;
+}
+
+.bar-cash   { background: linear-gradient(90deg, #43a047, #66bb6a); }
+.bar-online { background: linear-gradient(90deg, #1565c0, #42a5f5); }
+.bar-cheque { background: linear-gradient(90deg, #e65100, #ffa726); }
+.bar-rel    { background: linear-gradient(90deg, #6a1b9a, #ab47bc); }
+
+.bar-value {
+  width: 80px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #333;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.print-filter-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.print-filter-field {
+  flex: 1;
+  font-size: 0.85rem;
 }

@@ -168,6 +168,11 @@
         ⚠️ {{ errorMsg }}
       </div>
 
+      <label class="remember-row">
+        <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" />
+        <span>Remember me on this device</span>
+      </label>
+
       <button type="submit" class="login-btn"
               [class.loading]="loginState === 'loading'"
               [disabled]="loginState === 'loading'">

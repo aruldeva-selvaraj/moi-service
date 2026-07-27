@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,11 +27,18 @@ import { StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpi
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private readonly eventService = inject(EventService);
   private readonly moiService = inject(MoiService);
   private readonly receiptService = inject(ReceiptService);
   readonly auth = inject(AuthService);
+
+  // ── Carousel ──────────────────────────────────────────────
+  readonly banners = [
+    'assets/images/banner/banner1.jpeg',
+  ];
+  activeSlide = signal(0);
+  private slideTimer: ReturnType<typeof setInterval> | null = null;
 
   loading = signal(true);
   reportLoading = signal(false);
@@ -54,6 +61,25 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    if (this.banners.length > 1) {
+      this.slideTimer = setInterval(() => this.nextSlide(), 4000);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.slideTimer) clearInterval(this.slideTimer);
+  }
+
+  nextSlide() {
+    this.activeSlide.update((i: number) => (i + 1) % this.banners.length);
+  }
+
+  prevSlide() {
+    this.activeSlide.update((i: number) => (i - 1 + this.banners.length) % this.banners.length);
+  }
+
+  goToSlide(index: number) {
+    this.activeSlide.set(index);
   }
 
   getEventTitle(ev: Event): string {

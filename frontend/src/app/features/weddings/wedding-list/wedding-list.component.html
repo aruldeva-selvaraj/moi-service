@@ -9,7 +9,7 @@
   </app-page-header>
 
   @if (loading()) {
-    <app-loading-spinner />
+    <app-skeleton-loader variant="cards" [count]="3" />
   } @else {
 
     <!-- ── Pending Approval Section (Admin only) ─────────────── -->
@@ -38,6 +38,9 @@
                   <mat-icon>event</mat-icon>
                   {{ ev.event_date | date:'dd MMM yyyy' }}
                 </span>
+                @if (getEventStatusBadge(ev); as sb) {
+                  <span [class]="'ev-status-badge ' + sb.css">{{ sb.label }}</span>
+                }
                 @if (ev.venue) {
                   <span class="meta-item">
                     <mat-icon>location_on</mat-icon>
@@ -123,6 +126,9 @@
                 <mat-icon>event</mat-icon>
                 {{ ev.event_date | date:'dd MMM yyyy' }}
               </span>
+              @if (getEventStatusBadge(ev); as sb) {
+                <span [class]="'ev-status-badge ' + sb.css">{{ sb.label }}</span>
+              }
               @if (ev.venue) {
                 <span class="meta-item">
                   <mat-icon>location_on</mat-icon>

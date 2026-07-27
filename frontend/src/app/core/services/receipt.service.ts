@@ -5,13 +5,20 @@ import { Event, EventReport, getEventConfig, getEventTitle } from '../models/eve
 
 export type PaperSize = '58' | '80';
 export type PrintSide = 'groom' | 'bride' | 'both' | 'all';
+export type ReceiptLang = 'en' | 'ta';
+
+export interface PrintFilter {
+  side: PrintSide;
+  city?: string;
+  district?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ReceiptService {
   private doc = inject(DOCUMENT);
 
-  printReceipt(entry: MoiEntry, event: Event, paperSize: PaperSize = '80', receiptNo?: number): void {
-    const html = this.buildReceiptHtml(entry, event, paperSize, receiptNo);
+  printReceipt(entry: MoiEntry, event: Event, paperSize: PaperSize = '80', receiptNo?: number, lang: ReceiptLang = 'en'): void {
+    const html = this.buildReceiptHtml(entry, event, paperSize, receiptNo, lang);
     const win = this.doc.defaultView?.open(
       '', '_blank',
       `width=420,height=650,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes`
@@ -39,16 +46,18 @@ export class ReceiptService {
     }, 400);
   }
 
-  printA4Sheet(entries: MoiEntry[], event: Event, side: PrintSide = 'all'): void {
-    this.openA4Window(entries, event, side, 'print');
+  printA4Sheet(entries: MoiEntry[], event: Event, filter: PrintFilter | PrintSide = 'all'): void {
+    const f = typeof filter === 'string' ? { side: filter as PrintSide } : filter;
+    this.openA4Window(entries, event, f, 'print');
   }
 
-  downloadA4Sheet(entries: MoiEntry[], event: Event, side: PrintSide = 'all'): void {
-    this.openA4Window(entries, event, side, 'download');
+  downloadA4Sheet(entries: MoiEntry[], event: Event, filter: PrintFilter | PrintSide = 'all'): void {
+    const f = typeof filter === 'string' ? { side: filter as PrintSide } : filter;
+    this.openA4Window(entries, event, f, 'download');
   }
 
-  private openA4Window(entries: MoiEntry[], event: Event, side: PrintSide, mode: 'print' | 'download'): void {
-    const html = this.buildA4Html(entries, event, side, mode);
+  private openA4Window(entries: MoiEntry[], event: Event, filter: PrintFilter, mode: 'print' | 'download'): void {
+    const html = this.buildA4Html(entries, event, filter, mode);
     const win = this.doc.defaultView?.open(
       '', '_blank',
       `width=960,height=750,toolbar=no,location=no,directories=no,status=no,menubar=yes,scrollbars=yes`
@@ -104,9 +113,10 @@ export class ReceiptService {
     }, 500);
   }
 
-  private buildA4Html(entries: MoiEntry[], event: Event, side: PrintSide, mode: 'print' | 'download' = 'print'): string {
+  private buildA4Html(entries: MoiEntry[], event: Event, filter: PrintFilter, mode: 'print' | 'download' = 'print'): string {
     const cfg = getEventConfig(event.event_type);
     const title = getEventTitle(event);
+    const { side, city: cityFilter, district: districtFilter } = filter;
 
     const esc = (s: string | number | undefined): string =>
       String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -122,8 +132,20 @@ export class ReceiptService {
       side === 'bride' ? cfg.sideBLabel :
       side === 'both'  ? 'Both' : 'All Guests';
 
-    const filtered = side === 'all' ? entries : entries.filter(x => x.side === side);
-    const showSideCol = side === 'all';
+    let filtered = side === 'all' ? entries : entries.filter(x => x.side === side);
+    if (cityFilter) {
+      filtered = filtered.filter(x => x.city?.toLowerCase().includes(cityFilter.toLowerCase()));
+    }
+    if (districtFilter) {
+      filtered = filtered.filter(x => x.district?.toLowerCase().includes(districtFilter.toLowerCase()));
+    }
+    filtered = [...filtered].sort((a, b) =>
+      (a.city ?? '').localeCompare(b.city ?? '', 'en', { sensitivity: 'base' })
+    );
+    const showSideCol     = side === 'all';
+    const showRelCol      = filtered.some(x => !!x.relationship?.trim());
+    const showCityCol     = filtered.some(x => !!x.city?.trim());
+    const showDistrictCol = filtered.some(x => !!x.district?.trim());
 
     const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', {
       day: '2-digit', month: 'long', year: 'numeric',
@@ -138,27 +160,35 @@ export class ReceiptService {
     const sideDisplay = (s: string) =>
       s === 'groom' ? cfg.sideALabel : s === 'bride' ? cfg.sideBLabel : 'Both';
 
+    const filterDesc = [
+      cityFilter ? `City: ${cityFilter}` : '',
+      districtFilter ? `District: ${districtFilter}` : '',
+    ].filter(Boolean).join(' | ');
+
     const rows = filtered.map((x, i) => `
-      <tr>
+      <tr class="${i % 2 === 0 ? 'row-even' : 'row-odd'}">
         <td class="center">${i + 1}</td>
         <td class="col-name">
           ${esc(x.guest_name)}
           ${x.phone ? `<span class="phone">${esc(x.phone)}</span>` : ''}
         </td>
-        <td class="col-rel">${esc(x.relationship || '')}</td>
-        <td>${esc(x.city || '')}</td>
-        ${showSideCol ? `<td class="center">${esc(sideDisplay(x.side))}</td>` : ''}
+        ${showRelCol      ? `<td class="col-rel">${esc(x.relationship || '')}</td>` : ''}
+        ${showCityCol     ? `<td>${esc(x.city || '')}</td>` : ''}
+        ${showDistrictCol ? `<td>${esc(x.district || '')}</td>` : ''}
+        ${showSideCol     ? `<td class="center side-cell side-${x.side}">${esc(sideDisplay(x.side))}</td>` : ''}
         <td class="right col-amt">${esc(fmt(x.amount))}</td>
-        <td class="center">${payLabel[x.payment_mode] ?? x.payment_mode}</td>
       </tr>`).join('');
 
     const emptyCount = Math.max(0, 15 - filtered.length);
     const blankRows = Array(emptyCount).fill(null).map((_, i) => `
-      <tr class="empty-row">
+      <tr class="empty-row ${(filtered.length + i) % 2 === 0 ? 'row-even' : 'row-odd'}">
         <td class="center">${filtered.length + i + 1}</td>
-        <td></td><td></td><td></td>
-        ${showSideCol ? '<td></td>' : ''}
-        <td></td><td></td>
+        <td></td>
+        ${showRelCol      ? '<td></td>' : ''}
+        ${showCityCol     ? '<td></td>' : ''}
+        ${showDistrictCol ? '<td></td>' : ''}
+        ${showSideCol     ? '<td></td>' : ''}
+        <td></td>
       </tr>`).join('');
 
     return `<!DOCTYPE html>
@@ -309,14 +339,14 @@ export class ReceiptService {
     .reg-table {
       width: 100%;
       border-collapse: collapse;
-      border-bottom: 1px solid #bbb;
+      border-bottom: 2px solid #4a148c;
     }
 
     .reg-table thead th,
     .reg-table tbody td {
       border-top: none;
       border-bottom: none;
-      border-left: 1px solid #bbb;
+      border-left: 1px solid #c9b3e8;
       padding: 4px 6px;
       font-size: 11px;
       line-height: 1.2;
@@ -325,20 +355,26 @@ export class ReceiptService {
 
     .reg-table thead th:last-child,
     .reg-table tbody td:last-child {
-      border-right: 1px solid #bbb;
+      border-right: 1px solid #c9b3e8;
     }
 
     .reg-table thead th {
-      background: #4a148c;
+      background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%);
       color: #fff;
-      font-weight: 600;
+      font-weight: 700;
       text-align: center;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 8px 6px;
+      padding: 9px 6px;
+      border-left: 1px solid #6a2faa;
     }
 
+    .row-even { background: #fdfaff; }
+    .row-odd  { background: #f3eeff; }
+
     .reg-table .empty-row td { height: 26px; padding: 7px 8px; }
+    .empty-row.row-even { background: #fdfaff; }
+    .empty-row.row-odd  { background: #f9f5ff; }
 
     .phone {
       display: block;
@@ -347,9 +383,28 @@ export class ReceiptService {
       margin-top: 2px;
     }
 
-    .col-name { font-weight: 500; }
+    .col-name { font-weight: 600; color: #1a1a2e; }
     .col-rel  { font-style: italic; color: #555; }
-    .col-amt  { font-weight: 700; font-family: 'Courier New', Courier, monospace; }
+    .col-amt  { font-weight: 700; font-family: 'Courier New', Courier, monospace; color: #2e7d32; }
+
+    /* Side colour badges */
+    .side-groom { color: #1565c0; font-weight: 600; }
+    .side-bride { color: #c2185b; font-weight: 600; }
+    .side-both  { color: #6a1b9a; font-weight: 600; }
+
+    /* Payment colour badges */
+    .pay-cash   { color: #2e7d32; font-weight: 600; }
+    .pay-cheque { color: #e65100; font-weight: 600; }
+    .pay-online { color: #1565c0; font-weight: 600; }
+    .pay-dd     { color: #4a148c; font-weight: 600; }
+
+    .filter-info {
+      font-size: 10px;
+      color: #7b1fa2;
+      font-style: italic;
+      text-align: right;
+      margin-bottom: 4px;
+    }
 
     .table-footer {
       display: flex;
@@ -455,6 +510,8 @@ export class ReceiptService {
       <div class="header-right">
         <div><strong>Printed:</strong> ${printDate}</div>
         <div><strong>Side:</strong> ${esc(sideLabel)}</div>
+        ${cityFilter ? `<div><strong>City:</strong> ${esc(cityFilter)}</div>` : ''}
+        ${districtFilter ? `<div><strong>District:</strong> ${esc(districtFilter)}</div>` : ''}
         <div><strong>Total Guests:</strong> ${totalQty}</div>
         <div><strong>Grand Total:</strong> ${esc(fmt(grandTotal))}</div>
       </div>
@@ -467,16 +524,18 @@ export class ReceiptService {
       <span><strong>Date:</strong> ${eventDate}</span>
     </div>
 
+    ${filterDesc ? `<div class="filter-info">Filtered by: ${esc(filterDesc)}</div>` : ''}
+
     <table class="reg-table">
       <thead>
         <tr>
-          <th style="width:30px">S.No</th>
-          <th style="min-width:150px">Guest Name</th>
-          <th style="width:100px">Relationship</th>
-          <th style="width:80px">City</th>
-          ${showSideCol ? '<th style="width:70px">Side</th>' : ''}
-          <th style="width:90px">Amount</th>
-          <th style="width:70px">Payment</th>
+          <th style="width:28px">S.No</th>
+          <th style="min-width:120px">Guest Name</th>
+          ${showRelCol      ? '<th style="width:90px">Relationship</th>' : ''}
+          ${showCityCol     ? '<th style="width:70px">City</th>' : ''}
+          ${showDistrictCol ? '<th style="width:80px">District</th>' : ''}
+          ${showSideCol     ? '<th style="width:60px">Side</th>' : ''}
+          <th style="width:80px">Amount</th>
         </tr>
       </thead>
       <tbody>
@@ -657,9 +716,10 @@ export class ReceiptService {
 </html>`;
   }
 
-  private buildReceiptHtml(entry: MoiEntry, event: Event, paperSize: PaperSize, receiptNo?: number): string {
+  private buildReceiptHtml(entry: MoiEntry, event: Event, paperSize: PaperSize, receiptNo?: number, lang: ReceiptLang = 'en'): string {
     const cfg = getEventConfig(event.event_type);
     const title = getEventTitle(event);
+    const isTamil = lang === 'ta';
 
     const widthMm = paperSize === '58' ? '58mm' : '80mm';
     const widthPx = paperSize === '58' ? '220px' : '302px';
@@ -667,27 +727,76 @@ export class ReceiptService {
     const titleSize = paperSize === '58' ? '13px' : '16px';
     const amtSize = paperSize === '58' ? '18px' : '22px';
 
-    const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric',
+    const locale = isTamil ? 'ta-IN' : 'en-IN';
+
+    const eventDate = new Date(event.event_date).toLocaleDateString(locale, {
+      day: '2-digit', month: isTamil ? 'long' : 'short', year: 'numeric',
     });
 
     const now = new Date();
-    const printDate = now.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const printDate = now.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
     const printTime = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const amountFormatted = new Intl.NumberFormat('en-IN', {
       style: 'currency', currency: 'INR', minimumFractionDigits: 0,
     }).format(entry.amount);
 
-    const sideLabels: Record<string, string> = {
-      groom: cfg.sideALabel,
-      bride: cfg.sideBLabel,
-      both: 'Both',
+    // ── Label maps ───────────────────────────────────────────────────────
+    const L = isTamil ? {
+      subtitle:    `${cfg.emoji} திருமண பரிசு பதிவு ரசீது`,
+      event:       'நிகழ்வு',
+      family:      'குடும்பம்',
+      dateLabel:   'திருமண தேதி',
+      venue:       'இடம்',
+      receiptNo:   'ரசீது எண்',
+      printed:     'அச்சிடப்பட்டது',
+      guestName:   'விருந்தினர் பெயர்',
+      relation:    'உறவு முறை',
+      side:        'பக்கம்',
+      city:        'நகரம்',
+      district:    'மாவட்டம்',
+      phone:       'தொலைபேசி',
+      amountLabel: 'தொகை',
+      payment:     'செலுத்தும் முறை',
+      chequeNo:    'காசோலை எண்',
+      txnRef:      'பரிவர்த்தனை குறிப்பு',
+      receivedBy:  'பெற்றவர்',
+      notes:       'குறிப்பு',
+      thankYou:    'உங்கள் அன்பான மோய்க்கு மிக்க நன்றி!',
+      bless:       `இந்த திருமணத்தை இறைவன் ஆசீர்வதிக்கட்டும்`,
+      sideGroom:   'மணமகன் பக்கம்',
+      sideBride:   'மணமகள் பக்கம்',
+      sideBoth:    'இரு பக்கமும்',
+      payLabels:   { cash: 'ரொக்கம்', cheque: 'காசோலை', online: 'ஆன்லைன் பரிமாற்றம்', dd: 'வரைவோலை' } as Record<string, string>,
+    } : {
+      subtitle:    `${cfg.emoji} ${cfg.label} Gift Registry Receipt`,
+      event:       'Event',
+      family:      'Family',
+      dateLabel:   cfg.dateLabel,
+      venue:       'Venue',
+      receiptNo:   'Receipt No',
+      printed:     'Printed',
+      guestName:   'Guest Name',
+      relation:    'Relation',
+      side:        'Side',
+      city:        'City',
+      district:    'District',
+      phone:       'Phone',
+      amountLabel: 'AMOUNT',
+      payment:     'Payment',
+      chequeNo:    'Cheque No',
+      txnRef:      'Txn Ref',
+      receivedBy:  'Received By',
+      notes:       'Notes',
+      thankYou:    'Thank you for your generous blessing!',
+      bless:       `May God bless this ${cfg.label.toLowerCase()}`,
+      sideGroom:   cfg.sideALabel,
+      sideBride:   cfg.sideBLabel,
+      sideBoth:    'Both',
+      payLabels:   { cash: 'CASH', cheque: 'CHEQUE', online: 'ONLINE TRANSFER', dd: 'DEMAND DRAFT' } as Record<string, string>,
     };
 
-    const paymentLabels: Record<string, string> = {
-      cash: 'CASH', cheque: 'CHEQUE', online: 'ONLINE TRANSFER', dd: 'DEMAND DRAFT',
-    };
+    const sideLabel = entry.side === 'groom' ? L.sideGroom : entry.side === 'bride' ? L.sideBride : L.sideBoth;
 
     const e = (s: string | number | undefined): string =>
       String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -701,19 +810,34 @@ export class ReceiptService {
     const conditionalRow = (label: string, value: string | undefined, bold = false): string =>
       value ? row(label, e(value), bold) : '';
 
+    // Load Noto Sans Tamil from the app's own local font bundle (works on Ubuntu server)
+    const tamilFont = isTamil
+      ? `@font-face {
+           font-family: 'Noto Sans Tamil';
+           font-style: normal;
+           font-weight: 400;
+           font-display: block;
+           src: url('/assets/fonts/NotoSansTamil-Regular.woff2') format('woff2');
+         }`
+      : '';
+    const bodyFont = isTamil
+      ? `'Noto Sans Tamil', 'Latha', Arial, sans-serif`
+      : `'Courier New', Courier, monospace`;
+
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTamil ? 'ta' : 'en'}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Moi Receipt #${e(String(entry.id))}</title>
   <style>
+    ${tamilFont}
     @page { size: ${widthMm} auto; margin: 2mm 0; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Courier New', Courier, monospace;
+      font-family: ${bodyFont};
       font-size: ${fontSize};
-      line-height: 1.4;
+      line-height: 1.5;
       width: ${widthPx};
       max-width: ${widthPx};
       padding: 4mm 3mm 6mm;
@@ -721,12 +845,12 @@ export class ReceiptService {
       background: #fff;
     }
     .center { text-align: center; }
-    .title    { font-size: ${titleSize}; font-weight: bold; letter-spacing: 1px; }
-    .subtitle { font-size: calc(${fontSize} - 1px); letter-spacing: 0.5px; margin-top: 2px; }
+    .title    { font-size: ${titleSize}; font-weight: bold; letter-spacing: 1px; font-family: 'Courier New', Courier, monospace; }
+    .subtitle { font-size: calc(${fontSize} - 1px); letter-spacing: 0.3px; margin-top: 2px; }
     .dline { margin: 4px 0 3px; font-size: calc(${fontSize} - 1px); letter-spacing: 2px;
-             white-space: nowrap; overflow: hidden; }
+             white-space: nowrap; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
     .sline { margin: 3px 0; font-size: calc(${fontSize} - 1px); letter-spacing: 1px;
-             white-space: nowrap; overflow: hidden; }
+             white-space: nowrap; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
     table { width: 100%; border-collapse: collapse; margin: 2px 0; }
     td { vertical-align: top; padding: 1px 0; }
     td.lbl { width: 44%; font-weight: 600; white-space: nowrap;
@@ -741,8 +865,28 @@ export class ReceiptService {
       border-bottom: 2px solid #000;
       margin: 5px 0;
       letter-spacing: 1px;
+      font-family: 'Courier New', Courier, monospace;
     }
-    .footer { font-size: calc(${fontSize} - 1px); text-align: center; margin-top: 5px; line-height: 1.6; }
+    .footer { font-size: calc(${fontSize} - 1px); text-align: center; margin-top: 5px; line-height: 1.8; }
+    .congrats-block {
+      text-align: center;
+      margin-top: 6px;
+      padding: 4px 2px;
+    }
+    .congrats-en {
+      font-size: calc(${fontSize} - 1px);
+      font-style: italic;
+      color: #000;
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+    .congrats-ta {
+      font-family: ${isTamil ? `'Noto Sans Tamil', 'Latha', Arial, sans-serif` : `'Noto Sans Tamil', 'Latha', Arial, sans-serif`};
+      font-size: calc(${fontSize} - 1px);
+      color: #000;
+      line-height: 1.6;
+    }
+    .hearts { font-size: calc(${fontSize} + 1px); letter-spacing: 3px; }
     @media print {
       body { width: ${widthMm}; }
       @page { size: ${widthMm} auto; margin: 2mm 0; }
@@ -752,55 +896,79 @@ export class ReceiptService {
 <body>
   <div class="center">
     <div class="title">MOIFY</div>
-    <div class="subtitle">${cfg.emoji} ${e(cfg.label)} Gift Registry Receipt</div>
+    <div class="subtitle">${L.subtitle}</div>
   </div>
 
   <div class="dline">================================</div>
 
   <table>
     <tr>
-      <td class="lbl">Event</td>
+      <td class="lbl">${e(L.event)}</td>
       <td class="val"><b>${e(title)}</b></td>
     </tr>
-    ${event.family_name ? row('Family', e(event.family_name)) : ''}
-    ${row(cfg.dateLabel, eventDate)}
-    ${event.venue ? row('Venue', e(event.venue)) : ''}
+    ${event.family_name ? row(L.family, e(event.family_name)) : ''}
+    ${row(L.dateLabel, eventDate)}
+    ${event.venue ? row(L.venue, e(event.venue)) : ''}
   </table>
 
   <div class="sline">--------------------------------</div>
 
   <table>
-    ${row('Receipt No', '#' + e(String(receiptNo ?? entry.id)))}
-    ${row('Printed', printDate + ' ' + printTime)}
+    ${row(L.receiptNo, '#' + e(String(receiptNo ?? entry.id)))}
+    ${row(L.printed, printDate + ' ' + printTime)}
   </table>
 
   <div class="sline">--------------------------------</div>
 
   <table>
-    ${row('Guest Name', e(entry.guest_name), true)}
-    ${conditionalRow('Relation', entry.relationship)}
-    ${row('Side', sideLabels[entry.side] || e(entry.side))}
-    ${conditionalRow('City', entry.city)}
-    ${conditionalRow('Phone', entry.phone)}
+    ${row(L.guestName, e(entry.guest_name), true)}
+    ${conditionalRow(L.relation, entry.relationship)}
+    ${row(L.side, sideLabel)}
+    ${conditionalRow(L.city, entry.city)}
+    ${conditionalRow(L.district, entry.district)}
+    ${conditionalRow(L.phone, entry.phone)}
   </table>
 
   <div class="amount-block">
-    AMOUNT : ${e(amountFormatted)}
+    ${e(L.amountLabel)} : ${e(amountFormatted)}
   </div>
 
   <table>
-    ${row('Payment', paymentLabels[entry.payment_mode] || e(entry.payment_mode))}
-    ${conditionalRow('Cheque No', entry.cheque_number)}
-    ${conditionalRow('Txn Ref', entry.transaction_ref)}
-    ${conditionalRow('Received By', entry.received_by)}
-    ${conditionalRow('Notes', entry.notes)}
+    ${row(L.payment, L.payLabels[entry.payment_mode] || e(entry.payment_mode))}
+    ${conditionalRow(L.chequeNo, entry.cheque_number)}
+    ${conditionalRow(L.txnRef, entry.transaction_ref)}
+    ${conditionalRow(L.receivedBy, entry.received_by)}
+    ${conditionalRow(L.notes, entry.notes)}
   </table>
 
   <div class="dline">================================</div>
 
   <div class="footer">
-    <div>Thank you for your generous blessing!</div>
-    <div>May God bless this ${e(cfg.label.toLowerCase())}</div>
+    <div>${e(L.thankYou)}</div>
+    <div>${e(L.bless)}</div>
+  </div>
+
+  <div class="dline">--------------------------------</div>
+
+  <div class="congrats-block">
+    <div class="hearts">&#10084; &#10084; &#10084;</div>
+    ${isTamil ? `
+    <div class="congrats-ta">
+      &ldquo;இல்லறம் இனிதே இருக்க வாழ்த்துக்கள்!&rdquo;
+    </div>
+    <div class="congrats-ta">
+      &ldquo;அன்பும் அமைதியும் என்றும் நிலைக்கட்டும்.&rdquo;
+    </div>
+    <div class="congrats-ta">
+      &ldquo;திருமண நல் வாழ்த்துக்கள்!&rdquo;
+    </div>` : `
+    <div class="congrats-en">
+      &ldquo;May your journey together be filled<br>with love, laughter &amp; endless joy!&rdquo;
+    </div>
+    <div class="congrats-en">
+      &ldquo;Congratulations on your wedding!<br>Wishing you a lifetime of happiness.&rdquo;
+    </div>`}
+    <div class="hearts">&#10084; &#10084; &#10084;</div>
   </div>
 
   <div class="dline">================================</div>

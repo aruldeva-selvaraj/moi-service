@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
+import { MatSortModule } from '@angular/material/sort';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -16,7 +17,7 @@ import { MoiService } from '../../../core/services/moi.service';
 import { EventService } from '../../../core/services/event.service';
 import { MoiEntry, MoiFilter } from '../../../core/models/moi.model';
 import { Event, getEventTitle, getEventConfig } from '../../../core/models/event.model';
-import { EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../../shared/components/index';
+import { EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent } from '../../../shared/components/index';
 
 @Component({
   selector: 'app-moi-list',
@@ -24,9 +25,9 @@ import { EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } fro
   imports: [
     CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule,
-    MatIconModule, MatTableModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatIconModule, MatTableModule, MatSortModule, MatProgressSpinnerModule, MatSnackBarModule,
     MatTooltipModule, MatPaginatorModule,
-    EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent,
+    EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent,
   ],
   templateUrl: './moi-list.component.html',
   styleUrls: ['./moi-list.component.scss'],
@@ -47,8 +48,23 @@ export class MoiListComponent implements OnInit {
   searchQuery = '';
   page = 1;
   pageSize = 20;
+  sortField: 'guest_name' | 'amount' | 'created_at' | '' = '';
+  sortDir: 'asc' | 'desc' = 'desc';
 
   displayedColumns = ['event', 'guest_name', 'side', 'amount', 'payment_mode', 'city', 'date', 'actions'];
+
+  sortedEntries = computed(() => {
+    const list = [...this.entries()];
+    if (!this.sortField) return list;
+    const field = this.sortField;
+    const dir = this.sortDir === 'asc' ? 1 : -1;
+    return list.sort((a, b) => {
+      const av = (a as any)[field];
+      const bv = (b as any)[field];
+      if (typeof av === 'number') return (av - bv) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  });
 
   ngOnInit() {
     this.eventService.getAll().subscribe({ next: (ev) => this.events.set(ev) });
@@ -106,6 +122,20 @@ export class MoiListComponent implements OnInit {
     this.filterPayment = '';
     this.searchQuery = '';
     this.applyFilter();
+  }
+
+  onSort(field: 'guest_name' | 'amount' | 'created_at'): void {
+    if (this.sortField === field) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDir = field === 'amount' ? 'desc' : 'asc';
+    }
+  }
+
+  sortIcon(field: string): string {
+    if (this.sortField !== field) return 'unfold_more';
+    return this.sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
   }
 
   onPageChange(event: PageEvent) {

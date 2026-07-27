@@ -12,6 +12,7 @@ export interface MoiEntry {
   cheque_number?: string;
   transaction_ref?: string;
   city?: string;
+  district?: string;
   phone?: string;
   notes?: string;
   received_by?: string;
@@ -29,6 +30,7 @@ export interface MoiEntryCreate {
   cheque_number?: string;
   transaction_ref?: string;
   city?: string;
+  district?: string;
   phone?: string;
   notes?: string;
   received_by?: string;
@@ -60,6 +62,8 @@ export interface MoiFilter {
   side?: Side;
   payment_mode?: PaymentMode;
   search?: string;
+  city?: string;
+  district?: string;
   page: number;
   page_size: number;
 }

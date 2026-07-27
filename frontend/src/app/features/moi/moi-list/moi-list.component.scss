@@ -39,6 +39,28 @@
   font-size: 0.8rem;
 }
 
+.sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: inherit;
+  color: inherit;
+  padding: 0;
+
+  &:hover { color: var(--color-primary, #8B4513); }
+
+  .sort-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted, #aaa);
+  }
+}
+
 .table-paginator {
   background: var(--card-bg, white);
   border-radius: 0 0 var(--radius-md, 12px) var(--radius-md, 12px);

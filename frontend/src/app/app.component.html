@@ -2,7 +2,7 @@
   <app-nav />
 }
 <main [class.main-content]="!isLoginPage()">
-  <router-outlet />
+  <router-outlet #outlet="outlet" [@routeAnimation]="getRouteState(outlet)" />
 </main>
 @if (!isLoginPage()) {
   <app-theme-picker />

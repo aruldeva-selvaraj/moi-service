@@ -49,7 +49,7 @@
   </div>
 
   @if (loading()) {
-    <app-loading-spinner />
+    <app-skeleton-loader variant="table" [count]="6" [colCount]="7" />
   } @else if (entries().length === 0) {
     <app-empty-state
       icon="💝"
@@ -57,7 +57,7 @@
       message="Try adjusting your filters or add entries from an event page" />
   } @else {
     <div class="data-table-container">
-      <table mat-table [dataSource]="entries()">
+      <table mat-table [dataSource]="sortedEntries()">
         <ng-container matColumnDef="event">
           <th mat-header-cell *matHeaderCellDef>Event</th>
           <td mat-cell *matCellDef="let e">
@@ -67,7 +67,11 @@
           </td>
         </ng-container>
         <ng-container matColumnDef="guest_name">
-          <th mat-header-cell *matHeaderCellDef>Guest</th>
+          <th mat-header-cell *matHeaderCellDef>
+            <button class="sort-header" (click)="onSort('guest_name')">
+              Guest <mat-icon class="sort-icon">{{ sortIcon('guest_name') }}</mat-icon>
+            </button>
+          </th>
           <td mat-cell *matCellDef="let e">
             <div class="guest-name">{{ e.guest_name }}</div>
             @if (e.relationship) {
@@ -82,7 +86,11 @@
           </td>
         </ng-container>
         <ng-container matColumnDef="amount">
-          <th mat-header-cell *matHeaderCellDef>Amount</th>
+          <th mat-header-cell *matHeaderCellDef>
+            <button class="sort-header" (click)="onSort('amount')">
+              Amount <mat-icon class="sort-icon">{{ sortIcon('amount') }}</mat-icon>
+            </button>
+          </th>
           <td mat-cell *matCellDef="let e">
             <span class="amount-display">{{ e.amount | currency:'INR':'symbol':'1.0-0' }}</span>
           </td>
@@ -98,7 +106,11 @@
           <td mat-cell *matCellDef="let e">{{ e.city || '-' }}</td>
         </ng-container>
         <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef>Date</th>
+          <th mat-header-cell *matHeaderCellDef>
+            <button class="sort-header" (click)="onSort('created_at')">
+              Date <mat-icon class="sort-icon">{{ sortIcon('created_at') }}</mat-icon>
+            </button>
+          </th>
           <td mat-cell *matCellDef="let e" class="date-cell">
             {{ e.created_at | date:'dd/MM/yyyy HH:mm' }}
           </td>

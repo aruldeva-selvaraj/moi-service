@@ -17,7 +17,16 @@
   margin-right: 32px;
   flex-shrink: 0;
 
+  .nav-logo-img {
+    height: 36px;
+    width: 36px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
   .nav-logo { font-size: 1.5rem; }
+  .nav-logo-fallback { display: none; }
 
   .nav-title {
     font-family: var(--font-heading, 'Playfair Display', serif);
@@ -89,6 +98,99 @@
     transform: rotate(180deg);
   }
 }
+
+// ── Global search bar ─────────────────────────────────────────────────────────
+
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.global-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 24px;
+  background: var(--nav-bg);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  animation: gsSlideDown 0.2s ease;
+}
+
+@keyframes gsSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gs-icon {
+  color: rgba(255,255,255,0.6);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.gs-input {
+  flex: 1;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+
+  &::placeholder { color: rgba(255,255,255,0.5); }
+  &:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.16); }
+}
+
+.gs-clear {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+
+  &:hover { color: white; }
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.gs-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 24px;
+  right: 24px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  z-index: 2000;
+  overflow: hidden;
+}
+
+.gs-result-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: #222;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #f5f0ff; }
+}
+
+.gs-guest  { font-weight: 600; flex: 1; font-size: 0.88rem; }
+.gs-amount { color: #6a1b9a; font-weight: 700; font-size: 0.88rem; white-space: nowrap; }
+.gs-event  { font-size: 0.75rem; color: #888; white-space: nowrap; }
+.gs-empty  { display: block; padding: 12px 14px; color: #888; font-size: 0.85rem; }
 
 @media (max-width: 768px) {
   .link-label  { display: none; }

@@ -51,6 +51,7 @@ export class WeddingFormComponent implements OnInit {
     event_date: ['', Validators.required],
     venue: [''],
     city: [''],
+    district: [''],
     notes: [''],
   });
 

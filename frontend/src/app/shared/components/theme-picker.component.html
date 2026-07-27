@@ -145,6 +145,11 @@
           <span class="depth-preview neon-prev"></span>
           <span>Neon</span>
         </button>
+        <button class="depth-btn liquid-glass-btn" [class.active]="ts.config().depth === 'liquid-glass'"
+                (click)="ts.updateDepth('liquid-glass')">
+          <span class="depth-preview liquid-glass-prev"></span>
+          <span>🫧 Liquid Glass</span>
+        </button>
       </div>
     </section>
 

@@ -1,6 +1,8 @@
 <mat-toolbar class="nav-toolbar">
   <div class="nav-brand">
-    <span class="nav-logo">🪔</span>
+    <img src="assets/images/brand-logo.jpeg" alt="Moify" class="nav-logo-img"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" />
+    <span class="nav-logo nav-logo-fallback">🪔</span>
     <span class="nav-title">Moify</span>
     <span class="nav-slogan">Smart Digital Wedding Gift Ledger</span>
   </div>
@@ -35,6 +37,15 @@
       <span class="link-label">New Event</span>
     </a>
 
+    <!-- Dark mode quick-toggle -->
+    <button mat-icon-button
+            [matTooltip]="ts.config().mood === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+            matTooltipPosition="below"
+            (click)="ts.updateMood(ts.config().mood === 'dark' ? 'light' : 'dark')"
+            aria-label="Toggle dark mode">
+      <mat-icon>{{ ts.config().mood === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
     <!-- 5D Theme button -->
     <button mat-icon-button
             class="theme-toggle-btn"
@@ -44,6 +55,15 @@
             (click)="ts.togglePicker()"
             aria-label="Open Theme Studio">
       <mat-icon>palette</mat-icon>
+    </button>
+
+    <!-- Global search -->
+    <button mat-icon-button
+            matTooltip="Search guests across all events"
+            matTooltipPosition="below"
+            (click)="toggleSearch()"
+            aria-label="Global guest search">
+      <mat-icon>search</mat-icon>
     </button>
 
     <!-- Logout -->
@@ -56,3 +76,35 @@
     </button>
   </div>
 </mat-toolbar>
+
+<!-- Global search bar (slides down below nav) -->
+@if (searchOpen()) {
+  <div class="global-search-bar">
+    <mat-icon class="gs-icon">search</mat-icon>
+    <input #searchInput
+           class="gs-input"
+           type="text"
+           placeholder="Search guest name across all events…"
+           [(ngModel)]="searchQuery"
+           (input)="onSearchInput()"
+           (keydown.escape)="closeSearch()" />
+    @if (searchQuery) {
+      <button class="gs-clear" (click)="clearSearch()">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+    @if (searchResults().length > 0) {
+      <div class="gs-results">
+        @for (r of searchResults(); track r.id) {
+          <a class="gs-result-item" [routerLink]="['/events', r.event_id]" (click)="closeSearch()">
+            <span class="gs-guest">{{ r.guest_name }}</span>
+            <span class="gs-amount">{{ r.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            <span class="gs-event">{{ r.event_name }}</span>
+          </a>
+        }
+      </div>
+    } @else if (searchQuery.length >= 2 && !searchLoading()) {
+      <div class="gs-results"><span class="gs-empty">No guests found</span></div>
+    }
+  </div>
+}

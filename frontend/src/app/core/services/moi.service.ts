@@ -21,6 +21,8 @@ export class MoiService {
     if (filter.side) params = params.set('side', filter.side);
     if (filter.payment_mode) params = params.set('payment_mode', filter.payment_mode);
     if (filter.search) params = params.set('search', filter.search);
+    if (filter.city) params = params.set('city', filter.city);
+    if (filter.district) params = params.set('district', filter.district);
 
     return this.http.get<PaginatedMoiResponse>(this.baseUrl, { params });
   }

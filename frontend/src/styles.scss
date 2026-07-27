@@ -73,7 +73,7 @@ $wedding-theme: mat.m2-define-light-theme((
     accent: $wedding-accent,
   ),
   typography: mat.m2-define-typography-config(
-    $font-family: 'Inter, sans-serif',
+    $font-family: "'Inter', 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', system-ui, Arial, sans-serif",
   ),
   density: 0,
 ));
@@ -124,7 +124,7 @@ $wedding-theme: mat.m2-define-light-theme((
   --radius-md: 16px;
   --radius-lg: 22px;
   --radius-xl: 30px;
-  --font-heading: 'Playfair Display', serif;
+  --font-heading: 'Playfair Display', Georgia, 'Liberation Serif', 'DejaVu Serif', serif;
   --card-transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -137,7 +137,7 @@ $wedding-theme: mat.m2-define-light-theme((
 
 html, body {
   height: 100%;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', system-ui, Arial, sans-serif;
   background-color: var(--bg-page);
   color: var(--text-body);
   transition: background-color 0.4s ease, color 0.4s ease;
@@ -182,6 +182,105 @@ html, body {
     linear-gradient(rgba(var(--color-primary-rgb), 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+// ── Liquid Glass theme ────────────────────────────────────────────────────────
+
+// Gradient background (baked into body so it shows through transparent cards)
+:root[data-depth="liquid-glass"] body {
+  background:
+    radial-gradient(ellipse 80% 60% at 5% 0%,   rgba(var(--color-primary-rgb), 0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 65% 75% at 95% 100%, rgba(var(--color-accent-rgb), 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 55% 45%,  rgba(var(--color-primary-rgb), 0.06) 0%, transparent 80%),
+    var(--bg-page) !important;
+  background-attachment: fixed !important;
+}
+
+// Page content area must be transparent so the body gradient shows through
+:root[data-depth="liquid-glass"] .main-content {
+  background-color: transparent !important;
+}
+
+// Animated color blobs (add depth/movement — may show through transparent layers)
+:root[data-depth="liquid-glass"] body::before {
+  content: '';
+  position: fixed;
+  width: 90vw;
+  height: 90vw;
+  max-width: 900px;
+  max-height: 900px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--color-primary-rgb), 0.18), transparent 60%);
+  top: -25vw;
+  left: -20vw;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(30px);
+  animation: lg-drift-1 22s ease-in-out infinite;
+}
+
+:root[data-depth="liquid-glass"] body::after {
+  content: '';
+  position: fixed;
+  width: 75vw;
+  height: 75vw;
+  max-width: 750px;
+  max-height: 750px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--color-accent-rgb), 0.15), transparent 60%);
+  bottom: -20vw;
+  right: -15vw;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(35px);
+  animation: lg-drift-2 18s ease-in-out infinite;
+}
+
+@keyframes lg-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30%       { transform: translate(100px, -70px) scale(1.12); }
+  65%       { transform: translate(-50px, 110px) scale(0.9); }
+}
+
+@keyframes lg-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30%       { transform: translate(-80px, 60px) scale(1.1); }
+  65%       { transform: translate(70px, -90px) scale(0.93); }
+}
+
+// Specular shimmer sweep on cards
+:root[data-depth="liquid-glass"] .wedding-card,
+:root[data-depth="liquid-glass"] .form-card {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-depth="liquid-glass"] .stat-card {
+  overflow: hidden;
+}
+
+:root[data-depth="liquid-glass"] .wedding-card::after,
+:root[data-depth="liquid-glass"] .stat-card::after,
+:root[data-depth="liquid-glass"] .form-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -70%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 80%
+  );
+  pointer-events: none;
+  animation: lg-shimmer 8s ease-in-out infinite;
+}
+
+@keyframes lg-shimmer {
+  0%        { left: -70%; }
+  40%, 100% { left: 130%; }
 }
 
 @keyframes blob-drift-1 {

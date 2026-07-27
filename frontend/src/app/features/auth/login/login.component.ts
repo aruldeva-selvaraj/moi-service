@@ -17,6 +17,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   username = '';
   password = '';
+  rememberMe = false;
   showPassword = false;
   loginState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   errorMsg = '';
@@ -71,7 +72,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loginState = 'loading';
     this.errorMsg = '';
 
-    const result = await this.auth.login(this.username, this.password);
+    const result = await this.auth.login(this.username, this.password, this.rememberMe);
 
     if (result.ok) {
       this.loginState = 'success';

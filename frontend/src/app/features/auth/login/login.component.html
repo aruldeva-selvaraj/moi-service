@@ -168,6 +168,11 @@
         ⚠️ {{ errorMsg }}
       </div>
 
+      <label class="remember-row">
+        <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" />
+        <span>Remember me on this device</span>
+      </label>
+
       <button type="submit" class="login-btn"
               [class.loading]="loginState === 'loading'"
               [disabled]="loginState === 'loading'">
@@ -178,6 +183,138 @@
       </button>
     </form>
 
-    <div class="login-hint">Contact administrator for login credentials</div>
+    <div class="login-hint-row">
+      <span class="login-hint">Contact administrator for login credentials</span>
+      <button type="button" class="forgot-link" (click)="showForgot()">Forgot Password?</button>
+    </div>
+  </div>
+
+  <!-- ── Forgot Password Panel ───────────────────────────────────────────── -->
+  <div class="login-card forgot-card" *ngIf="forgotStep !== 'off' && loginState !== 'success'">
+
+    <!-- Step 1: Lookup user -->
+    <ng-container *ngIf="forgotStep === 'lookup'">
+      <div class="fp-header">
+        <div class="fp-icon">🔑</div>
+        <h2 class="fp-title">Forgot Password</h2>
+        <p class="fp-subtitle">Enter your username or mobile number to continue</p>
+      </div>
+
+      <div class="fp-form">
+        <div class="form-group">
+          <label>Username or Mobile Number</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" [(ngModel)]="fpIdentifier" name="fpIdentifier"
+                   placeholder="e.g. admin or 9789616611"
+                   (input)="fpError = ''" (keyup.enter)="lookupUser()" />
+          </div>
+        </div>
+
+        <div class="error-msg" *ngIf="fpError">⚠️ {{ fpError }}</div>
+
+        <button type="button" class="login-btn" [class.loading]="fpLoading"
+                [disabled]="fpLoading" (click)="lookupUser()">
+          <span *ngIf="!fpLoading">🔍 Find Account</span>
+          <span *ngIf="fpLoading" class="spinner-wrap">
+            <span class="btn-spinner"></span> Searching…
+          </span>
+        </button>
+
+        <button type="button" class="back-link" (click)="backToLogin()">← Back to Login</button>
+      </div>
+    </ng-container>
+
+    <!-- Step 2: Admin confirm + new password -->
+    <ng-container *ngIf="forgotStep === 'confirm'">
+      <div class="fp-header">
+        <div class="fp-icon">🛡️</div>
+        <h2 class="fp-title">Admin Confirmation</h2>
+        <p class="fp-subtitle">Admin must authorize this password reset</p>
+      </div>
+
+      <div class="fp-found-badge">
+        <span class="fp-found-label">Resetting password for</span>
+        <span class="fp-found-name">{{ fpMaskedName || fpIdentifier }}</span>
+      </div>
+
+      <div class="fp-form">
+        <div class="form-group">
+          <label>Admin Username</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" [(ngModel)]="fpAdminUsername" name="fpAdminUsername"
+                   placeholder="Admin username" (input)="fpError = ''" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Admin Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input [type]="fpShowAdminPw ? 'text' : 'password'"
+                   [(ngModel)]="fpAdminPassword" name="fpAdminPassword"
+                   placeholder="Admin password" (input)="fpError = ''" />
+            <button type="button" class="toggle-pw" (click)="fpShowAdminPw = !fpShowAdminPw">
+              {{ fpShowAdminPw ? '🙈' : '👁️' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="fp-divider"></div>
+
+        <div class="form-group">
+          <label>New Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input [type]="fpShowNewPw ? 'text' : 'password'"
+                   [(ngModel)]="fpNewPassword" name="fpNewPassword"
+                   placeholder="Min 6 characters" (input)="fpError = ''" />
+            <button type="button" class="toggle-pw" (click)="fpShowNewPw = !fpShowNewPw">
+              {{ fpShowNewPw ? '🙈' : '👁️' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">✅</span>
+            <input [type]="fpShowConfirmPw ? 'text' : 'password'"
+                   [(ngModel)]="fpConfirmPassword" name="fpConfirmPassword"
+                   placeholder="Re-enter new password" (input)="fpError = ''"
+                   (keyup.enter)="resetPassword()" />
+            <button type="button" class="toggle-pw" (click)="fpShowConfirmPw = !fpShowConfirmPw">
+              {{ fpShowConfirmPw ? '🙈' : '👁️' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="error-msg" *ngIf="fpError">⚠️ {{ fpError }}</div>
+
+        <button type="button" class="reset-btn" [class.loading]="fpLoading"
+                [disabled]="fpLoading" (click)="resetPassword()">
+          <span *ngIf="!fpLoading">🔒 Reset Password</span>
+          <span *ngIf="fpLoading" class="spinner-wrap">
+            <span class="btn-spinner"></span> Resetting…
+          </span>
+        </button>
+
+        <button type="button" class="back-link" (click)="forgotStep = 'lookup'; fpError = ''">← Back</button>
+      </div>
+    </ng-container>
+
+    <!-- Step 3: Done -->
+    <ng-container *ngIf="forgotStep === 'done'">
+      <div class="fp-header">
+        <div class="fp-icon">✅</div>
+        <h2 class="fp-title">Password Reset!</h2>
+        <p class="fp-subtitle">The password has been updated successfully.</p>
+      </div>
+      <button type="button" class="login-btn" (click)="backToLogin()">
+        🪔 Back to Login
+      </button>
+    </ng-container>
+
   </div>
 </div>

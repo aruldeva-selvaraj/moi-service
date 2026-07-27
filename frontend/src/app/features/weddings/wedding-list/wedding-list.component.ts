@@ -10,7 +10,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Event, getEventConfig, getEventTitle } from '../../../core/models/event.model';
-import { EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../../shared/components/index';
+import { EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent } from '../../../shared/components/index';
 
 @Component({
   selector: 'app-wedding-list',
@@ -18,7 +18,7 @@ import { EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } fro
   imports: [
     CommonModule, RouterLink, CurrencyPipe, DatePipe,
     MatButtonModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDividerModule, MatChipsModule,
-    EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent,
+    EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent,
   ],
   templateUrl: './wedding-list.component.html',
   styleUrls: ['./wedding-list.component.scss'],
@@ -41,14 +41,40 @@ export class WeddingListComponent implements OnInit {
   loadEvents() {
     this.loading.set(true);
     this.eventService.getAll().subscribe({
-      next: (data) => { this.events.set(data); this.loading.set(false); },
+      next: (data) => {
+        this.events.set(data);
+        this.loading.set(false);
+        if (this.auth.isAdmin()) this.notifyPending(data.filter(e => e.status === 'pending').length);
+      },
       error: () => { this.loading.set(false); },
     });
+  }
+
+  private notifyPending(count: number): void {
+    if (count === 0 || !('Notification' in window)) return;
+    const send = () => new Notification('Moify — Pending Approval', {
+      body: `${count} event${count > 1 ? 's' : ''} waiting for your approval`,
+      icon: '/favicon.ico',
+    });
+    if (Notification.permission === 'granted') send();
+    else if (Notification.permission !== 'denied') Notification.requestPermission().then(p => { if (p === 'granted') send(); });
   }
 
   getEventTitle(ev: Event): string { return getEventTitle(ev); }
   getEventEmoji(ev: Event): string { return getEventConfig(ev.event_type).emoji; }
   getEventTypeLabel(ev: Event): string { return getEventConfig(ev.event_type).label; }
+
+  getEventStatusBadge(ev: Event): { label: string; css: string } | null {
+    if (!ev.event_date) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const evDate = new Date(ev.event_date); evDate.setHours(0, 0, 0, 0);
+    const diff = Math.round((evDate.getTime() - today.getTime()) / 86400000);
+    if (diff < 0)   return { label: 'Completed', css: 'ev-status-done' };
+    if (diff === 0) return { label: '🎉 Today!', css: 'ev-status-today' };
+    if (diff <= 7)  return { label: `In ${diff} day${diff === 1 ? '' : 's'}`, css: 'ev-status-soon' };
+    if (diff <= 30) return { label: `In ${diff} days`, css: 'ev-status-upcoming' };
+    return null;
+  }
 
   approveEvent(ev: Event, e: MouseEvent): void {
     e.stopPropagation();

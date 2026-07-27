@@ -2,7 +2,7 @@ import { Injectable, signal, effect, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
 export type Mood = 'light' | 'dark';
-export type Depth = 'flat' | 'glass' | 'elevated' | 'neon';
+export type Depth = 'flat' | 'glass' | 'elevated' | 'neon' | 'liquid-glass';
 export type Vibe = 'classic' | 'festive' | 'royal' | 'modern';
 
 export interface ThemeConfig {
@@ -59,6 +59,11 @@ export const PRESET_THEMES: PresetTheme[] = [
     name: 'Midnight Neon',
     icon: '🌙',
     config: { primaryColor: '#3B82F6', accentColor: '#A855F7', mood: 'dark', depth: 'neon', vibe: 'modern' },
+  },
+  {
+    name: 'Liquid Glass',
+    icon: '🫧',
+    config: { primaryColor: '#5E5CE6', accentColor: '#BF5AF2', mood: 'light', depth: 'liquid-glass', vibe: 'modern' },
   },
 ];
 
@@ -225,6 +230,26 @@ export class ThemeService {
         root.style.setProperty('--table-header-bg', `var(--color-primary)`);
         root.style.setProperty('--nav-backdrop', 'none');
         root.style.setProperty('--nav-shadow', `0 0 0 1px rgba(${pr}, ${pg}, ${pb}, 0.4), 0 4px 24px rgba(${pr}, ${pg}, ${pb}, 0.4)`);
+        break;
+
+      case 'liquid-glass':
+        root.style.setProperty('--card-bg', isDark ? 'rgba(15,23,42,0.48)' : 'rgba(255,255,255,0.62)');
+        root.style.setProperty('--card-border', `1px solid rgba(255,255,255,${isDark ? '0.16' : '0.72'})`);
+        root.style.setProperty('--card-shadow',
+          `0 8px 40px rgba(${pr},${pg},${pb},0.18), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.85)`
+        );
+        root.style.setProperty('--card-hover-shadow',
+          `0 24px 64px rgba(${pr},${pg},${pb},0.28), 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.92)`
+        );
+        root.style.setProperty('--card-backdrop', `blur(48px) saturate(200%) brightness(${isDark ? '1.06' : '1.1'})`);
+        root.style.setProperty('--glow', `0 0 32px rgba(${pr},${pg},${pb},0.3), 0 0 64px rgba(${ar},${ag},${ab},0.15)`);
+        root.style.setProperty('--table-header-bg', `rgba(${pr},${pg},${pb},0.55)`);
+        root.style.setProperty('--nav-backdrop', `blur(60px) saturate(220%) brightness(${isDark ? '1.06' : '1.12'})`);
+        root.style.setProperty('--nav-shadow', `0 4px 32px rgba(${pr},${pg},${pb},0.22), inset 0 -1px 0 rgba(255,255,255,0.15)`);
+        root.style.setProperty('--bg-card', isDark ? 'rgba(15,23,42,0.48)' : 'rgba(255,255,255,0.62)');
+        root.style.setProperty('--bg-card-hover', isDark ? 'rgba(30,41,59,0.58)' : 'rgba(255,255,255,0.82)');
+        root.style.setProperty('--bg-stat', isDark ? 'rgba(30,41,59,0.42)' : `rgba(${pr},${pg},${pb},0.05)`);
+        root.style.setProperty('--border-color', `rgba(${pr},${pg},${pb},0.15)`);
         break;
     }
   }

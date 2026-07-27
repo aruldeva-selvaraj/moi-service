@@ -305,6 +305,8 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
+
+  .liquid-glass-btn { grid-column: span 4; flex-direction: row; gap: 10px; justify-content: center; }
 }
 
 .depth-btn {
@@ -362,6 +364,13 @@
   background: transparent;
   border: 1px solid var(--color-primary, #8B4513);
   box-shadow: 0 0 8px var(--color-primary, #8B4513), inset 0 0 4px rgba(139,69,19,0.1);
+}
+
+.liquid-glass-prev {
+  background: linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(150,140,255,0.35) 60%, rgba(191,90,242,0.2) 100%);
+  border: 1px solid rgba(255,255,255,0.8);
+  box-shadow: 0 4px 16px rgba(94,92,230,0.25), inset 0 1px 0 rgba(255,255,255,0.95);
+  backdrop-filter: blur(4px);
 }
 
 // ── Vibe grid ─────────────────────────────────────────────────────────────────

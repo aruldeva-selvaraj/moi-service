@@ -26,20 +26,19 @@
           @if (event()!.city) {
             <span><mat-icon class="meta-icon">location_city</mat-icon> {{ event()!.city }}</span>
           }
+          @if (event()!.district) {
+            <span><mat-icon class="meta-icon">map</mat-icon> {{ event()!.district }}</span>
+          }
         </div>
       </div>
       <div class="header-actions">
         <a mat-stroked-button [routerLink]="['/events', event()!.id, 'edit']">
           <mat-icon>edit</mat-icon> Edit
         </a>
-        <button mat-raised-button color="accent" (click)="printGuestListA4()"
-                matTooltip="Print full guest list with all details grouped by side (A4 Landscape)"
+        <button mat-raised-button color="accent" (click)="openA4PrintModal()"
+                matTooltip="Print A4 guest register — choose side to filter"
                 [disabled]="entries().length === 0">
-          <mat-icon>groups</mat-icon> Print Guest List
-        </button>
-        <button mat-stroked-button (click)="printConsolidatedA4()"
-                matTooltip="Print A4 consolidated register — split by side">
-          <mat-icon>picture_as_pdf</mat-icon> A4 Register
+          <mat-icon>print</mat-icon> Print A4
         </button>
         <button mat-stroked-button (click)="printMoiList()">
           <mat-icon>print</mat-icon> Print
@@ -65,13 +64,68 @@
       <!-- Add Moi Tab -->
       <mat-tab label="➕ Add Moi Entry">
         <div class="tab-content">
+
+          <!-- Sticky running total banner -->
+          @if (event()) {
+            <div class="running-total-banner">
+              <span class="rt-item">💰 <strong>{{ event()!.total_moi | currency:'INR':'symbol':'1.0-0' }}</strong> collected</span>
+              <span class="rt-sep">|</span>
+              <span class="rt-item">👥 <strong>{{ event()!.moi_count }}</strong> guests</span>
+              @if (event()!.moi_count > 0) {
+                <span class="rt-sep">|</span>
+                <span class="rt-item rt-avg">avg <strong>{{ event()!.total_moi / event()!.moi_count | currency:'INR':'symbol':'1.0-0' }}</strong></span>
+              }
+            </div>
+          }
+
+          <!-- ── AI Smart Entry ──────────────────────────── -->
+          <div class="ai-smart-entry">
+            <div class="ai-entry-header">
+              <mat-icon class="ai-entry-icon">auto_awesome</mat-icon>
+              <span class="ai-entry-title">AI Smart Entry</span>
+              <span class="ai-entry-hint">Type or speak a full sentence — fields are extracted automatically</span>
+            </div>
+
+            <div class="ai-entry-body">
+              <mat-form-field appearance="outline" class="ai-textarea-field">
+                <mat-label>Describe the entry in natural language…</mat-label>
+                <textarea matInput [(ngModel)]="aiText" rows="2"
+                          placeholder='name Arul amount 500 city Karuppur district Kumbakonam'></textarea>
+                <mat-hint>Keywords: name · amount · city · district · phone · relation · side · received by</mat-hint>
+              </mat-form-field>
+
+              <div class="ai-entry-actions">
+                <button mat-icon-button color="warn" type="button"
+                        [class.voice-pulse]="aiListening()"
+                        (click)="startAiVoice()"
+                        [matTooltip]="aiListening() ? 'Listening… tap to stop' : 'Speak your entry (full sentence)'">
+                  <mat-icon>{{ aiListening() ? 'mic' : 'mic_none' }}</mat-icon>
+                </button>
+
+                <button mat-raised-button color="accent" type="button"
+                        [disabled]="!aiText.trim()"
+                        (click)="openAiDialog()">
+                  <mat-icon>auto_awesome</mat-icon>
+                  Parse &amp; Review
+                </button>
+              </div>
+            </div>
+
+            @if (aiListening()) {
+              <div class="ai-listening-bar">
+                <span class="ai-pulse-dot"></span>
+                Listening… speak your entry now
+              </div>
+            }
+          </div>
+
           <div class="form-card moi-form-card">
             <h3 class="form-section-title">Record New Moi Entry</h3>
             <form [formGroup]="moiForm" (ngSubmit)="submitMoi()">
               <div class="grid-2">
                 <mat-form-field appearance="outline">
                   <mat-label>Guest Name *</mat-label>
-                  <input matInput formControlName="guest_name" placeholder="Enter guest's name">
+                  <input matInput formControlName="guest_name" placeholder="Enter guest's name" #guestNameInput (input)="checkDuplicate()">
                   <mat-icon matPrefix>person</mat-icon>
                   <button mat-icon-button matSuffix type="button"
                     [class.voice-active]="voice.activeField() === 'guest_name'"
@@ -86,29 +140,46 @@
 
                 <mat-form-field appearance="outline">
                   <mat-label>Relationship</mat-label>
-                  <input matInput formControlName="relationship" placeholder="e.g., Uncle, Friend, Colleague">
+                  <input matInput formControlName="relationship" placeholder="e.g., Uncle, Friend, Colleague"
+                    [matAutocomplete]="relAuto">
                   <mat-icon matPrefix>people</mat-icon>
+                  <mat-autocomplete #relAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(relationshipSuggestions(), moiForm.get('relationship')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-autocomplete>
                 </mat-form-field>
               </div>
 
               <div class="grid-2">
-                <mat-form-field appearance="outline">
-                  <mat-label>Amount (₹) *</mat-label>
-                  <input matInput type="number" formControlName="amount" placeholder="0" min="1">
-                  <mat-icon matPrefix>currency_rupee</mat-icon>
-                  <button mat-icon-button matSuffix type="button"
-                    [class.voice-active]="voice.activeField() === 'amount'"
-                    [matTooltip]="voice.activeField() === 'amount' ? 'Listening… click to stop' : 'Voice input for Amount (say the number)'"
-                    (click)="startVoice('amount')">
-                    <mat-icon>{{ voice.activeField() === 'amount' ? 'mic' : 'mic_none' }}</mat-icon>
-                  </button>
-                  @if (moiForm.get('amount')?.hasError('required') && moiForm.get('amount')?.touched) {
-                    <mat-error>Amount is required</mat-error>
-                  }
-                  @if (moiForm.get('amount')?.hasError('min') && moiForm.get('amount')?.touched) {
-                    <mat-error>Amount must be positive</mat-error>
-                  }
-                </mat-form-field>
+                <div>
+                  <mat-form-field appearance="outline" style="width:100%">
+                    <mat-label>Amount (₹) *</mat-label>
+                    <input matInput type="number" formControlName="amount" placeholder="0" min="1">
+                    <mat-icon matPrefix>currency_rupee</mat-icon>
+                    <button mat-icon-button matSuffix type="button"
+                      [class.voice-active]="voice.activeField() === 'amount'"
+                      [matTooltip]="voice.activeField() === 'amount' ? 'Listening… click to stop' : 'Voice input for Amount (say the number)'"
+                      (click)="startVoice('amount')">
+                      <mat-icon>{{ voice.activeField() === 'amount' ? 'mic' : 'mic_none' }}</mat-icon>
+                    </button>
+                    @if (moiForm.get('amount')?.hasError('required') && moiForm.get('amount')?.touched) {
+                      <mat-error>Amount is required</mat-error>
+                    }
+                    @if (moiForm.get('amount')?.hasError('min') && moiForm.get('amount')?.touched) {
+                      <mat-error>Amount must be positive</mat-error>
+                    }
+                  </mat-form-field>
+                  <div class="amount-chips">
+                    @for (preset of amountPresets; track preset) {
+                      <button type="button" class="amount-chip"
+                        [class.amount-chip-active]="moiForm.get('amount')?.value === preset"
+                        (click)="setAmount(preset)">
+                        ₹{{ preset | number }}
+                      </button>
+                    }
+                  </div>
+                </div>
 
                 <mat-form-field appearance="outline">
                   <mat-label>Side</mat-label>
@@ -151,7 +222,8 @@
               <div class="grid-2">
                 <mat-form-field appearance="outline">
                   <mat-label>Guest City</mat-label>
-                  <input matInput formControlName="city" placeholder="e.g., Chennai">
+                  <input matInput formControlName="city" placeholder="e.g., Chennai"
+                    [matAutocomplete]="cityAuto">
                   <mat-icon matPrefix>location_city</mat-icon>
                   <button mat-icon-button matSuffix type="button"
                     [class.voice-active]="voice.activeField() === 'city'"
@@ -159,28 +231,63 @@
                     (click)="startVoice('city')">
                     <mat-icon>{{ voice.activeField() === 'city' ? 'mic' : 'mic_none' }}</mat-icon>
                   </button>
+                  <mat-autocomplete #cityAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(citySuggestions(), moiForm.get('city')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-autocomplete>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                  <mat-label>Phone</mat-label>
-                  <input matInput formControlName="phone" placeholder="10-digit mobile">
-                  <mat-icon matPrefix>phone</mat-icon>
+                  <mat-label>District</mat-label>
+                  <input matInput formControlName="district" placeholder="e.g., Chennai District"
+                    [matAutocomplete]="distAuto">
+                  <mat-icon matPrefix>map</mat-icon>
+                  <mat-autocomplete #distAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(districtSuggestions(), moiForm.get('district')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-autocomplete>
                 </mat-form-field>
               </div>
 
               <div class="grid-2">
                 <mat-form-field appearance="outline">
-                  <mat-label>Received By</mat-label>
-                  <input matInput formControlName="received_by" placeholder="Who collected the moi">
-                  <mat-icon matPrefix>how_to_reg</mat-icon>
+                  <mat-label>Phone</mat-label>
+                  <input matInput formControlName="phone" placeholder="10-digit mobile">
+                  <mat-icon matPrefix>phone</mat-icon>
                 </mat-form-field>
 
+                <mat-form-field appearance="outline">
+                  <mat-label>Received By</mat-label>
+                  <input matInput formControlName="received_by" placeholder="Who collected the moi"
+                    [matAutocomplete]="recvAuto">
+                  <mat-icon matPrefix>how_to_reg</mat-icon>
+                  <mat-autocomplete #recvAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(receivedBySuggestions(), moiForm.get('received_by')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                </mat-form-field>
+              </div>
+
+              <div class="grid-2">
                 <mat-form-field appearance="outline">
                   <mat-label>Notes</mat-label>
                   <input matInput formControlName="notes" placeholder="Additional notes">
                   <mat-icon matPrefix>notes</mat-icon>
                 </mat-form-field>
               </div>
+
+              @if (dupWarning()) {
+                <div class="dup-warning">
+                  <mat-icon class="dup-icon">warning_amber</mat-icon>
+                  <span>Similar name already recorded: <strong>{{ dupWarning()!.name }}</strong> ({{ dupWarning()!.amount | currency:'INR':'symbol':'1.0-0' }})</span>
+                  <button mat-icon-button type="button" class="dup-close" matTooltip="Dismiss" (click)="dupWarning.set(null)">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              }
 
               @if (voice.isListening()) {
                 <div class="voice-listening-banner">
@@ -200,6 +307,10 @@
                     <mat-button-toggle value="58">58 mm</mat-button-toggle>
                     <mat-button-toggle value="80">80 mm</mat-button-toggle>
                   </mat-button-toggle-group>
+                  <mat-button-toggle-group [value]="receiptLang()" (change)="receiptLang.set($event.value)" class="lang-toggle" matTooltip="Receipt language">
+                    <mat-button-toggle value="en">EN</mat-button-toggle>
+                    <mat-button-toggle value="ta">தமிழ்</mat-button-toggle>
+                  </mat-button-toggle-group>
                 </div>
                 <div class="form-buttons">
                   <button mat-stroked-button type="button" (click)="moiForm.reset(defaultMoiValues)">
@@ -213,7 +324,25 @@
                   </button>
                 </div>
               </div>
+              <div class="kbd-hint">
+                <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit without mouse
+              </div>
             </form>
+
+            <!-- Activity timeline -->
+            @if (activityLog().length > 0) {
+              <div class="activity-timeline">
+                <div class="activity-title">⚡ Recent Entries this session</div>
+                @for (item of activityLog(); track item.id) {
+                  <div class="activity-item">
+                    <span class="activity-dot"></span>
+                    <span>{{ item.name }}</span>
+                    <span class="activity-amount">{{ item.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+                    <span class="activity-time">{{ item.time | date:'HH:mm:ss' }}</span>
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
       </mat-tab>
@@ -244,6 +373,18 @@
               </mat-select>
             </mat-form-field>
 
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Filter by City</mat-label>
+              <input matInput [(ngModel)]="filterCity" (input)="applyFilter()" placeholder="City...">
+              <mat-icon matSuffix>location_city</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Filter by District</mat-label>
+              <input matInput [(ngModel)]="filterDistrict" (input)="applyFilter()" placeholder="District...">
+              <mat-icon matSuffix>map</mat-icon>
+            </mat-form-field>
+
             <mat-form-field appearance="outline" class="search-field">
               <mat-label>Search Guest</mat-label>
               <input matInput [(ngModel)]="searchQuery" (input)="applyFilter()" placeholder="Search by name...">
@@ -260,7 +401,7 @@
               message='Use the "Add Moi Entry" tab to record guest contributions' />
           } @else {
             <div class="data-table-container">
-              <table mat-table [dataSource]="entries()">
+              <table mat-table [dataSource]="entries()" multiTemplateDataRows>
                 <ng-container matColumnDef="guest_name">
                   <th mat-header-cell *matHeaderCellDef>Guest Name</th>
                   <td mat-cell *matCellDef="let e">
@@ -292,6 +433,10 @@
                   <th mat-header-cell *matHeaderCellDef>City</th>
                   <td mat-cell *matCellDef="let e">{{ e.city || '-' }}</td>
                 </ng-container>
+                <ng-container matColumnDef="district">
+                  <th mat-header-cell *matHeaderCellDef>District</th>
+                  <td mat-cell *matCellDef="let e">{{ e.district || '-' }}</td>
+                </ng-container>
                 <ng-container matColumnDef="received_by">
                   <th mat-header-cell *matHeaderCellDef>Received By</th>
                   <td mat-cell *matCellDef="let e">{{ e.received_by || '-' }}</td>
@@ -299,17 +444,101 @@
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef>Actions</th>
                   <td mat-cell *matCellDef="let e">
-                    <button mat-icon-button matTooltip="Print receipt" (click)="printEntry(e)">
-                      <mat-icon>receipt</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" matTooltip="Delete entry" (click)="deleteEntry(e)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
+                    @if (editingEntry()?.id === e.id) {
+                      <button mat-icon-button color="primary" matTooltip="Save changes"
+                        [disabled]="editSubmitting()" (click)="saveEdit()">
+                        <mat-icon>check_circle</mat-icon>
+                      </button>
+                      <button mat-icon-button matTooltip="Cancel" (click)="cancelEdit()">
+                        <mat-icon>cancel</mat-icon>
+                      </button>
+                    } @else {
+                      <button mat-icon-button matTooltip="Print receipt" (click)="printEntry(e)">
+                        <mat-icon>receipt</mat-icon>
+                      </button>
+                      <button mat-icon-button matTooltip="Edit entry" (click)="startEdit(e)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button color="warn" matTooltip="Delete entry" (click)="deleteEntry(e)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+
+                <!-- Expanded inline edit row -->
+                <ng-container matColumnDef="expandedEdit">
+                  <td mat-cell *matCellDef="let e" [attr.colspan]="displayedColumns.length" class="edit-expansion-cell">
+                    @if (editingEntry()?.id === e.id) {
+                      <div class="edit-expansion" [formGroup]="editForm">
+                        <div class="edit-grid">
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Guest Name</mat-label>
+                            <input matInput formControlName="guest_name">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Relationship</mat-label>
+                            <input matInput formControlName="relationship">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Amount (₹)</mat-label>
+                            <input matInput type="number" formControlName="amount">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Side</mat-label>
+                            <mat-select formControlName="side">
+                              <mat-option value="groom">{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }}</mat-option>
+                              <mat-option value="bride">{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }}</mat-option>
+                              <mat-option value="both">Both</mat-option>
+                            </mat-select>
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Payment</mat-label>
+                            <mat-select formControlName="payment_mode">
+                              <mat-option value="cash">💵 Cash</mat-option>
+                              <mat-option value="cheque">📝 Cheque</mat-option>
+                              <mat-option value="online">📱 Online</mat-option>
+                              <mat-option value="dd">🏦 DD</mat-option>
+                            </mat-select>
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>City</mat-label>
+                            <input matInput formControlName="city">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>District</mat-label>
+                            <input matInput formControlName="district">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Received By</mat-label>
+                            <input matInput formControlName="received_by">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Phone</mat-label>
+                            <input matInput formControlName="phone">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Notes</mat-label>
+                            <input matInput formControlName="notes">
+                          </mat-form-field>
+                        </div>
+                        <div class="edit-actions">
+                          <button mat-stroked-button type="button" (click)="cancelEdit()">Cancel</button>
+                          <button mat-raised-button color="primary" type="button"
+                            [disabled]="editForm.invalid || editSubmitting()" (click)="saveEdit()">
+                            <mat-icon>save</mat-icon> Save Changes
+                          </button>
+                        </div>
+                      </div>
+                    }
                   </td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                  [class.editing-row]="editingEntry()?.id === row.id"
+                  [class.just-added]="justAddedId() === row.id"></tr>
+                <tr mat-row *matRowDef="let row; columns: expandedColumns;" class="edit-row"></tr>
               </table>
             </div>
 
@@ -324,3 +553,63 @@
     </mat-tab-group>
   }
 </div>
+
+<!-- Print A4 Side Filter Modal -->
+@if (showPrintModal()) {
+  <div class="print-modal-overlay" (click)="showPrintModal.set(false)">
+    <div class="print-modal" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Print / Download A4 Register</h3>
+      <p class="modal-subtitle">Filter by city, district and side</p>
+
+      <!-- Optional city/district filters for print -->
+      <div class="print-filter-row">
+        <mat-form-field appearance="outline" class="print-filter-field">
+          <mat-label>City (optional)</mat-label>
+          <input matInput [(ngModel)]="printFilterCity" placeholder="e.g., Chennai">
+          <mat-icon matSuffix>location_city</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="print-filter-field">
+          <mat-label>District (optional)</mat-label>
+          <input matInput [(ngModel)]="printFilterDistrict" placeholder="e.g., Chennai District">
+          <mat-icon matSuffix>map</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <p class="modal-section-label"><mat-icon class="label-icon">print</mat-icon> Print</p>
+      <div class="modal-options">
+        <button mat-raised-button class="side-btn groom-btn" (click)="printA4WithSide('groom')">
+          <mat-icon>face</mat-icon>
+          <span>{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }} Side</span>
+        </button>
+        <button mat-raised-button class="side-btn bride-btn" (click)="printA4WithSide('bride')">
+          <mat-icon>face_3</mat-icon>
+          <span>{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }} Side</span>
+        </button>
+        <button mat-raised-button class="side-btn all-btn" (click)="printA4WithSide('all')">
+          <mat-icon>groups</mat-icon>
+          <span>All Guests</span>
+        </button>
+      </div>
+
+      <div class="modal-divider"></div>
+
+      <p class="modal-section-label"><mat-icon class="label-icon">picture_as_pdf</mat-icon> Download PDF</p>
+      <div class="modal-options">
+        <button mat-stroked-button class="side-btn dl-groom-btn" (click)="downloadA4WithSide('groom')">
+          <mat-icon>download</mat-icon>
+          <span>{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }} Side</span>
+        </button>
+        <button mat-stroked-button class="side-btn dl-bride-btn" (click)="downloadA4WithSide('bride')">
+          <mat-icon>download</mat-icon>
+          <span>{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }} Side</span>
+        </button>
+        <button mat-stroked-button class="side-btn dl-all-btn" (click)="downloadA4WithSide('all')">
+          <mat-icon>download</mat-icon>
+          <span>All Guests</span>
+        </button>
+      </div>
+
+      <button mat-button class="cancel-btn" (click)="showPrintModal.set(false)">Cancel</button>
+    </div>
+  </div>
+}

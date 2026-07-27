@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS events (
     event_date     DATE         NOT NULL,
     venue          VARCHAR(300),
     city           VARCHAR(100),
+    district       VARCHAR(100),
     notes          TEXT,
     created_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,  -- FK to owner user
     status         VARCHAR(20)  NOT NULL DEFAULT 'approved',         -- pending | approved
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS moi_entries (
     cheque_number   VARCHAR(50),
     transaction_ref VARCHAR(100),
     city            VARCHAR(100),
+    district        VARCHAR(100),
     phone           VARCHAR(20),
     notes           TEXT,
     received_by     VARCHAR(100),
@@ -83,6 +85,10 @@ CREATE INDEX IF NOT EXISTS idx_moi_guest_name       ON moi_entries(lower(guest_n
 CREATE INDEX IF NOT EXISTS idx_moi_relationship     ON moi_entries(lower(relationship));
 CREATE INDEX IF NOT EXISTS idx_moi_event_side       ON moi_entries(event_id, side);
 CREATE INDEX IF NOT EXISTS idx_moi_created_at       ON moi_entries(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_moi_city             ON moi_entries(lower(city)) WHERE city IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_moi_district         ON moi_entries(lower(district)) WHERE district IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_city          ON events(lower(city)) WHERE city IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_district      ON events(lower(district)) WHERE district IS NOT NULL;
 
 COMMENT ON TABLE moi_entries IS 'Moi (cash gift) entries per event';
 
@@ -138,6 +144,13 @@ INSERT INTO moi_entries (event_id, guest_name, relationship, side, amount, payme
 --
 --   ALTER TABLE events ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved';
 --   CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
+
+-- ─── Migration: add district column ──────────────────────────────────────────
+--   ALTER TABLE events      ADD COLUMN IF NOT EXISTS district VARCHAR(100);
+--   ALTER TABLE moi_entries ADD COLUMN IF NOT EXISTS district VARCHAR(100);
+--   CREATE INDEX IF NOT EXISTS idx_events_district  ON events(lower(district))      WHERE district IS NOT NULL;
+--   CREATE INDEX IF NOT EXISTS idx_moi_city         ON moi_entries(lower(city))     WHERE city IS NOT NULL;
+--   CREATE INDEX IF NOT EXISTS idx_moi_district     ON moi_entries(lower(district)) WHERE district IS NOT NULL;
 
 -- ─── Migration: moi_manager_db → moify_db rename (reference only) ──────
 -- If you already have data in the old moi_manager_db, dump and restore:

@@ -115,6 +115,7 @@ export interface Event {
   event_date: string;
   venue?: string;
   city?: string;
+  district?: string;
   notes?: string;
   total_moi: number;
   moi_count: number;
@@ -132,6 +133,7 @@ export interface EventCreate {
   event_date: string;
   venue?: string;
   city?: string;
+  district?: string;
   notes?: string;
 }
 

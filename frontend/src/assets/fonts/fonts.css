@@ -1,0 +1,109 @@
+/*
+ * Moify — Offline Font Bundle
+ *
+ * All fonts load from /assets/fonts/ (served from src/assets/fonts/).
+ * Run download-fonts.ps1 once to populate the woff2 files.
+ * Without the woff2 files, the app falls back to system fonts:
+ *   • Playfair Display  → Georgia / Liberation Serif / DejaVu Serif (available on Ubuntu)
+ *   • Inter             → Ubuntu / DejaVu Sans / Liberation Sans (Ubuntu system fonts)
+ *   • Material Icons    → icons degrade to text until woff2 is present
+ *   • Noto Sans Tamil   → Latha / Arial (fallback for Tamil receipt printing)
+ */
+
+/* ── Playfair Display (headings / logo) ──────────────────────────────────── */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Playfair Display Regular'), local('PlayfairDisplay-Regular'),
+       url('PlayfairDisplay-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Playfair Display SemiBold'), local('PlayfairDisplay-SemiBold'),
+       url('PlayfairDisplay-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Playfair Display Bold'), local('PlayfairDisplay-Bold'),
+       url('PlayfairDisplay-Bold.woff2') format('woff2');
+}
+
+/* ── Inter (body / UI text) ─────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: local('Inter Light'), local('Inter-Light'),
+       url('Inter-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Inter Regular'), local('Inter-Regular'),
+       url('Inter-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Inter Medium'), local('Inter-Medium'),
+       url('Inter-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Inter SemiBold'), local('Inter-SemiBold'),
+       url('Inter-600.woff2') format('woff2');
+}
+
+/* ── Material Icons (icon ligatures used by mat-icon) ───────────────────── */
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: local('Material Icons'), local('MaterialIcons-Regular'),
+       url('MaterialIcons-Regular.woff2') format('woff2'),
+       url('MaterialIcons-Regular.woff')  format('woff');
+}
+
+/* ── Noto Sans Tamil (used in printed receipts) ─────────────────────────── */
+@font-face {
+  font-family: 'Noto Sans Tamil';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: local('Noto Sans Tamil'), local('NotoSansTamil'),
+       url('NotoSansTamil-Regular.woff2') format('woff2');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

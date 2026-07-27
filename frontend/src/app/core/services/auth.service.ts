@@ -4,8 +4,9 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-const TOKEN_KEY = 'moify_token';
-const USER_KEY  = 'moify_user';
+const TOKEN_KEY    = 'moify_token';
+const USER_KEY     = 'moify_user';
+const REMEMBER_KEY = 'moify_remember';
 
 export interface AuthUser {
   id: number;
@@ -22,19 +23,23 @@ export class AuthService {
 
   private readonly apiBase = environment.apiUrl;
 
-  isLoggedIn = signal(!!sessionStorage.getItem(TOKEN_KEY));
+  isLoggedIn = signal(!!(sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY)));
   currentUser = signal<AuthUser | null>(this.loadUser());
+
+  private store(remember: boolean): Storage {
+    return remember ? localStorage : sessionStorage;
+  }
 
   private loadUser(): AuthUser | null {
     try {
-      const raw = sessionStorage.getItem(USER_KEY);
+      const raw = sessionStorage.getItem(USER_KEY) ?? localStorage.getItem(USER_KEY);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
   }
 
-  async login(username: string, password: string): Promise<{ ok: boolean; error?: string }> {
+  async login(username: string, password: string, remember = false): Promise<{ ok: boolean; error?: string }> {
     try {
       const res = await firstValueFrom(
         this.http.post<{ token: string; user: AuthUser; error?: string }>(
@@ -48,8 +53,10 @@ export class AuthService {
         return { ok: false, error: res.error ?? 'Login failed' };
       }
 
-      sessionStorage.setItem(TOKEN_KEY, res.token);
-      sessionStorage.setItem(USER_KEY, JSON.stringify(res.user));
+      const storage = this.store(remember);
+      if (remember) localStorage.setItem(REMEMBER_KEY, '1');
+      storage.setItem(TOKEN_KEY, res.token);
+      storage.setItem(USER_KEY, JSON.stringify(res.user));
       this.isLoggedIn.set(true);
       this.currentUser.set(res.user);
       return { ok: true };
@@ -60,7 +67,7 @@ export class AuthService {
   }
 
   async verifyToken(): Promise<boolean> {
-    const token = sessionStorage.getItem(TOKEN_KEY);
+    const token = sessionStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(TOKEN_KEY);
     if (!token) return false;
     try {
       const res = await firstValueFrom(
@@ -98,13 +105,47 @@ export class AuthService {
     }
   }
 
+  async lookupUser(identifier: string): Promise<{ found: boolean; masked_name?: string; error?: string }> {
+    try {
+      return await firstValueFrom(
+        this.http.post<{ found: boolean; masked_name?: string }>(
+          `${this.apiBase}/api/auth/lookup-user`, { identifier }
+        )
+      );
+    } catch (err: unknown) {
+      return { found: false, error: this.extractError(err) };
+    }
+  }
+
+  async adminResetPassword(
+    admin_username: string,
+    admin_password: string,
+    target: string,
+    new_password: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    try {
+      await firstValueFrom(
+        this.http.post<{ success: boolean }>(
+          `${this.apiBase}/api/auth/admin-reset-password`,
+          { admin_username, admin_password, target, new_password }
+        )
+      );
+      return { ok: true };
+    } catch (err: unknown) {
+      return { ok: false, error: this.extractError(err) };
+    }
+  }
+
   getToken(): string | null {
-    return sessionStorage.getItem(TOKEN_KEY);
+    return sessionStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(TOKEN_KEY);
   }
 
   private clearSession(): void {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(REMEMBER_KEY);
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
   }

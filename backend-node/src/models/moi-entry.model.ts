@@ -76,6 +76,12 @@ export class MoiEntry extends Entity {
 
   @property({
     type: 'string',
+    postgresql: {columnName: 'district'},
+  })
+  district?: string;
+
+  @property({
+    type: 'string',
     postgresql: {columnName: 'phone'},
   })
   phone?: string;

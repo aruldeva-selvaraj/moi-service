@@ -111,6 +111,43 @@
   }
 }
 
+// ── Event status badges ─────────────────────────────────────────
+.ev-status-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 9px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.ev-status-today {
+  background: #fde68a;
+  color: #92400e;
+  animation: ev-pulse 1.4s ease-in-out infinite;
+}
+
+.ev-status-soon {
+  background: color-mix(in srgb, #f97316 15%, transparent);
+  color: #c2410c;
+}
+
+.ev-status-upcoming {
+  background: color-mix(in srgb, #3b82f6 12%, transparent);
+  color: #1d4ed8;
+}
+
+.ev-status-done {
+  background: color-mix(in srgb, #6b7280 12%, transparent);
+  color: #374151;
+}
+
+@keyframes ev-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+}
+
 // ── Existing ─────────────────────────────────────────────────────
 .event-type-chip {
   display: inline-block;

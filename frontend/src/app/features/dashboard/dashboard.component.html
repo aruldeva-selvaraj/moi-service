@@ -4,6 +4,37 @@
       ? 'Smart Digital Wedding Gift Ledger — All Events'
       : 'Welcome, ' + (auth.currentUser()?.full_name || auth.currentUser()?.username || 'Guest') + ' · My Events'" />
 
+  <!-- ── Hero Carousel Banner ─────────────────────────────── -->
+  @if (banners.length > 0) {
+    <div class="hero-carousel">
+      <div class="carousel-track" [style.transform]="'translateX(-' + activeSlide() * 100 + '%)'">
+        @for (img of banners; track img) {
+          <div class="carousel-slide">
+            <img [src]="img" [alt]="'Banner ' + ($index + 1)" class="carousel-img" />
+          </div>
+        }
+      </div>
+
+      @if (banners.length > 1) {
+        <button class="carousel-btn carousel-prev" (click)="prevSlide()" aria-label="Previous">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button class="carousel-btn carousel-next" (click)="nextSlide()" aria-label="Next">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <div class="carousel-dots">
+          @for (img of banners; track img) {
+            <button class="carousel-dot"
+                    [class.active]="activeSlide() === $index"
+                    (click)="goToSlide($index)"
+                    [attr.aria-label]="'Go to slide ' + ($index + 1)">
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+
   @if (loading()) {
     <app-loading-spinner message="Loading dashboard..." />
   } @else {

@@ -8,19 +8,15 @@
               matTooltip="Generate A4 PDF summary — totals, side split, payment modes">
         <mat-icon>picture_as_pdf</mat-icon> PDF Report
       </button>
+      <button mat-stroked-button (click)="shareEventSummary()"
+              matTooltip="Share summary via WhatsApp / copy to clipboard">
+        <mat-icon>share</mat-icon> Share
+      </button>
     }
     @if (selectedEventId && allEntries().length > 0) {
-      <button mat-raised-button color="warn" (click)="printTableReport()"
-              matTooltip="Print A4 table — Groom Side, Bride Side, Both · columns: S.No, Name, City, Amount">
-        <mat-icon>table_view</mat-icon> Print Table
-      </button>
-      <button mat-raised-button color="accent" (click)="printGuestList()"
-              matTooltip="Print full guest list with all details (A4 Landscape)">
-        <mat-icon>groups</mat-icon> Guest List
-      </button>
-      <button mat-stroked-button (click)="printConsolidated()"
-              matTooltip="Print A4 consolidated register — split by side">
-        <mat-icon>summarize</mat-icon> A4 Register
+      <button mat-raised-button color="accent" (click)="openA4PrintModal()"
+              matTooltip="Print A4 guest register — choose side to filter">
+        <mat-icon>print</mat-icon> Print A4
       </button>
     }
   </app-page-header>
@@ -88,6 +84,88 @@
           [value]="eventReport()!.online_amount | currency:'INR':'symbol':'1.0-0'"
           label="Online"
           [sub]="eventReport()!.total_amount > 0 ? (eventReport()!.online_amount / eventReport()!.total_amount | percent:'1.0-1') : '0%'" />
+      </div>
+    }
+
+    <!-- Analytics Charts -->
+    @if (eventReport() && selectedEventId) {
+      <h3 class="section-title">Visual Analytics</h3>
+      <div class="charts-row section-gap">
+
+        <!-- Side split donut -->
+        <div class="chart-card">
+          <div class="chart-title">Side Split</div>
+          <svg viewBox="0 0 120 120" class="donut-svg">
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#e0e0e0" stroke-width="18"/>
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#1565c0" stroke-width="18"
+              [attr.stroke-dasharray]="donutDash(eventReport()!.groom_amount, eventReport()!.total_amount)"
+              [attr.stroke-dashoffset]="donutOffset(0, eventReport()!.total_amount)"
+              style="transition:stroke-dasharray 0.5s"/>
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#c2185b" stroke-width="18"
+              [attr.stroke-dasharray]="donutDash(eventReport()!.bride_amount, eventReport()!.total_amount)"
+              [attr.stroke-dashoffset]="donutOffset(eventReport()!.groom_amount, eventReport()!.total_amount)"
+              style="transition:stroke-dasharray 0.5s"/>
+            <text x="60" y="56" text-anchor="middle" font-size="9" fill="#777">Total</text>
+            <text x="60" y="68" text-anchor="middle" font-size="8" font-weight="bold" fill="#333">{{ eventReport()!.moi_count }} guests</text>
+          </svg>
+          <div class="donut-legend">
+            <span class="legend-dot" style="background:#1565c0"></span>
+            <span>{{ getSelectedEventConfig().sideALabel }}
+              ({{ eventReport()!.total_amount > 0 ? (eventReport()!.groom_amount / eventReport()!.total_amount | percent:'1.0-0') : '0%' }})</span>
+          </div>
+          <div class="donut-legend">
+            <span class="legend-dot" style="background:#c2185b"></span>
+            <span>{{ getSelectedEventConfig().sideBLabel }}
+              ({{ eventReport()!.total_amount > 0 ? (eventReport()!.bride_amount / eventReport()!.total_amount | percent:'1.0-0') : '0%' }})</span>
+          </div>
+        </div>
+
+        <!-- Payment mode bars -->
+        <div class="chart-card chart-card-wide">
+          <div class="chart-title">Payment Mode Breakdown</div>
+          <div class="bar-chart">
+            <div class="bar-row">
+              <span class="bar-label">💵 Cash</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-cash" [style.width.%]="barWidth(eventReport()!.cash_amount, eventReport()!.total_amount)"></div>
+              </div>
+              <span class="bar-value">{{ eventReport()!.cash_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">📱 Online</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-online" [style.width.%]="barWidth(eventReport()!.online_amount, eventReport()!.total_amount)"></div>
+              </div>
+              <span class="bar-value">{{ eventReport()!.online_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">📝 Cheque</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-cheque" [style.width.%]="barWidth(eventReport()!.cheque_amount, eventReport()!.total_amount)"></div>
+              </div>
+              <span class="bar-value">{{ eventReport()!.cheque_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top relationships bar chart -->
+        @if (relationshipData().length > 0) {
+          <div class="chart-card chart-card-wide">
+            <div class="chart-title">Top Relationships by Amount</div>
+            <div class="bar-chart">
+              @for (r of relationshipData().slice(0, 6); track r.relationship) {
+                <div class="bar-row">
+                  <span class="bar-label">{{ r.relationship }}</span>
+                  <div class="bar-track">
+                    <div class="bar-fill bar-rel" [style.width.%]="barWidth(r.total_amount, topRelMax())"></div>
+                  </div>
+                  <span class="bar-value">{{ r.total_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
       </div>
     }
 
@@ -182,3 +260,62 @@
 
   }
 </div>
+
+<!-- Print A4 Side Filter Modal -->
+@if (showPrintModal()) {
+  <div class="print-modal-overlay" (click)="showPrintModal.set(false)">
+    <div class="print-modal" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Print / Download A4 Register</h3>
+      <p class="modal-subtitle">Filter by city / district, then choose side</p>
+
+      <div class="print-filter-row">
+        <mat-form-field appearance="outline" class="print-filter-field">
+          <mat-label>City (optional)</mat-label>
+          <input matInput [(ngModel)]="printFilterCity" placeholder="e.g., Chennai">
+          <mat-icon matPrefix>location_city</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="print-filter-field">
+          <mat-label>District (optional)</mat-label>
+          <input matInput [(ngModel)]="printFilterDistrict" placeholder="e.g., Vellore">
+          <mat-icon matPrefix>map</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <p class="modal-section-label"><mat-icon class="label-icon">print</mat-icon> Print</p>
+      <div class="modal-options">
+        <button mat-raised-button class="side-btn groom-btn" (click)="printA4WithSide('groom')">
+          <mat-icon>face</mat-icon>
+          <span>{{ getSelectedEventConfig().sideAEmoji }} {{ getSelectedEventConfig().sideALabel }} Side</span>
+        </button>
+        <button mat-raised-button class="side-btn bride-btn" (click)="printA4WithSide('bride')">
+          <mat-icon>face_3</mat-icon>
+          <span>{{ getSelectedEventConfig().sideBEmoji }} {{ getSelectedEventConfig().sideBLabel }} Side</span>
+        </button>
+        <button mat-raised-button class="side-btn all-btn" (click)="printA4WithSide('all')">
+          <mat-icon>groups</mat-icon>
+          <span>All Guests</span>
+        </button>
+      </div>
+
+      <div class="modal-divider"></div>
+
+      <p class="modal-section-label"><mat-icon class="label-icon">picture_as_pdf</mat-icon> Download PDF</p>
+      <div class="modal-options">
+        <button mat-stroked-button class="side-btn dl-groom-btn" (click)="downloadA4WithSide('groom')">
+          <mat-icon>download</mat-icon>
+          <span>{{ getSelectedEventConfig().sideAEmoji }} {{ getSelectedEventConfig().sideALabel }} Side</span>
+        </button>
+        <button mat-stroked-button class="side-btn dl-bride-btn" (click)="downloadA4WithSide('bride')">
+          <mat-icon>download</mat-icon>
+          <span>{{ getSelectedEventConfig().sideBEmoji }} {{ getSelectedEventConfig().sideBLabel }} Side</span>
+        </button>
+        <button mat-stroked-button class="side-btn dl-all-btn" (click)="downloadA4WithSide('all')">
+          <mat-icon>download</mat-icon>
+          <span>All Guests</span>
+        </button>
+      </div>
+
+      <button mat-button class="cancel-btn" (click)="showPrintModal.set(false)">Cancel</button>
+    </div>
+  </div>
+}

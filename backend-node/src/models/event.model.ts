@@ -62,6 +62,12 @@ export class Event extends Entity {
 
   @property({
     type: 'string',
+    postgresql: {columnName: 'district'},
+  })
+  district?: string;
+
+  @property({
+    type: 'string',
     postgresql: {columnName: 'notes'},
   })
   notes?: string;

@@ -14,6 +14,7 @@ interface MoiCreateDto {
   cheque_number?: string;
   transaction_ref?: string;
   city?: string;
+  district?: string;
   phone?: string;
   notes?: string;
   received_by?: string;
@@ -40,6 +41,8 @@ export class MoiController {
     @param.query.string('side')        side?:        string,
     @param.query.string('payment_mode') paymentMode?: string,
     @param.query.string('search')      search?:      string,
+    @param.query.string('city')        city?:        string,
+    @param.query.string('district')    district?:    string,
     @param.query.number('page')        page  = 1,
     @param.query.number('page_size')   pageSize = 20,
   ): Promise<object> {
@@ -54,10 +57,12 @@ export class MoiController {
       : `FROM moi_entries m
          INNER JOIN events e ON m.event_id = e.id AND e.created_by = ${caller?.sub ?? 0}`;
 
-    if (eventId)     { conditions.push(`m.event_id = $${pIdx++}`);           params.push(eventId);           }
-    if (side)        { conditions.push(`m.side = $${pIdx++}`);               params.push(side);              }
-    if (paymentMode) { conditions.push(`m.payment_mode = $${pIdx++}`);       params.push(paymentMode);       }
-    if (search)      { conditions.push(`m.guest_name ILIKE $${pIdx++}`);     params.push(`%${search}%`);     }
+    if (eventId)     { conditions.push(`m.event_id = $${pIdx++}`);               params.push(eventId);           }
+    if (side)        { conditions.push(`m.side = $${pIdx++}`);                   params.push(side);              }
+    if (paymentMode) { conditions.push(`m.payment_mode = $${pIdx++}`);           params.push(paymentMode);       }
+    if (search)      { conditions.push(`m.guest_name ILIKE $${pIdx++}`);         params.push(`%${search}%`);     }
+    if (city)        { conditions.push(`m.city ILIKE $${pIdx++}`);               params.push(`%${city}%`);       }
+    if (district)    { conditions.push(`m.district ILIKE $${pIdx++}`);           params.push(`%${district}%`);   }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -219,9 +224,9 @@ export class MoiController {
     const result = await this.moiRepo.query(
       `INSERT INTO moi_entries
          (event_id, guest_name, relationship, side, amount, payment_mode,
-          cheque_number, transaction_ref, city, phone, notes, received_by,
+          cheque_number, transaction_ref, city, district, phone, notes, received_by,
           created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING *`,
       [
         data.event_id,
@@ -233,6 +238,7 @@ export class MoiController {
         data.cheque_number   ?? null,
         data.transaction_ref ?? null,
         data.city            ?? null,
+        data.district        ?? null,
         data.phone           ?? null,
         data.notes           ?? null,
         data.received_by     ?? null,

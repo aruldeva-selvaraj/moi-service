@@ -12,12 +12,13 @@ interface EventCreateDto {
   event_date: string;
   venue?: string;
   city?: string;
+  district?: string;
   notes?: string;
 }
 
 const EVENT_SELECT = `
   e.id, e.event_type, e.primary_name, e.secondary_name,
-  e.family_name, e.event_date::text, e.venue, e.city, e.notes,
+  e.family_name, e.event_date::text, e.venue, e.city, e.district, e.notes,
   e.created_by, e.status, e.created_at, e.updated_at,
   COALESCE(SUM(m.amount), 0)::float AS total_moi,
   COUNT(m.id)::int                  AS moi_count`;
@@ -78,10 +79,10 @@ export class EventsController {
     const result = await this.eventRepo.query(
       `INSERT INTO events
          (event_type, primary_name, secondary_name, family_name,
-          event_date, venue, city, notes, created_by, status, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+          event_date, venue, city, district, notes, created_by, status, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING id, event_type, primary_name, secondary_name, family_name,
-                 event_date::text, venue, city, notes, created_by, status,
+                 event_date::text, venue, city, district, notes, created_by, status,
                  created_at, updated_at,
                  0::float AS total_moi, 0::int AS moi_count`,
       [
@@ -92,6 +93,7 @@ export class EventsController {
         data.event_date,
         data.venue ?? null,
         data.city ?? null,
+        data.district ?? null,
         data.notes ?? null,
         caller?.sub ?? null,
         status,

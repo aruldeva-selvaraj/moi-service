@@ -1,51 +1,109 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Moify — One-time font downloader
-# Run this script ONCE (from home internet, hotspot, or any unblocked machine)
-# to populate src\assets\fonts\ with all required font files.
-# After running, the app works completely offline — no CDN requests at all.
-#
+# ──────────────────────────────────────────────────────────────
+# Moify - Offline Font Downloader
+# Downloads all required fonts into src\assets\fonts
 # Usage:
 #   cd moi-wedding-app\frontend
-#   .\download-fonts.ps1
-# ─────────────────────────────────────────────────────────────────────────────
+#   powershell -ExecutionPolicy Bypass -File .\download-fonts.ps1
+# ──────────────────────────────────────────────────────────────
 
-$dest = Join-Path $PSScriptRoot "src\assets\fonts"
-New-Item -ItemType Directory -Force $dest | Out-Null
-$h = @{ "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+if ($PSScriptRoot) {
+    $basePath = $PSScriptRoot
+}
+else {
+    $basePath = (Get-Location).Path
+}
 
-function Download($url, $file) {
-    $out = Join-Path $dest $file
-    if (Test-Path $out) { Write-Host "  SKIP  $file (already exists)"; return }
+$dest = Join-Path $basePath "src\assets\fonts"
+
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
+$headers = @{
+    "User-Agent" = "Mozilla/5.0"
+}
+
+function Download-Font {
+    param(
+        [string]$Url,
+        [string]$FileName
+    )
+
+    $output = Join-Path $dest $FileName
+
+    if (Test-Path $output) {
+        Write-Host "[SKIP] $FileName already exists."
+        return
+    }
+
     try {
-        Invoke-WebRequest -Uri $url -OutFile $out -Headers $h -UseBasicParsing -TimeoutSec 60
-        Write-Host "  OK    $file"
-    } catch {
-        Write-Warning "FAILED $file — $_"
+        Invoke-WebRequest `
+            -Uri $Url `
+            -Headers $headers `
+            -OutFile $output `
+            -TimeoutSec 60
+
+        Write-Host "[ OK ] $FileName"
+    }
+    catch {
+        Write-Host "[FAIL] $FileName"
+        Write-Host $_.Exception.Message
     }
 }
 
-Write-Host "`nDownloading Material Icons font..."
-Download "https://github.com/google/material-design-icons/raw/master/font/MaterialIcons-Regular.woff2" "MaterialIcons-Regular.woff2"
-Download "https://github.com/google/material-design-icons/raw/master/font/MaterialIcons-Regular.woff"  "MaterialIcons-Regular.woff"
+Write-Host ""
+Write-Host "Downloading Material Icons..."
 
-Write-Host "`nDownloading Inter font (body / UI text)..."
-# Inter v4 — Latin subset, variable font slices per weight
-$interBase = "https://fonts.gstatic.com/s/inter/v13"
-# These URLs match the Latin-subset woff2 for weights 300/400/500/600
-Download "https://rsms.me/inter/font-files/Inter-Light.woff2"    "Inter-300.woff2"
-Download "https://rsms.me/inter/font-files/Inter-Regular.woff2"  "Inter-400.woff2"
-Download "https://rsms.me/inter/font-files/Inter-Medium.woff2"   "Inter-500.woff2"
-Download "https://rsms.me/inter/font-files/Inter-SemiBold.woff2" "Inter-600.woff2"
+Download-Font `
+"https://github.com/google/material-design-icons/raw/master/font/MaterialIcons-Regular.woff2" `
+"MaterialIcons-Regular.woff2"
 
-Write-Host "`nDownloading Playfair Display font (headings / logo)..."
-$playfairBase = "https://github.com/clauseggers/Playfair/raw/master/fonts/ttf"
-# Prefer woff2 from fontsource CDN (unpkg mirrors the npm package)
-Download "https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5/files/playfair-display-latin-400-normal.woff2" "PlayfairDisplay-Regular.woff2"
-Download "https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5/files/playfair-display-latin-600-normal.woff2" "PlayfairDisplay-SemiBold.woff2"
-Download "https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5/files/playfair-display-latin-700-normal.woff2" "PlayfairDisplay-Bold.woff2"
+Download-Font `
+"https://github.com/google/material-design-icons/raw/master/font/MaterialIcons-Regular.woff" `
+"MaterialIcons-Regular.woff"
 
-Write-Host "`nDownloading Noto Sans Tamil (used in printed receipts)..."
-Download "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tamil@5/files/noto-sans-tamil-tamil-400-normal.woff2" "NotoSansTamil-Regular.woff2"
+Write-Host ""
+Write-Host "Downloading Inter Fonts..."
 
-Write-Host "`nDone! Files saved to: $dest"
-Write-Host "Restart 'npm start' to serve the updated fonts."
+Download-Font `
+"https://rsms.me/inter/font-files/Inter-Light.woff2" `
+"Inter-300.woff2"
+
+Download-Font `
+"https://rsms.me/inter/font-files/Inter-Regular.woff2" `
+"Inter-400.woff2"
+
+Download-Font `
+"https://rsms.me/inter/font-files/Inter-Medium.woff2" `
+"Inter-500.woff2"
+
+Download-Font `
+"https://rsms.me/inter/font-files/Inter-SemiBold.woff2" `
+"Inter-600.woff2"
+
+Write-Host ""
+Write-Host "Downloading Playfair Display..."
+
+Download-Font `
+"https://cdn.jsdelivr.net/npm/@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" `
+"PlayfairDisplay-Regular.woff2"
+
+Download-Font `
+"https://cdn.jsdelivr.net/npm/@fontsource/playfair-display/files/playfair-display-latin-600-normal.woff2" `
+"PlayfairDisplay-SemiBold.woff2"
+
+Download-Font `
+"https://cdn.jsdelivr.net/npm/@fontsource/playfair-display/files/playfair-display-latin-700-normal.woff2" `
+"PlayfairDisplay-Bold.woff2"
+
+Write-Host ""
+Write-Host "Downloading Noto Sans Tamil..."
+
+Download-Font `
+"https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tamil/files/noto-sans-tamil-tamil-400-normal.woff2" `
+"NotoSansTamil-Regular.woff2"
+
+Write-Host ""
+Write-Host "===================================="
+Write-Host "All downloads completed."
+Write-Host "Fonts saved to:"
+Write-Host $dest
+Write-Host "===================================="

@@ -40,7 +40,11 @@ export class AppComponent implements AfterViewInit {
   );
 
   getRouteState(outlet: RouterOutlet) {
-    return outlet?.activatedRouteData?.['animation'] ?? outlet?.activatedRoute?.snapshot?.url?.[0]?.path ?? '';
+    if (!outlet || !outlet.isActivated) {
+      return '';
+    }
+
+    return outlet.activatedRouteData?.['animation'] ?? outlet.activatedRoute?.snapshot?.url?.[0]?.path ?? '';
   }
 
   ngAfterViewInit(): void {

@@ -74,7 +74,8 @@ CREATE TABLE IF NOT EXISTS moi_entries (
     notes           TEXT,
     received_by     VARCHAR(100),
     created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by      INTEGER REFERENCES public.users(id)
 );
 
 -- Indexes for moi_entries
@@ -145,6 +146,9 @@ INSERT INTO moi_entries (event_id, guest_name, relationship, side, amount, payme
 --   ALTER TABLE events ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved';
 --   CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
 
+-- ─── Migration: add created_by to moi_entries ────────────────────────────────
+--   ALTER TABLE moi_entries ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES public.users(id);
+
 -- ─── Migration: add district column ──────────────────────────────────────────
 --   ALTER TABLE events      ADD COLUMN IF NOT EXISTS district VARCHAR(100);
 --   ALTER TABLE moi_entries ADD COLUMN IF NOT EXISTS district VARCHAR(100);
@@ -184,3 +188,64 @@ INSERT INTO moi_entries (event_id, guest_name, relationship, side, amount, payme
 -- DROP TABLE weddings;
 --
 -- COMMIT;
+
+-- ─── Soft-delete columns ──────────────────────────────────────────────────────
+
+ALTER TABLE public.moi_entries ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+
+-- ─── CHECK constraints ────────────────────────────────────────────────────────
+
+ALTER TABLE public.moi_entries ADD CONSTRAINT IF NOT EXISTS chk_amount_positive CHECK (amount > 0);
+ALTER TABLE public.moi_entries ADD CONSTRAINT IF NOT EXISTS chk_side CHECK (side IN ('groom','bride','both'));
+ALTER TABLE public.moi_entries ADD CONSTRAINT IF NOT EXISTS chk_payment_mode CHECK (payment_mode IN ('cash','cheque','online','dd'));
+ALTER TABLE public.events ADD CONSTRAINT IF NOT EXISTS chk_event_status CHECK (status IN ('pending','approved','rejected','completed'));
+ALTER TABLE public.users ADD CONSTRAINT IF NOT EXISTS chk_user_role CHECK (role IN ('admin','user'));
+
+-- ─── Composite indexes for paginated queries ──────────────────────────────────
+
+CREATE INDEX IF NOT EXISTS idx_moi_entries_event_created ON public.moi_entries(event_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_moi_entries_deleted ON public.moi_entries(deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_events_deleted ON public.events(deleted_at) WHERE deleted_at IS NULL;
+
+-- ─── Audit log table ──────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS public.audit_log (
+  id SERIAL PRIMARY KEY,
+  actor_id INTEGER REFERENCES public.users(id) ON DELETE SET NULL,
+  actor_username VARCHAR(100),
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id INTEGER,
+  old_value JSONB,
+  new_value JSONB,
+  ip_address VARCHAR(45),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON public.audit_log(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_actor ON public.audit_log(actor_id, created_at DESC);
+
+-- ─── Token blocklist table ────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS public.token_blocklist (
+  id SERIAL PRIMARY KEY,
+  jti VARCHAR(255) UNIQUE NOT NULL,
+  user_id INTEGER REFERENCES public.users(id) ON DELETE CASCADE,
+  blocked_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_token_blocklist_jti ON public.token_blocklist(jti);
+CREATE INDEX IF NOT EXISTS idx_token_blocklist_expires ON public.token_blocklist(expires_at);
+
+-- ─── party_size column on moi_entries ────────────────────────────────────────
+
+ALTER TABLE public.moi_entries ADD COLUMN IF NOT EXISTS party_size INTEGER DEFAULT 1 CHECK (party_size > 0);
+
+-- ─── Extra event metadata columns ────────────────────────────────────────────
+
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(20) DEFAULT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ceremony_start TIME DEFAULT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ceremony_end TIME DEFAULT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS expected_guests INTEGER DEFAULT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ceremony_type VARCHAR(50) DEFAULT NULL;

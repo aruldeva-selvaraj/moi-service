@@ -262,7 +262,7 @@ export class MoiCanvas3DComponent implements AfterViewInit, OnDestroy {
       end: '+=160%',
       scrub: 1.2,
       pin: true,
-      onUpdate: (self) => this.updateCoins(self.progress),
+      onUpdate: (self: any) => this.updateCoins(self.progress),
     });
 
     this.setPhaseUI(0);

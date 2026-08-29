@@ -49,7 +49,7 @@ import { CommonModule } from '@angular/common';
       100% { background-position: 400px 0; }
     }
 
-    %shimmer {
+    .sk-shimmer {
       background: linear-gradient(90deg,
         var(--bg-stat, #f0f0f0) 25%,
         rgba(255,255,255,0.6) 50%,
@@ -61,16 +61,18 @@ import { CommonModule } from '@angular/common';
     }
 
     .sk-line {
-      @extend %shimmer;
+      background: linear-gradient(90deg, var(--bg-stat, #f0f0f0) 25%, rgba(255,255,255,0.6) 50%, var(--bg-stat, #f0f0f0) 75%);
+      background-size: 800px 100%;
+      animation: sk-shimmer 1.4s ease-in-out infinite;
+      border-radius: 6px;
       height: 14px;
       margin-bottom: 10px;
       width: 100%;
-
-      &.sk-title  { height: 20px; width: 55%; margin-bottom: 8px; }
-      &.sk-sub    { height: 12px; width: 35%; margin-bottom: 14px; }
-      &.sk-body   { height: 13px; }
-      &.sk-short  { width: 65%; }
     }
+    .sk-line.sk-title  { height: 20px; width: 55%; margin-bottom: 8px; }
+    .sk-line.sk-sub    { height: 12px; width: 35%; margin-bottom: 14px; }
+    .sk-line.sk-body   { height: 13px; }
+    .sk-line.sk-short  { width: 65%; }
 
     .sk-divider {
       height: 1px;
@@ -104,13 +106,19 @@ import { CommonModule } from '@angular/common';
     .sk-table-header { background: var(--table-header-bg, rgba(139,69,19,0.08)); }
 
     .sk-th {
-      @extend %shimmer;
+      background: linear-gradient(90deg, var(--bg-stat, #f0f0f0) 25%, rgba(255,255,255,0.6) 50%, var(--bg-stat, #f0f0f0) 75%);
+      background-size: 800px 100%;
+      animation: sk-shimmer 1.4s ease-in-out infinite;
+      border-radius: 6px;
       height: 14px;
       flex: 1;
     }
 
     .sk-td {
-      @extend %shimmer;
+      background: linear-gradient(90deg, var(--bg-stat, #f0f0f0) 25%, rgba(255,255,255,0.6) 50%, var(--bg-stat, #f0f0f0) 75%);
+      background-size: 800px 100%;
+      animation: sk-shimmer 1.4s ease-in-out infinite;
+      border-radius: 6px;
       height: 12px;
       flex: 1;
     }

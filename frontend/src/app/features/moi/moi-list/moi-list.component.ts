@@ -221,7 +221,7 @@ export class MoiListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly search$ = new Subject<string>();
+  readonly search$ = new Subject<string>();
 
   loading = signal(true);
   entries = signal<MoiEntry[]>([]);

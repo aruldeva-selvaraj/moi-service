@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {del, get, param, patch, post, put, requestBody, HttpErrors, RestBindings, Response, Request} from '@loopback/rest';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
@@ -153,7 +152,7 @@ export class EventsController {
          LIMIT $${pIdx} OFFSET $${pIdx + 1}`,
         [...filterParams, pageSize, offset],
       );
-      return {data, total, page: pageNum, limit: pageSize};
+      return {data: data as EventRow[], total, page: pageNum, limit: pageSize};
     }
 
     return this.eventRepo.query(
@@ -163,7 +162,7 @@ export class EventsController {
        GROUP BY e.id
        ORDER BY ${sortExpr}`,
       filterParams,
-    );
+    ) as unknown as Promise<EventRow[]>;
   }
 
   // ── POST /api/events ───────────────────────────────────

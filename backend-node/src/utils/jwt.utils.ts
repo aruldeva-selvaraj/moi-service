@@ -37,7 +37,7 @@ export function extractCaller(request: Request): CallerPayload | null {
   try {
     const payload = jwt.verify(token, EFFECTIVE_SECRET) as jwt.JwtPayload;
     return {
-      sub:           payload['sub'] as number,
+      sub:           payload['sub'] as unknown as number,
       username:      payload['username'] as string,
       role:          payload['role'] as string,
       mobile_number: payload['mobile_number'] as string | undefined,

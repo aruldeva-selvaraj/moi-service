@@ -1,4 +1,4 @@
-import {del, get, param, post, put, requestBody, HttpErrors, RestBindings, Response, Request} from '@loopback/rest';
+import {get, param, post, requestBody, HttpErrors, RestBindings, Response, Request} from '@loopback/rest';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {MoiEntryRepository, EventRepository} from '../repositories';
@@ -177,7 +177,7 @@ export class MoiController {
     } else if (admin) {
       rows = await this.moiRepo.query(
         `SELECT
-           (SELECT COUNT(*)::int FROM events) AS total_events,
+           (SELECT COUNT(*)::int FROM events WHERE deleted_at IS NULL) AS total_events,
            COUNT(*)::int AS total_moi_entries,
            COALESCE(SUM(amount), 0)::float AS total_amount,
            COALESCE(AVG(amount), 0)::float AS avg_amount
@@ -188,7 +188,7 @@ export class MoiController {
     } else {
       rows = await this.moiRepo.query(
         `SELECT
-           (SELECT COUNT(*)::int FROM events WHERE created_by = $1) AS total_events,
+           (SELECT COUNT(*)::int FROM events WHERE created_by = $1 AND deleted_at IS NULL) AS total_events,
            COUNT(m.*)::int AS total_moi_entries,
            COALESCE(SUM(m.amount), 0)::float AS total_amount,
            COALESCE(AVG(m.amount), 0)::float AS avg_amount
@@ -441,20 +441,21 @@ export class MoiController {
     return created;
   }
 
-  // ── PUT /api/moi/:id ───────────────────────────────────
-  @put('/api/moi/{id}', {
+  // ── POST /api/moi/update ──────────────────────────────
+  @post('/api/moi/update', {
     responses: {
       '200': {description: 'Moi entry updated'},
       '404': {description: 'Not found'},
     },
   })
   async updateMoi(
-    @param.path.number('id') id: number,
     @requestBody({content: {'application/json': {schema: {type: 'object'}}}})
-    data: Partial<MoiCreateDto>,
+    body: {id: number} & Partial<MoiCreateDto>,
   ): Promise<object> {
     const caller = extractCaller(this.request);
     if (!caller) throw new HttpErrors.Unauthorized('Authentication required');
+    const { id, ...data } = body;
+    if (!id || typeof id !== 'number') throw new HttpErrors.BadRequest('id is required');
     const admin = isAdmin(caller);
     let ownerJoin: string;
     let checkParams: unknown[];
@@ -480,32 +481,35 @@ export class MoiController {
       Object.entries(data).filter(([k, v]) => v !== undefined && ALLOWED_MOI_FIELDS.includes(k)),
     );
     const fields = Object.entries(filtered);
-    if (!fields.length) return this.getMoi(id);
 
-    const setClauses = fields.map(([k], i) => `${k} = $${i + 1}`).join(', ');
-    const values: unknown[] = fields.map(([, v]) => v);
-    const updIdx = fields.length + 1;
-    const idIdx  = fields.length + 2;
-    values.push(new Date());
-    values.push(id);
+    if (fields.length) {
+      const setClauses = fields.map(([k], i) => `${k} = $${i + 1}`).join(', ');
+      const values: unknown[] = fields.map(([, v]) => v);
+      const updIdx = fields.length + 1;
+      const idIdx  = fields.length + 2;
+      values.push(new Date());
+      values.push(id);
+      const result = await this.moiRepo.query(
+        `UPDATE moi_entries SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx} RETURNING id`,
+        values,
+      );
+      if (!result.length) throw new HttpErrors.NotFound('Moi entry not found');
+    }
 
-    const result = await this.moiRepo.query(
-      `UPDATE moi_entries SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx} RETURNING id`,
-      values,
+    // Direct SELECT — never call route handlers internally (causes response side-effects)
+    const updatedRows = await this.moiRepo.query(
+      `SELECT m.*, u2.username AS created_by_username
+       FROM moi_entries m
+       LEFT JOIN public.users u2 ON m.created_by = u2.id
+       WHERE m.id = $1 AND m.deleted_at IS NULL`,
+      [id],
     );
-    if (!result.length) throw new HttpErrors.NotFound('Moi entry not found');
+    const updated = updatedRows[0] ?? {};
 
-    const updated = await this.getMoi(id);
     await this.moiRepo.query(
       `INSERT INTO public.audit_log(actor_id,actor_username,action,entity_type,entity_id,new_value)
        VALUES($1,$2,$3,'moi_entry',$4,$5)`,
-      [
-        caller?.sub ?? null,
-        caller?.username ?? null,
-        'UPDATE',
-        id,
-        JSON.stringify(updated),
-      ],
+      [caller?.sub ?? null, caller?.username ?? null, 'UPDATE', id, JSON.stringify(updated)],
     );
 
     return updated;
@@ -577,16 +581,21 @@ export class MoiController {
     );
   }
 
-  // ── DELETE /api/moi/:id ────────────────────────────────
-  @del('/api/moi/{id}', {
+  // ── POST /api/moi/delete ──────────────────────────────
+  @post('/api/moi/delete', {
     responses: {
-      '204': {description: 'Moi entry deleted'},
+      '200': {description: 'Moi entry deleted'},
       '404': {description: 'Not found'},
     },
   })
-  async deleteMoi(@param.path.number('id') id: number): Promise<void> {
+  async deleteMoi(
+    @requestBody({content: {'application/json': {schema: {type: 'object'}}}})
+    body: {id: number},
+  ): Promise<object> {
     const caller = extractCaller(this.request);
     if (!caller) throw new HttpErrors.Unauthorized('Authentication required');
+    const { id } = body;
+    if (!id || typeof id !== 'number') throw new HttpErrors.BadRequest('id is required');
     const admin = isAdmin(caller);
     let ownerJoin: string;
     let deleteCheckParams: unknown[];
@@ -612,16 +621,10 @@ export class MoiController {
     await this.moiRepo.query(
       `INSERT INTO public.audit_log(actor_id,actor_username,action,entity_type,entity_id,new_value)
        VALUES($1,$2,$3,'moi_entry',$4,$5)`,
-      [
-        caller?.sub ?? null,
-        caller?.username ?? null,
-        'DELETE',
-        id,
-        null,
-      ],
+      [caller?.sub ?? null, caller?.username ?? null, 'DELETE', id, null],
     );
 
-    this.response.status(204);
+    return { success: true };
   }
 
   // ── POST /api/moi/bulk ────────────────────────────────

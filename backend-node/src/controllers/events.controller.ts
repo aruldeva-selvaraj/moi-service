@@ -524,7 +524,7 @@ export class EventsController {
          COALESCE(SUM(amount) FILTER (WHERE payment_mode = 'online'), 0)::float    AS online_amount,
          COALESCE(SUM(CASE WHEN payment_mode = 'dd' THEN amount ELSE 0 END), 0)::float AS dd_amount
        FROM moi_entries
-       WHERE event_id = $1`,
+       WHERE event_id = $1 AND deleted_at IS NULL`,
       [id],
     );
 

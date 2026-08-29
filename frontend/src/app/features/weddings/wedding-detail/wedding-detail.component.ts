@@ -547,7 +547,9 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   }
 
   printMoiList() {
-    window.print();
+    if (this.event() && this.entries().length > 0) {
+      this.receiptService.printA4Sheet(this.entries(), this.event()!, { side: 'all' });
+    }
   }
 
   // ── AI Smart Entry methods ──────────────────────────────

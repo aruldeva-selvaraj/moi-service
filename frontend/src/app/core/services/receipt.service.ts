@@ -262,9 +262,8 @@ export class ReceiptService {
     /* ── Document Header ── */
     .doc-header {
       display:flex; align-items:flex-start; justify-content:space-between;
-      padding:10px 128px 14px;
+      padding:136px 20px 14px;
       border-bottom:2px solid #c9a86c;
-      min-height:128px;
     }
     .h-left .bill-lbl  { font-size:15px; font-weight:800; color:#7b1a36; font-family:Georgia,serif; }
     .h-left .inv-num   { font-size:13px; font-weight:800; color:#1a1a1a; margin-top:5px; letter-spacing:.5px; }
@@ -331,10 +330,14 @@ export class ReceiptService {
     .tremark { font-size:10px; color:#666; }
 
     /* ── Summary Row ── */
-    .summary-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:12px; }
+    .summary-row {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-top:14px; gap:12px;
+    }
     .tg-box {
       display:flex; align-items:center; gap:12px;
       border:1.5px solid #e0d0d0; border-radius:6px; padding:10px 18px;
+      flex-shrink:0;
     }
     .tg-ico   { font-size:30px; }
     .tg-count { font-size:24px; font-weight:800; color:#1a1a1a; line-height:1; }
@@ -342,11 +345,11 @@ export class ReceiptService {
 
     .ta-box {
       background:#fde8ee; border:1.5px solid #e8a0b8;
-      border-radius:6px; padding:10px 20px;
-      text-align:right; flex:1; max-width:310px;
+      border-radius:6px; padding:12px 24px;
+      text-align:center; flex:1;
     }
     .ta-lbl   { font-size:11px; font-weight:700; color:#7b1a36; }
-    .ta-val   { font-size:24px; font-weight:800; color:#7b1a36; margin:3px 0 2px; }
+    .ta-val   { font-size:26px; font-weight:800; color:#7b1a36; margin:4px 0 3px; }
     .ta-words { font-size:9.5px; color:#8b3050; font-style:italic; line-height:1.4; }
 
     /* ── Bottom Section ── */
@@ -356,17 +359,23 @@ export class ReceiptService {
     .notes-sec ul li { font-size:10px; color:#555; line-height:1.75; }
 
     .gratitude-center {
-      flex:1; text-align:center; padding-top:6px;
+      text-align:center; padding-top:6px;
       font-size:13.5px; font-style:italic; color:#c4932a;
       font-family:Georgia,'Times New Roman',serif;
-      line-height:1.6;
+      line-height:1.6; min-width:120px;
     }
     .grat-orn { font-size:13px; color:#c4932a; display:block; margin:2px 0; }
 
-    .auth-sec { flex:1; text-align:right; }
-    .auth-ttl { font-size:12.5px; font-weight:800; color:#7b1a36; margin-bottom:32px; font-family:Georgia,serif; }
-    .auth-line { border-bottom:1.5px solid #333; width:150px; margin:0 0 5px auto; }
-    .auth-role { font-size:10px; color:#555; }
+    .auth-sec { flex:1; }
+    .auth-ttl {
+      font-size:12.5px; font-weight:800; color:#7b1a36;
+      margin-bottom:28px; font-family:Georgia,serif; text-align:center;
+    }
+    .auth-sigs { display:flex; justify-content:space-between; gap:16px; }
+    .auth-sig  { flex:1; text-align:center; }
+    .auth-line { border-bottom:1.5px solid #555; margin:0 auto 5px; width:90%; }
+    .auth-role { font-size:10px; color:#555; margin-top:3px; }
+    .auth-name { font-size:10.5px; font-weight:700; color:#7b1a36; }
 
     /* ── Page Footer Bar ── */
     .pg-footer {
@@ -482,8 +491,18 @@ export class ReceiptService {
     </div>
     <div class="auth-sec">
       <div class="auth-ttl">Authorized By</div>
-      <div class="auth-line"></div>
-      <div class="auth-role">( Family Representative )</div>
+      <div class="auth-sigs">
+        <div class="auth-sig">
+          <div class="auth-line"></div>
+          <div class="auth-name">Family Representative</div>
+          <div class="auth-role">( ${esc(event.family_name || event.primary_name)} )</div>
+        </div>
+        <div class="auth-sig">
+          <div class="auth-line"></div>
+          <div class="auth-name">Moify Team</div>
+          <div class="auth-role">( Authorized Signatory )</div>
+        </div>
+      </div>
     </div>
   </div>
 

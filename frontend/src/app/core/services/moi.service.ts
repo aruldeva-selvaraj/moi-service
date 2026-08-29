@@ -44,11 +44,11 @@ export class MoiService {
   }
 
   update(id: number, data: Partial<MoiEntryCreate>): Observable<MoiEntry> {
-    return this.http.put<MoiEntry>(`${this.baseUrl}/${id}`, data);
+    return this.http.post<MoiEntry>(`${this.baseUrl}/update`, { id, ...data });
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  delete(id: number): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(`${this.baseUrl}/delete`, { id });
   }
 
   getSummary(eventId?: number): Observable<SummaryStats> {

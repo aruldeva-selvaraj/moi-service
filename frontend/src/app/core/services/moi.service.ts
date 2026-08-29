@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import {
   MoiEntry, MoiEntryCreate, PaginatedMoiResponse,
   SummaryStats, RelationshipReport, MoiFilter, GeoBreakdownItem
@@ -93,11 +92,5 @@ export class MoiService {
     let params = new HttpParams();
     if (eventId) params = params.set('event_id', eventId.toString());
     return this.http.get<GeoBreakdownItem[]>(`${this.baseUrl}/by-district`, { params });
-  }
-
-  transliterateToTamil(text: string): Observable<string> {
-    const params = new HttpParams().set('text', text);
-    return this.http.get<{result: string}>(`${environment.apiUrl}/api/transliterate`, { params })
-      .pipe(map(r => r.result ?? ''));
   }
 }

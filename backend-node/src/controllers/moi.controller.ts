@@ -26,7 +26,6 @@ interface MoiBulkDto {
 interface MoiCreateDto {
   event_id: number;
   guest_name: string;
-  guest_name_tamil?: string;
   relationship?: string;
   side?: string;
   amount: number;
@@ -399,30 +398,29 @@ export class MoiController {
     const now = new Date();
     const result = await this.moiRepo.query(
       `INSERT INTO moi_entries
-         (event_id, guest_name, guest_name_tamil, relationship, side, amount, payment_mode,
+         (event_id, guest_name, relationship, side, amount, payment_mode,
           cheque_number, transaction_ref, city, district, phone, notes, received_by,
           party_size, created_at, updated_at, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
        RETURNING *`,
       [
         data.event_id,
         data.guest_name,
-        data.guest_name_tamil ?? null,
-        data.relationship     ?? null,
-        data.side             ?? 'groom',
+        data.relationship    ?? null,
+        data.side            ?? 'groom',
         data.amount,
-        data.payment_mode     ?? 'cash',
-        data.cheque_number    ?? null,
-        data.transaction_ref  ?? null,
-        data.city             ?? null,
-        data.district         ?? null,
-        data.phone            ?? null,
-        data.notes            ?? null,
-        data.received_by      ?? null,
-        data.party_size       ?? null,
+        data.payment_mode    ?? 'cash',
+        data.cheque_number   ?? null,
+        data.transaction_ref ?? null,
+        data.city            ?? null,
+        data.district        ?? null,
+        data.phone           ?? null,
+        data.notes           ?? null,
+        data.received_by     ?? null,
+        data.party_size      ?? null,
         now,
         now,
-        caller?.sub           ?? null,
+        caller?.sub          ?? null,
       ],
     );
 
@@ -475,7 +473,7 @@ export class MoiController {
     if (!existing.length) throw new HttpErrors.NotFound('Moi entry not found');
 
     const ALLOWED_MOI_FIELDS = [
-      'guest_name', 'guest_name_tamil', 'relationship', 'side', 'amount', 'payment_mode',
+      'guest_name', 'relationship', 'side', 'amount', 'payment_mode',
       'cheque_number', 'transaction_ref', 'city', 'district', 'phone',
       'notes', 'received_by', 'party_size',
     ];

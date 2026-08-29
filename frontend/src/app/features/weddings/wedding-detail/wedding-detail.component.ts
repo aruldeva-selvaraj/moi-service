@@ -2,8 +2,6 @@ import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, Elem
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subscription, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -28,7 +26,7 @@ import { VoiceRecognitionService } from '../../../core/services/voice-recognitio
 import { Event, getEventConfig, getEventTitle, EventTypeConfig } from '../../../core/models/event.model';
 import { MoiEntry, MoiEntryCreate, MoiFilter } from '../../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent, AiEntryDialogData, ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/index';
-import { transliterateEnToTamil } from '../../../core/utils/transliterate.util';
+
 
 @Component({
   selector: 'app-wedding-detail',
@@ -89,7 +87,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   amountPresets = signal<number[]>([500, 1000, 2000, 5000, 10000]);
 
   private sessionWarningTimer?: ReturnType<typeof setTimeout>;
-  private subs = new Subscription();
 
   readonly citySuggestions = computed(() =>
     [...new Set(this.entries().map(e => e.city).filter((v): v is string => !!v?.trim()))].sort()
@@ -125,7 +122,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   get defaultMoiValues() {
     return {
       guest_name: '',
-      guest_name_tamil: '',
       relationship: '',
       side: 'groom',
       amount: null,
@@ -143,7 +139,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
 
   moiForm: FormGroup = this.fb.group({
     guest_name: ['', Validators.required],
-    guest_name_tamil: [''],
     relationship: [''],
     side: ['groom'],
     amount: [null, [Validators.required, Validators.min(1), Validators.pattern(/^[0-9]+$/)]],
@@ -160,7 +155,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
 
   editForm: FormGroup = this.fb.group({
     guest_name: ['', Validators.required],
-    guest_name_tamil: [''],
     relationship: [''],
     side: ['groom'],
     amount: [null, [Validators.required, Validators.min(1), Validators.pattern(/^[0-9]+$/)]],
@@ -299,30 +293,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
     this.loadEvent();
     this.loadEntries();
 
-    // Auto-transliterate guest name → Tamil via backend API (Google), fallback to local
-    const autoTamil = (val: string) =>
-      val?.trim()
-        ? this.moiService.transliterateToTamil(val).pipe(
-            catchError(() => of(transliterateEnToTamil(val)))
-          )
-        : of('');
-
-    this.subs.add(
-      this.moiForm.get('guest_name')!.valueChanges.pipe(
-        debounceTime(400), distinctUntilChanged(),
-        switchMap(val => autoTamil(val))
-      ).subscribe(tamil => {
-        this.moiForm.get('guest_name_tamil')!.setValue(tamil, { emitEvent: false });
-      })
-    );
-    this.subs.add(
-      this.editForm.get('guest_name')!.valueChanges.pipe(
-        debounceTime(400), distinctUntilChanged(),
-        switchMap(val => autoTamil(val))
-      ).subscribe(tamil => {
-        this.editForm.get('guest_name_tamil')!.setValue(tamil, { emitEvent: false });
-      })
-    );
     this.loadLastSettings();
     this.loadPresetsFromStorage();
     // Read highlight param
@@ -356,7 +326,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.sessionWarningTimer) clearTimeout(this.sessionWarningTimer);
-    this.subs.unsubscribe();
   }
 
   loadEvent() {
@@ -479,9 +448,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   startEdit(entry: MoiEntry): void {
     this.editingEntry.set(entry);
     this.editForm.patchValue({
-      guest_name:       entry.guest_name,
-      guest_name_tamil: entry.guest_name_tamil ?? '',
-      relationship:     entry.relationship  ?? '',
+      guest_name:    entry.guest_name,
+      relationship:  entry.relationship  ?? '',
       side:          entry.side,
       amount:        String(Math.round(Number(entry.amount))),
       payment_mode:  entry.payment_mode,

@@ -121,472 +121,391 @@ export class ReceiptService {
     const esc = (s: string | number | undefined): string =>
       String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-    const fmt = (n: number) => new Intl.NumberFormat('en-IN', {
-      style: 'currency', currency: 'INR', minimumFractionDigits: 0,
-    }).format(n);
-
-    const payLabel: Record<string, string> = { cash: 'Cash', cheque: 'Cheque', online: 'Online', dd: 'DD' };
-
-    const sideLabel =
-      side === 'groom' ? cfg.sideALabel :
-      side === 'bride' ? cfg.sideBLabel :
-      side === 'both'  ? 'Both' : 'All Guests';
+    const fmtNum = (n: number) => new Intl.NumberFormat('en-IN').format(Math.round(n));
 
     let filtered = side === 'all' ? entries : entries.filter(x => x.side === side);
-    if (cityFilter) {
-      filtered = filtered.filter(x => x.city?.toLowerCase().includes(cityFilter.toLowerCase()));
-    }
-    if (districtFilter) {
-      filtered = filtered.filter(x => x.district?.toLowerCase().includes(districtFilter.toLowerCase()));
-    }
-    filtered = [...filtered].sort((a, b) =>
-      (a.city ?? '').localeCompare(b.city ?? '', 'en', { sensitivity: 'base' })
-    );
-    const showSideCol     = side === 'all';
-    const showRelCol      = filtered.some(x => !!x.relationship?.trim());
-    const showCityCol     = filtered.some(x => !!x.city?.trim());
-    const showDistrictCol = filtered.some(x => !!x.district?.trim());
+    if (cityFilter)    filtered = filtered.filter(x => x.city?.toLowerCase().includes(cityFilter.toLowerCase()));
+    if (districtFilter) filtered = filtered.filter(x => x.district?.toLowerCase().includes(districtFilter.toLowerCase()));
+    filtered = [...filtered].sort((a, b) => (a.city ?? '').localeCompare(b.city ?? '', 'en', { sensitivity: 'base' }));
 
-    const eventDate = new Date(event.event_date).toLocaleDateString('en-IN', {
-      day: '2-digit', month: 'long', year: 'numeric',
-    });
-    const printDate = new Date().toLocaleDateString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
+    const now      = new Date();
+    const printDate = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const printTime = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    const grandTotal = filtered.reduce((s, x) => s + x.amount, 0);
-    const totalQty = filtered.length;
+    const evDateObj = new Date(event.event_date);
+    const eventDate = evDateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const eventDay  = evDateObj.toLocaleDateString('en-IN', { weekday: 'long' });
 
-    const sideDisplay = (s: string) =>
-      s === 'groom' ? cfg.sideALabel : s === 'bride' ? cfg.sideBLabel : 'Both';
+    const grandTotal = filtered.reduce((s, x) => s + Number(x.amount), 0);
+    const totalQty   = filtered.length;
+    const year       = now.getFullYear();
+    const invoiceNum = `#MOI-${year}-${String(event.id).padStart(6, '0')}`;
+    const eventOfLabel = cfg.label + ' of';
 
-    const filterDesc = [
-      cityFilter ? `City: ${cityFilter}` : '',
-      districtFilter ? `District: ${districtFilter}` : '',
-    ].filter(Boolean).join(' | ');
+    const payBadge = (pm: string): string => {
+      const styleMap: Record<string, string> = {
+        cash:   'color:#2e7d32;border:1.5px solid #2e7d32;',
+        cheque: 'color:#e65100;border:1.5px solid #e65100;',
+        online: 'color:#1565c0;border:1.5px solid #1565c0;',
+        dd:     'color:#6a1b9a;border:1.5px solid #6a1b9a;',
+      };
+      const labelMap: Record<string, string> = { cash: 'Cash', cheque: 'Cheque', online: 'Online', dd: 'DD' };
+      const st = styleMap[pm] ?? 'color:#333;border:1.5px solid #999;';
+      return `<span style="font-size:9.5px;padding:2px 8px;border-radius:12px;${st}font-weight:700;">${labelMap[pm] ?? pm}</span>`;
+    };
 
-    const rows = filtered.map((x, i) => `
-      <tr class="${i % 2 === 0 ? 'row-even' : 'row-odd'}">
-        <td class="center">${i + 1}</td>
-        <td class="col-name">
-          ${esc(x.guest_name)}
-          ${x.phone ? `<span class="phone">${esc(x.phone)}</span>` : ''}
-        </td>
-        ${showRelCol      ? `<td class="col-rel">${esc(x.relationship || '')}</td>` : ''}
-        ${showCityCol     ? `<td>${esc(x.city || '')}</td>` : ''}
-        ${showDistrictCol ? `<td>${esc(x.district || '')}</td>` : ''}
-        ${showSideCol     ? `<td class="center side-cell side-${x.side}">${esc(sideDisplay(x.side))}</td>` : ''}
-        <td class="right col-amt">${esc(fmt(x.amount))}</td>
-      </tr>`).join('');
+    const tableRows = filtered.map((x, i) => {
+      const d = x.created_at ? new Date(x.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : eventDate;
+      return `<tr style="background:${i % 2 === 0 ? '#ffffff' : '#fdf5f7'};">
+        <td class="tc tn">${i + 1}</td>
+        <td class="tc td">${d}</td>
+        <td class="tl tname">${esc(x.guest_name)}${x.phone ? `<div class="tphone">${esc(x.phone)}</div>` : ''}</td>
+        <td class="tl trel">${esc(x.relationship || '')}</td>
+        <td class="tc">${payBadge(x.payment_mode)}</td>
+        <td class="tr tamt">${fmtNum(Number(x.amount))}</td>
+        <td class="tl tremark">${esc(x.notes || '')}</td>
+      </tr>`;
+    }).join('');
 
-    const emptyCount = Math.max(0, 15 - filtered.length);
-    const blankRows = Array(emptyCount).fill(null).map((_, i) => `
-      <tr class="empty-row ${(filtered.length + i) % 2 === 0 ? 'row-even' : 'row-odd'}">
-        <td class="center">${filtered.length + i + 1}</td>
-        <td></td>
-        ${showRelCol      ? '<td></td>' : ''}
-        ${showCityCol     ? '<td></td>' : ''}
-        ${showDistrictCol ? '<td></td>' : ''}
-        ${showSideCol     ? '<td></td>' : ''}
-        <td></td>
-      </tr>`).join('');
+    // Floral SVG: pass flip=true for top-right corner
+    const floralCorner = (flip: boolean): string => {
+      const g = flip ? 'translate(130,0) scale(-1,1)' : '';
+      return `<svg width="130" height="130" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
+  <g transform="${g}">
+    <!-- vine -->
+    <path d="M6 115 Q38 88 65 62 Q90 42 108 8" stroke="#7a9440" stroke-width="1.6" fill="none" opacity="0.55"/>
+    <path d="M6 98 Q28 78 48 68" stroke="#6a8435" stroke-width="1" fill="none" opacity="0.45"/>
+    <!-- leaves -->
+    <ellipse cx="62" cy="64" rx="24" ry="7" fill="#5e9038" opacity="0.7" transform="rotate(-50 62 64)"/>
+    <ellipse cx="34" cy="70" rx="20" ry="6" fill="#4e8030" opacity="0.65" transform="rotate(-68 34 70)"/>
+    <ellipse cx="80" cy="44" rx="18" ry="5.5" fill="#5e9038" opacity="0.6" transform="rotate(-22 80 44)"/>
+    <ellipse cx="104" cy="58" rx="14" ry="4.5" fill="#4e8030" opacity="0.55" transform="rotate(-58 104 58)"/>
+    <!-- main rose -->
+    <g transform="translate(44,40)">
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#eaacbe" opacity="0.9" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#eaacbe" opacity="0.9" transform="rotate(60)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#eaacbe" opacity="0.9" transform="rotate(120)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#d8608a" opacity="0.9" transform="rotate(30)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#d8608a" opacity="0.9" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#d8608a" opacity="0.9" transform="rotate(150)"/>
+      <circle cx="0" cy="0" r="10" fill="#be3860"/>
+      <circle cx="0" cy="0" r="6"  fill="#9c2040"/>
+      <circle cx="-2" cy="-2" r="2.5" fill="#ff9ab8" opacity="0.45"/>
+    </g>
+    <!-- second rose -->
+    <g transform="translate(84,74) scale(0.62)">
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#f2bece" opacity="0.9" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#f2bece" opacity="0.9" transform="rotate(60)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#f2bece" opacity="0.9" transform="rotate(120)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#e07898" opacity="0.9" transform="rotate(30)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#e07898" opacity="0.9" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-15" rx="10" ry="13" fill="#e07898" opacity="0.9" transform="rotate(150)"/>
+      <circle cx="0" cy="0" r="10" fill="#c85878"/>
+      <circle cx="0" cy="0" r="5.5" fill="#a83858"/>
+    </g>
+    <!-- bud -->
+    <g transform="translate(97,20) scale(0.42)">
+      <ellipse cx="0" cy="-14" rx="9" ry="12" fill="#f4c4d4" opacity="0.88" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-14" rx="9" ry="12" fill="#f4c4d4" opacity="0.88" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-14" rx="9" ry="12" fill="#f4c4d4" opacity="0.88" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-14" rx="9" ry="12" fill="#eca0b8" opacity="0.88" transform="rotate(36)"/>
+      <ellipse cx="0" cy="-14" rx="9" ry="12" fill="#eca0b8" opacity="0.88" transform="rotate(108)"/>
+      <circle cx="0" cy="0" r="8" fill="#cc4868"/>
+    </g>
+    <!-- small berries -->
+    <circle cx="20" cy="90" r="4.5" fill="#f090b0" opacity="0.78"/>
+    <circle cx="9"  cy="74" r="3"   fill="#f4b4c8" opacity="0.7"/>
+    <circle cx="108" cy="36" r="3.5" fill="#f090b0" opacity="0.68"/>
+  </g>
+</svg>`;
+    };
 
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Moi Register — ${esc(title)}</title>
+  <title>Moi Invoice &#8212; ${esc(title)}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    @page { size: A4 portrait; margin: 12mm 10mm; }
-
-    html {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
+    * { margin:0; padding:0; box-sizing:border-box; }
+    @page { size: A4 portrait; margin: 6mm 6mm; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     @media print {
-      @page { margin: 12mm 10mm; }
-      html, body { margin: 0; padding: 0; }
-      .download-bar { display: none !important; }
+      @page { margin: 6mm 6mm; }
+      html, body { margin:0; padding:0; }
+      .dl-bar { display:none !important; }
     }
+    body { font-family:'Segoe UI', Arial, sans-serif; font-size:11px; color:#222; background:#fff; }
 
-    /* ── Download toolbar (screen only) ── */
-    .download-bar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 9999;
-      background: #4a148c;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 20px;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    /* Download bar */
+    .dl-bar {
+      position:fixed; top:0; left:0; right:0; z-index:9999;
+      background:#7b1a36; color:#fff;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 20px; font-size:14px; box-shadow:0 2px 8px rgba(0,0,0,.3);
     }
-
-    .download-bar span { opacity: 0.9; }
-
-    .download-bar button {
-      background: #fff;
-      color: #4a148c;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 20px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .dl-bar button {
+      background:#fff; color:#7b1a36; border:none; border-radius:6px;
+      padding:8px 20px; font-size:14px; font-weight:700; cursor:pointer;
     }
+    body.has-dl-bar .page { margin-top:56px; }
 
-    .download-bar button:hover { background: #f3e5f5; }
+    /* Page */
+    .page { width:195mm; margin:0 auto; position:relative; background:#fff; min-height:277mm; }
 
-    body.has-download-bar .page { margin-top: 56px; }
-
-    body {
-      font-family: 'Segoe UI', 'Noto Sans', Arial, sans-serif;
-      font-size: 12px;
-      color: #222;
-      background: #fff;
+    /* Floral corners */
+    .fc-tl, .fc-tr {
+      position:absolute; top:0; width:130px; height:130px; pointer-events:none; z-index:1;
     }
+    .fc-tl { left:0; }
+    .fc-tr { right:0; }
 
-    .page {
-      width: 190mm;
-      min-height: 270mm;
-      margin: 0 auto;
-      position: relative;
+    /* ── Document Header ── */
+    .doc-header {
+      display:flex; align-items:flex-start; justify-content:space-between;
+      padding:10px 128px 14px;
+      border-bottom:2px solid #c9a86c;
+      min-height:128px;
     }
+    .h-left .bill-lbl  { font-size:15px; font-weight:800; color:#7b1a36; font-family:Georgia,serif; }
+    .h-left .inv-num   { font-size:13px; font-weight:800; color:#1a1a1a; margin-top:5px; letter-spacing:.5px; }
+    .h-left .inv-row   { font-size:11px; color:#444; margin-top:5px; display:flex; align-items:center; gap:5px; }
 
-    /* ── Header ── */
-    .header {
-      display: flex;
-      align-items: center;
-      border-bottom: 3px solid #4a148c;
-      padding-bottom: 10px;
-      margin-bottom: 6px;
+    .h-center { text-align:center; flex:1; padding:0 10px; }
+    .brand-row {
+      font-size:22px; font-weight:800; color:#7b1a36;
+      font-family:Georgia,'Times New Roman',serif; letter-spacing:1.5px;
+      display:flex; align-items:center; justify-content:center; gap:8px;
     }
-
-    .header-info { flex: 1; }
-
-    .app-name {
-      font-size: 28px;
-      font-weight: 800;
-      color: #4a148c;
-      letter-spacing: 1.5px;
-      line-height: 1.1;
+    .brand-sub  { font-size:10px; color:#888; margin-top:2px; letter-spacing:.5px; }
+    .of-row {
+      margin-top:10px; font-size:12px; font-style:italic; color:#c4932a;
+      display:flex; align-items:center; justify-content:center; gap:8px;
     }
-
-    .app-tagline {
-      font-size: 12px;
-      color: #555;
-      font-style: italic;
-      margin-top: 2px;
+    .of-line { flex:1; height:1px; background:#c4932a; max-width:36px; }
+    .couple-names {
+      font-size:30px; font-weight:700; color:#7b1a36;
+      font-family:Georgia,'Times New Roman',serif;
+      line-height:1.1; margin-top:5px; letter-spacing:1px;
     }
+    .c-heart { color:#c4932a; font-size:24px; vertical-align:middle; }
+    .ornament { font-size:11px; color:#8b7a2a; margin-top:5px; letter-spacing:4px; }
 
-    .event-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin-top: 6px;
+    .h-right { text-align:right; min-width:95px; }
+    .ty-text { font-size:17px; color:#c0392b; font-style:italic; font-family:Georgia,serif; font-weight:700; }
+    .ty-heart { color:#c0392b; font-size:15px; margin:3px 0; }
+    .ty-msg   { font-size:10px; color:#555; line-height:1.5; margin-top:4px; }
+
+    /* ── Info Cards ── */
+    .info-cards {
+      display:flex; margin:12px 0 10px;
+      border:1.5px solid #ddc8a0; border-radius:5px; overflow:hidden;
     }
-
-    .event-meta {
-      font-size: 10.5px;
-      color: #444;
-      margin-top: 3px;
-      line-height: 1.5;
+    .info-card { flex:1; padding:10px 12px; border-right:1.5px solid #ddc8a0; }
+    .info-card:last-child { border-right:none; }
+    .card-hdr {
+      display:flex; align-items:center; gap:6px;
+      font-size:10.5px; font-weight:800; color:#7b1a36;
+      text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px;
     }
-
-    .header-right { text-align: right; }
-
-    .header-right div {
-      font-size: 11px;
-      color: #333;
-      margin-bottom: 3px;
-    }
-
-    .header-right strong { color: #4a148c; }
-
-    /* ── Title strip ── */
-    .title-strip {
-      background: #4a148c;
-      color: #fff;
-      text-align: center;
-      padding: 7px 0;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin: 10px 0;
-    }
-
-    /* ── Meta row ── */
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0 8px;
-      font-size: 11.5px;
-    }
-
-    .meta-row strong { color: #4a148c; }
+    .card-ico { font-size:15px; }
+    .card-ln  { font-size:10.5px; color:#333; line-height:1.65; }
 
     /* ── Table ── */
-    .reg-table {
-      width: 100%;
-      border-collapse: collapse;
-      border-bottom: 2px solid #4a148c;
+    .moi-tbl { width:100%; border-collapse:collapse; margin-top:10px; font-size:10.5px; }
+    .moi-tbl thead tr { background:#7b1a36; color:#fff; }
+    .moi-tbl thead th {
+      padding:8px 6px; font-weight:700; text-align:center; font-size:10.5px;
+      letter-spacing:.3px; border:1px solid #9b2a46;
     }
+    .moi-tbl thead th.tl { text-align:left; padding-left:8px; }
+    .moi-tbl tbody td   { padding:5px 6px; border:1px solid #e8d4d8; vertical-align:middle; }
+    .tc { text-align:center; }
+    .tr { text-align:right; }
+    .tl { text-align:left; }
+    .tn      { color:#888; font-size:10px; }
+    .td      { color:#555; font-size:10px; white-space:nowrap; }
+    .tname   { font-weight:600; color:#1a1a1a; }
+    .tphone  { font-size:9px; color:#999; margin-top:1px; }
+    .trel    { font-style:italic; color:#555; }
+    .tamt    { font-weight:700; font-family:'Courier New',Courier,monospace; white-space:nowrap; }
+    .tremark { font-size:10px; color:#666; }
 
-    .reg-table thead th,
-    .reg-table tbody td {
-      border-top: none;
-      border-bottom: none;
-      border-left: 1px solid #c9b3e8;
-      padding: 4px 6px;
-      font-size: 11px;
-      line-height: 1.2;
-      vertical-align: middle;
+    /* ── Summary Row ── */
+    .summary-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:12px; }
+    .tg-box {
+      display:flex; align-items:center; gap:12px;
+      border:1.5px solid #e0d0d0; border-radius:6px; padding:10px 18px;
     }
+    .tg-ico   { font-size:30px; }
+    .tg-count { font-size:24px; font-weight:800; color:#1a1a1a; line-height:1; }
+    .tg-lbl   { font-size:10px; color:#666; margin-top:2px; }
 
-    .reg-table thead th:last-child,
-    .reg-table tbody td:last-child {
-      border-right: 1px solid #c9b3e8;
+    .ta-box {
+      background:#fde8ee; border:1.5px solid #e8a0b8;
+      border-radius:6px; padding:10px 20px;
+      text-align:right; flex:1; max-width:310px;
     }
+    .ta-lbl   { font-size:11px; font-weight:700; color:#7b1a36; }
+    .ta-val   { font-size:24px; font-weight:800; color:#7b1a36; margin:3px 0 2px; }
+    .ta-words { font-size:9.5px; color:#8b3050; font-style:italic; line-height:1.4; }
 
-    .reg-table thead th {
-      background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%);
-      color: #fff;
-      font-weight: 700;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 9px 6px;
-      border-left: 1px solid #6a2faa;
+    /* ── Bottom Section ── */
+    .bottom-sec { display:flex; justify-content:space-between; align-items:flex-start; margin-top:18px; gap:12px; }
+    .notes-sec .notes-ttl { font-size:12.5px; font-weight:800; color:#7b1a36; margin-bottom:7px; font-family:Georgia,serif; }
+    .notes-sec ul { padding-left:14px; }
+    .notes-sec ul li { font-size:10px; color:#555; line-height:1.75; }
+
+    .gratitude-center {
+      flex:1; text-align:center; padding-top:6px;
+      font-size:13.5px; font-style:italic; color:#c4932a;
+      font-family:Georgia,'Times New Roman',serif;
+      line-height:1.6;
     }
+    .grat-orn { font-size:13px; color:#c4932a; display:block; margin:2px 0; }
 
-    .row-even { background: #fdfaff; }
-    .row-odd  { background: #f3eeff; }
+    .auth-sec { flex:1; text-align:right; }
+    .auth-ttl { font-size:12.5px; font-weight:800; color:#7b1a36; margin-bottom:32px; font-family:Georgia,serif; }
+    .auth-line { border-bottom:1.5px solid #333; width:150px; margin:0 0 5px auto; }
+    .auth-role { font-size:10px; color:#555; }
 
-    .reg-table .empty-row td { height: 26px; padding: 7px 8px; }
-    .empty-row.row-even { background: #fdfaff; }
-    .empty-row.row-odd  { background: #f9f5ff; }
-
-    .phone {
-      display: block;
-      font-size: 9px;
-      color: #888;
-      margin-top: 2px;
+    /* ── Page Footer Bar ── */
+    .pg-footer {
+      margin-top:16px; border-top:1.5px solid #c9a86c;
+      padding-top:8px;
+      display:flex; justify-content:center; align-items:center;
+      gap:12px; font-size:10px; color:#666; flex-wrap:wrap;
     }
-
-    .col-name { font-weight: 600; color: #1a1a2e; }
-    .col-rel  { font-style: italic; color: #555; }
-    .col-amt  { font-weight: 700; font-family: 'Courier New', Courier, monospace; color: #2e7d32; }
-
-    /* Side colour badges */
-    .side-groom { color: #1565c0; font-weight: 600; }
-    .side-bride { color: #c2185b; font-weight: 600; }
-    .side-both  { color: #6a1b9a; font-weight: 600; }
-
-    /* Payment colour badges */
-    .pay-cash   { color: #2e7d32; font-weight: 600; }
-    .pay-cheque { color: #e65100; font-weight: 600; }
-    .pay-online { color: #1565c0; font-weight: 600; }
-    .pay-dd     { color: #4a148c; font-weight: 600; }
-
-    .filter-info {
-      font-size: 10px;
-      color: #7b1fa2;
-      font-style: italic;
-      text-align: right;
-      margin-bottom: 4px;
-    }
-
-    .table-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 6px 0 10px;
-      padding: 6px 8px;
-      background: #f8f9ff;
-      border-top: 1px solid #bbb;
-      border-bottom: 1px solid #bbb;
-      font-size: 11px;
-    }
-
-    .center { text-align: center; }
-    .right  { text-align: right; }
-
-    /* ── Total section ── */
-    .total-section {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 0;
-    }
-
-    .total-box {
-      width: 260px;
-      border: 2px solid #4a148c;
-      border-top: none;
-    }
-
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 10px;
-      font-size: 11.5px;
-      line-height: 1.3;
-      border-top: 1px solid #ddd;
-    }
-
-    .total-row.grand {
-      background: #4a148c;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 8px 10px;
-      border-top: none;
-    }
-
-    /* ── Footer ── */
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 30px;
-      padding-top: 10px;
-    }
-
-    .footer-left { font-size: 9.5px; color: #888; }
-    .footer-right { text-align: center; }
-
-    .stamp-area {
-      width: 180px;
-      height: 60px;
-      border-bottom: 2px solid #333;
-      margin-bottom: 4px;
-    }
-
-    .footer-right p {
-      font-size: 11px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .footer-right .for-label {
-      font-size: 10px;
-      color: #666;
-      font-weight: 400;
-      margin-bottom: 2px;
-    }
-
-    /* ── Decorative bottom bar ── */
-    .bottom-bar {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #4a148c 0%, #7b1fa2 50%, #4a148c 100%);
-    }
+    .pf-sep   { color:#c9a86c; }
+    .pf-brand { color:#7b1a36; font-weight:700; }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="header">
-      <div class="header-info">
-        <div class="app-name">MOIFY</div>
-        <div class="app-tagline">Smart Digital Gift Ledger</div>
-        <div class="event-name">${cfg.emoji} ${esc(title)}</div>
-        <div class="event-meta">
-          ${eventDate}${event.venue ? ' &bull; ' + esc(event.venue) : ''}${event.city ? ', ' + esc(event.city) : ''}
-          ${event.family_name ? '<br>' + esc(event.family_name) : ''}
-        </div>
-      </div>
-      <div class="header-right">
-        <div><strong>Printed:</strong> ${printDate}</div>
-        <div><strong>Side:</strong> ${esc(sideLabel)}</div>
-        ${cityFilter ? `<div><strong>City:</strong> ${esc(cityFilter)}</div>` : ''}
-        ${districtFilter ? `<div><strong>District:</strong> ${esc(districtFilter)}</div>` : ''}
-        <div><strong>Total Guests:</strong> ${totalQty}</div>
-        <div><strong>Grand Total:</strong> ${esc(fmt(grandTotal))}</div>
-      </div>
+<div class="page">
+  <!-- Floral corners -->
+  <div class="fc-tl">${floralCorner(false)}</div>
+  <div class="fc-tr">${floralCorner(true)}</div>
+
+  <!-- Document Header -->
+  <div class="doc-header">
+    <div class="h-left">
+      <div class="bill-lbl">Bill / Invoice</div>
+      <div class="inv-num">${esc(invoiceNum)}</div>
+      <div class="inv-row">&#128197; ${printDate}</div>
+      <div class="inv-row">&#128336; ${printTime}</div>
     </div>
 
-    <div class="title-strip">MOI GUEST REGISTER &mdash; ${esc(sideLabel)}</div>
-
-    <div class="meta-row">
-      <span><strong>Event:</strong> ${esc(title)}</span>
-      <span><strong>Date:</strong> ${eventDate}</span>
-    </div>
-
-    ${filterDesc ? `<div class="filter-info">Filtered by: ${esc(filterDesc)}</div>` : ''}
-
-    <table class="reg-table">
-      <thead>
-        <tr>
-          <th style="width:28px">S.No</th>
-          <th style="min-width:120px">Guest Name</th>
-          ${showRelCol      ? '<th style="width:90px">Relationship</th>' : ''}
-          ${showCityCol     ? '<th style="width:70px">City</th>' : ''}
-          ${showDistrictCol ? '<th style="width:80px">District</th>' : ''}
-          ${showSideCol     ? '<th style="width:60px">Side</th>' : ''}
-          <th style="width:80px">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-        ${blankRows}
-      </tbody>
-    </table>
-
-    <div class="table-footer">
-      <span style="width:60%;text-align:left"><strong>Total</strong></span>
-      <span style="width:40%;text-align:right"><strong>${totalQty} ${totalQty === 1 ? 'Guest' : 'Guests'}</strong></span>
-    </div>
-
-    <div class="total-section">
-      <div class="total-box">
-        <div class="total-row">
-          <span>Total Guests</span>
-          <span>${totalQty}</span>
-        </div>
-        <div class="total-row grand">
-          <span>Grand Total</span>
-          <span>${esc(fmt(grandTotal))}</span>
-        </div>
+    <div class="h-center">
+      <div class="brand-row">&#9890;&nbsp;Moify</div>
+      <div class="brand-sub">Smart Digital Wedding Gift Ledger</div>
+      <div class="of-row"><div class="of-line"></div><span>${esc(eventOfLabel)}</span><div class="of-line"></div></div>
+      <div class="couple-names">
+        ${esc(event.primary_name)}${event.secondary_name ? ` <span class="c-heart">&#10084;</span> ${esc(event.secondary_name)}` : ''}
       </div>
+      <div class="ornament">&#10022; &nbsp; &#10022; &nbsp; &#10022;</div>
     </div>
 
-    <div class="footer">
-      <div class="footer-left">
-        <p>Generated by Moify &mdash; Smart Digital Gift Ledger</p>
-      </div>
-      <div class="footer-right">
-        <div class="stamp-area"></div>
-        <p class="for-label">For ${esc(title)}</p>
-        <p>Authorized Signatory</p>
-      </div>
+    <div class="h-right">
+      <div class="ty-text">Thank You!</div>
+      <div class="ty-heart">&#10084;</div>
+      <div class="ty-msg">Your blessings make<br>our day special.</div>
     </div>
-
-    <div class="bottom-bar"></div>
   </div>
 
-  ${mode === 'download' ? `
-  <div class="download-bar">
-    <span>📄 Your PDF is ready — click <strong>Save as PDF</strong>, then choose <em>Save as PDF</em> as the destination.</span>
-    <button onclick="window.print()">⬇ Save as PDF</button>
+  <!-- Info Cards -->
+  <div class="info-cards">
+    <div class="info-card">
+      <div class="card-hdr"><span class="card-ico">&#128100;</span>${esc(cfg.sideALabel.toUpperCase())}'S FAMILY</div>
+      ${event.family_name ? `<div class="card-ln">${esc(event.family_name)}</div>` : ''}
+      <div class="card-ln">${esc(event.primary_name)}</div>
+      ${event.city ? `<div class="card-ln">${esc(event.city)}${event.district ? ', ' + esc(event.district) : ''}</div>` : ''}
+    </div>
+    <div class="info-card">
+      <div class="card-hdr"><span class="card-ico">&#128205;</span>VENUE</div>
+      <div class="card-ln">${event.venue ? esc(event.venue) : '&#8212;'}</div>
+      ${event.city ? `<div class="card-ln">${esc(event.city)}${event.district ? ', ' + esc(event.district) : ''}</div>` : ''}
+    </div>
+    <div class="info-card">
+      <div class="card-hdr"><span class="card-ico">&#128197;</span>FUNCTION DATE</div>
+      <div class="card-ln">${eventDate}</div>
+      <div class="card-ln">${eventDay}</div>
+    </div>
   </div>
-  <script>
-    document.body.classList.add('has-download-bar');
-  </script>` : (!isManagedExternally ? `
-  <script>
-    window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
-  </script>` : '')}
+
+  <!-- Table -->
+  <table class="moi-tbl">
+    <thead>
+      <tr>
+        <th style="width:30px">S.No</th>
+        <th style="width:72px">Date</th>
+        <th class="tl" style="min-width:110px">Guest Name</th>
+        <th class="tl" style="min-width:90px">Relation / Company</th>
+        <th style="width:65px">Gift Type &#127873;</th>
+        <th style="width:72px">Amount (&#8377;)</th>
+        <th class="tl" style="min-width:60px">Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows || `<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa;">No entries found</td></tr>`}
+    </tbody>
+  </table>
+
+  <!-- Summary Row -->
+  <div class="summary-row">
+    <div class="tg-box">
+      <div class="tg-ico">&#128101;</div>
+      <div>
+        <div class="tg-count">${totalQty}</div>
+        <div class="tg-lbl">Total Guests</div>
+      </div>
+    </div>
+    <div class="ta-box">
+      <div class="ta-lbl">Total Amount</div>
+      <div class="ta-val">&#8377;&nbsp;${fmtNum(grandTotal)}</div>
+      <div class="ta-words">(${this.numberToWords(grandTotal)})</div>
+    </div>
+  </div>
+
+  <!-- Bottom Section -->
+  <div class="bottom-sec">
+    <div class="notes-sec">
+      <div class="notes-ttl">Notes</div>
+      <ul>
+        <li>This is a system generated invoice.</li>
+        <li>Thank you for your valuable blessings and gifts.</li>
+        <li>We appreciate your presence and good wishes.</li>
+      </ul>
+    </div>
+    <div class="gratitude-center">
+      <span class="grat-orn">&#10084;</span>
+      With Love &amp; Gratitude
+      <span class="grat-orn">&#10084;</span>
+    </div>
+    <div class="auth-sec">
+      <div class="auth-ttl">Authorized By</div>
+      <div class="auth-line"></div>
+      <div class="auth-role">( Family Representative )</div>
+    </div>
+  </div>
+
+  <!-- Page Footer -->
+  <div class="pg-footer">
+    <span>&#127760; www.moify.com</span>
+    <span class="pf-sep">|</span>
+    <span>&#128222; support@moify.com</span>
+    <span class="pf-sep">|</span>
+    <span>&#9993; support@moify.com</span>
+    <span class="pf-sep">|</span>
+    <span class="pf-brand">Made with &#10084; by Moify</span>
+  </div>
+</div>
+
+${mode === 'download' ? `
+<div class="dl-bar">
+  <span>&#128196; PDF ready &#8212; click <strong>Save as PDF</strong> and choose <em>Save as PDF</em> as destination.</span>
+  <button onclick="window.print()">&#11015; Save as PDF</button>
+</div>
+<script>document.body.classList.add('has-dl-bar');</script>` : (!isManagedExternally ? `
+<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};</script>` : '')}
 </body>
 </html>`;
   }

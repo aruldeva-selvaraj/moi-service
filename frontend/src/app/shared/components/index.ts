@@ -7,3 +7,5 @@ export { NavComponent } from './nav.component';
 export { ThemePickerComponent } from './theme-picker.component';
 export { AiEntryDialogComponent } from './ai-entry-dialog.component';
 export type { AiEntryDialogData } from './ai-entry-dialog.component';
+export { ConfirmDialogComponent } from './confirm-dialog.component';
+export type { ConfirmDialogData } from './confirm-dialog.component';

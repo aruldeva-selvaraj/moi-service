@@ -658,7 +658,7 @@ export class MoiController {
     const errors: Array<{row: number; message: string}> = [];
     const now = new Date();
 
-    await this.moiRepo.query('BEGIN');
+    await this.moiRepo.query('BEGIN', []);
     try {
       for (let i = 0; i < data.entries.length; i++) {
         const e = data.entries[i];
@@ -695,9 +695,9 @@ export class MoiController {
         );
         created++;
       }
-      await this.moiRepo.query('COMMIT');
+      await this.moiRepo.query('COMMIT', []);
     } catch (e) {
-      await this.moiRepo.query('ROLLBACK');
+      await this.moiRepo.query('ROLLBACK', []);
       throw e;
     }
 

@@ -66,7 +66,7 @@ export class NavComponent implements OnInit {
       this.showInstallBtn.set(true);
     });
 
-    // Close mobile menu and refresh count on navigation
+    // Close mobile menu on navigation
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd),
       takeUntilDestroyed(this.destroyRef)
@@ -74,7 +74,6 @@ export class NavComponent implements OnInit {
       this.searchOpen.set(false);
       this.mobileMenuOpen.set(false);
       this.clearSearch();
-      this.refreshPendingCount();
     });
 
     // Search pipeline: debounce + switchMap for moi entries

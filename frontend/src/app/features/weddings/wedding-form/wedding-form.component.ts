@@ -93,7 +93,11 @@ export class WeddingFormComponent implements OnInit {
     const formValue = { ...this.form.value };
 
     if (formValue.event_date instanceof Date) {
-      formValue.event_date = formValue.event_date.toISOString().split('T')[0];
+      const d = formValue.event_date as Date;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      formValue.event_date = `${y}-${m}-${day}`;
     }
 
     const obs = this.isEdit && this.eventId
@@ -102,6 +106,7 @@ export class WeddingFormComponent implements OnInit {
 
     obs.subscribe({
       next: (ev) => {
+        this.form.markAsPristine();
         this.snackBar.open(
           this.isEdit ? 'Event updated!' : 'Event created!',
           'Close', { duration: 3000, panelClass: 'success-snackbar' },

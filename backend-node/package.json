@@ -2,7 +2,10 @@
   "name": "moify-backend",
   "version": "2.0.0",
   "description": "Moify API — LoopBack 4 + PostgreSQL",
-  "keywords": ["loopback-application", "loopback4"],
+  "keywords": [
+    "loopback-application",
+    "loopback4"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
@@ -34,6 +37,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.20.0",
     "nodemon": "^3.1.0"
   }
 }

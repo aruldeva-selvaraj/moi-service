@@ -1,12 +1,17 @@
-import { Component, inject, signal, ElementRef, ViewChild } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, inject, signal, ElementRef, ViewChild, DestroyRef } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, switchMap, filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
 import { ThemeService } from '../../core/services/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MoiService } from '../../core/services/moi.service';
@@ -20,17 +25,21 @@ interface SearchResult extends MoiEntry { event_name: string; }
   selector: 'app-nav',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink, RouterLinkActive, CurrencyPipe,
+    FormsModule, RouterLink, RouterLinkActive, CurrencyPipe, DatePipe,
     MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule,
+    MatSidenavModule, MatListModule,
   ],
   templateUrl: './nav.component.html',
   styleUrls: ['./nav.component.scss'],
 })
-export class NavComponent {
-  ts   = inject(ThemeService);
-  auth = inject(AuthService);
-  private moiService   = inject(MoiService);
-  private eventService = inject(EventService);
+export class NavComponent implements OnInit {
+  readonly ts   = inject(ThemeService);
+  auth          = inject(AuthService);
+  private moiService    = inject(MoiService);
+  private eventService  = inject(EventService);
+  private readonly router      = inject(Router);
+  private readonly destroyRef  = inject(DestroyRef);
+  private readonly searchQuery$ = new Subject<string>();
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
@@ -38,9 +47,59 @@ export class NavComponent {
   searchLoading = signal(false);
   searchQuery   = '';
   searchResults = signal<SearchResult[]>([]);
+  pendingCount  = signal(0);
+  eventResults  = signal<any[]>([]);
+  mobileMenuOpen = signal(false);
+
+  private deferredInstallPrompt: any = null;
+  showInstallBtn = signal(false);
 
   private events: Event[] = [];
-  private searchTimer?: ReturnType<typeof setTimeout>;
+
+  ngOnInit(): void {
+    this.refreshPendingCount();
+
+    // PWA install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredInstallPrompt = e;
+      this.showInstallBtn.set(true);
+    });
+
+    // Close mobile menu and refresh count on navigation
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.searchOpen.set(false);
+      this.mobileMenuOpen.set(false);
+      this.clearSearch();
+      this.refreshPendingCount();
+    });
+
+    // Search pipeline: debounce + switchMap for moi entries
+    this.searchQuery$.pipe(
+      debounceTime(300),
+      switchMap(q => q.length < 2 ? [] : this.moiService.getAll({ page: 1, page_size: 10, search: q })),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (resp: any) => {
+        this.searchResults.set((resp.items || []).map((r: any) => ({
+          ...r,
+          event_name: this.events.find((e: any) => e.id === r.event_id)?.primary_name || 'Event',
+        })));
+        this.searchLoading.set(false);
+      },
+      error: () => this.searchLoading.set(false),
+    });
+  }
+
+  refreshPendingCount(): void {
+    this.eventService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (evs: any[]) => this.pendingCount.set(evs.filter((e: any) => e.status === 'pending').length),
+      error: () => {},
+    });
+  }
 
   toggleSearch(): void {
     this.searchOpen.update(v => !v);
@@ -62,28 +121,63 @@ export class NavComponent {
     this.searchResults.set([]);
   }
 
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  installPwa(): void {
+    if (!this.deferredInstallPrompt) return;
+    this.deferredInstallPrompt.prompt();
+    this.deferredInstallPrompt.userChoice.then(() => {
+      this.deferredInstallPrompt = null;
+      this.showInstallBtn.set(false);
+    });
+  }
+
+  getUserInitials(): string {
+    const user = this.auth.currentUser?.();
+    if (!user) return '?';
+    const name: string = (user as any).full_name || (user as any).username || '';
+    return name
+      .split(' ')
+      .slice(0, 2)
+      .map((w: string) => w[0]?.toUpperCase() || '')
+      .join('') || '?';
+  }
+
+  getDisplayName(): string {
+    const user = this.auth.currentUser?.();
+    if (!user) return 'User';
+    return (user as any).full_name || (user as any).username || 'User';
+  }
+
+  getRole(): string {
+    const user = this.auth.currentUser?.();
+    if (!user) return '';
+    return (user as any).role || '';
+  }
+
   private loadEvents(): void {
     if (this.events.length) return;
     this.eventService.getAll().subscribe({ next: evs => this.events = evs });
   }
 
   onSearchInput(): void {
-    clearTimeout(this.searchTimer);
-    if (this.searchQuery.length < 2) { this.searchResults.set([]); return; }
+    const q = this.searchQuery;
+    if (q.length < 2) {
+      this.searchResults.set([]);
+      this.eventResults.set(this.events.filter(e =>
+        (e.primary_name || '').toLowerCase().includes(q.toLowerCase()) ||
+        (e.family_name || '').toLowerCase().includes(q.toLowerCase())
+      ).slice(0, 5));
+      return;
+    }
     this.searchLoading.set(true);
-    this.searchTimer = setTimeout(() => {
-      this.moiService.getAll({ search: this.searchQuery, page: 1, page_size: 8 }).subscribe({
-        next: resp => {
-          const results = resp.items.map(e => ({
-            ...e,
-            event_name: this.getEventName(e.event_id),
-          }));
-          this.searchResults.set(results);
-          this.searchLoading.set(false);
-        },
-        error: () => this.searchLoading.set(false),
-      });
-    }, 300);
+    this.eventResults.set(this.events.filter(e =>
+      (e.primary_name || '').toLowerCase().includes(q.toLowerCase()) ||
+      (e.family_name || '').toLowerCase().includes(q.toLowerCase())
+    ).slice(0, 5));
+    this.searchQuery$.next(q);
   }
 
   private getEventName(id: number): string {

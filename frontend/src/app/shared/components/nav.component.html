@@ -1,4 +1,12 @@
 <mat-toolbar class="nav-toolbar">
+  <!-- Hamburger button — visible only on mobile -->
+  <button class="hamburger-btn"
+          mat-icon-button
+          aria-label="Open navigation menu"
+          (click)="toggleMobileMenu()">
+    <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
+  </button>
+
   <div class="nav-brand">
     <img src="assets/images/brand-logo.jpeg" alt="Moify" class="nav-logo-img"
          onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" />
@@ -7,14 +15,18 @@
     <span class="nav-slogan">Smart Digital Wedding Gift Ledger</span>
   </div>
 
-  <div class="nav-links">
+  <!-- Desktop nav links -->
+  <div class="nav-links desktop-only">
     <a mat-button routerLink="/dashboard" routerLinkActive="active-link">
       <mat-icon>dashboard</mat-icon>
       <span class="link-label">Dashboard</span>
     </a>
-    <a mat-button routerLink="/events" routerLinkActive="active-link">
+    <a mat-button routerLink="/events" routerLinkActive="active-link" class="events-link">
       <mat-icon>celebration</mat-icon>
       <span class="link-label">Events</span>
+      @if (pendingCount() > 0) {
+        <span class="badge">{{ pendingCount() }}</span>
+      }
     </a>
     <a mat-button routerLink="/moi" routerLinkActive="active-link">
       <mat-icon>payments</mat-icon>
@@ -24,11 +36,12 @@
       <mat-icon>bar_chart</mat-icon>
       <span class="link-label">Reports</span>
     </a>
-    <a mat-button routerLink="/users/create" routerLinkActive="active-link"
-       *ngIf="auth.isAdmin()">
-      <mat-icon>person_add</mat-icon>
-      <span class="link-label">Create User</span>
-    </a>
+    @if (auth.isAdmin()) {
+      <a mat-button routerLink="/users/create" routerLinkActive="active-link">
+        <mat-icon>person_add</mat-icon>
+        <span class="link-label">Create User</span>
+      </a>
+    }
   </div>
 
   <div class="nav-actions">
@@ -36,6 +49,14 @@
       <mat-icon>add</mat-icon>
       <span class="link-label">New Event</span>
     </a>
+
+    <!-- PWA install button -->
+    @if (showInstallBtn()) {
+      <button mat-button class="install-btn" (click)="installPwa()" matTooltip="Install App" matTooltipPosition="below">
+        <mat-icon>install_mobile</mat-icon>
+        <span class="link-label">Install App</span>
+      </button>
+    }
 
     <!-- Dark mode quick-toggle -->
     <button mat-icon-button
@@ -62,20 +83,138 @@
             matTooltip="Search guests across all events"
             matTooltipPosition="below"
             (click)="toggleSearch()"
-            aria-label="Global guest search">
+            aria-label="Global guest search"
+            [attr.aria-expanded]="searchOpen()">
       <mat-icon>search</mat-icon>
     </button>
 
-    <!-- Logout -->
+    <!-- Avatar dropdown -->
     <button mat-icon-button
-            matTooltip="Logout"
+            class="avatar-btn"
+            [matMenuTriggerFor]="avatarMenu"
+            matTooltip="Account"
             matTooltipPosition="below"
-            (click)="auth.logout()"
-            aria-label="Logout">
-      <mat-icon>logout</mat-icon>
+            aria-label="Open account menu">
+      <span class="avatar-initials">{{ getUserInitials() }}</span>
     </button>
+
+    <mat-menu #avatarMenu="matMenu" class="avatar-dropdown-menu">
+      <!-- User info header -->
+      <div class="avatar-menu-header" (click)="$event.stopPropagation()">
+        <div class="avatar-menu-initials">{{ getUserInitials() }}</div>
+        <div class="avatar-menu-info">
+          <span class="avatar-menu-name">{{ getDisplayName() }}</span>
+          @if (getRole()) {
+            <span class="avatar-menu-role">{{ getRole() }}</span>
+          }
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+      <a mat-menu-item routerLink="/profile">
+        <mat-icon>account_circle</mat-icon>
+        Profile
+      </a>
+      <button mat-menu-item (click)="ts.updateMood(ts.config().mood === 'dark' ? 'light' : 'dark')">
+        <mat-icon>{{ ts.config().mood === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        {{ ts.config().mood === 'dark' ? 'Light Mode' : 'Dark Mode' }}
+      </button>
+      <button mat-menu-item (click)="ts.togglePicker()">
+        <mat-icon>palette</mat-icon>
+        Change Theme
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="auth.logout()" class="logout-item">
+        <mat-icon>logout</mat-icon>
+        Logout
+      </button>
+    </mat-menu>
   </div>
 </mat-toolbar>
+
+<!-- Mobile slide-in menu overlay -->
+@if (mobileMenuOpen()) {
+  <div class="mobile-menu-overlay" (click)="toggleMobileMenu()"></div>
+  <div class="mobile-menu-drawer">
+    <!-- Mobile menu header -->
+    <div class="mobile-menu-header">
+      <div class="mobile-avatar-initials">{{ getUserInitials() }}</div>
+      <div class="mobile-user-info">
+        <span class="mobile-user-name">{{ getDisplayName() }}</span>
+        @if (getRole()) {
+          <span class="mobile-user-role">{{ getRole() }}</span>
+        }
+      </div>
+      <button mat-icon-button class="mobile-close-btn" (click)="toggleMobileMenu()" aria-label="Close menu">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <nav class="mobile-nav-links">
+      <a mat-button routerLink="/dashboard" routerLinkActive="active-link" (click)="toggleMobileMenu()">
+        <mat-icon>dashboard</mat-icon>
+        Dashboard
+      </a>
+      <a mat-button routerLink="/events" routerLinkActive="active-link" (click)="toggleMobileMenu()">
+        <mat-icon>celebration</mat-icon>
+        Events
+        @if (pendingCount() > 0) {
+          <span class="badge">{{ pendingCount() }}</span>
+        }
+      </a>
+      <a mat-button routerLink="/moi" routerLinkActive="active-link" (click)="toggleMobileMenu()">
+        <mat-icon>payments</mat-icon>
+        Moi Entries
+      </a>
+      <a mat-button routerLink="/reports" routerLinkActive="active-link" (click)="toggleMobileMenu()">
+        <mat-icon>bar_chart</mat-icon>
+        Reports
+      </a>
+      @if (auth.isAdmin()) {
+        <a mat-button routerLink="/users/create" routerLinkActive="active-link" (click)="toggleMobileMenu()">
+          <mat-icon>person_add</mat-icon>
+          Create User
+        </a>
+      }
+      <a mat-button routerLink="/profile" routerLinkActive="active-link" (click)="toggleMobileMenu()">
+        <mat-icon>account_circle</mat-icon>
+        Profile
+      </a>
+    </nav>
+
+    <div class="mobile-menu-actions">
+      <a mat-raised-button color="accent" routerLink="/events/new" (click)="toggleMobileMenu()">
+        <mat-icon>add</mat-icon>
+        New Event
+      </a>
+
+      <!-- Dark mode toggle in mobile menu -->
+      <button mat-stroked-button
+              (click)="ts.updateMood(ts.config().mood === 'dark' ? 'light' : 'dark')"
+              aria-label="Toggle dark mode">
+        <mat-icon>{{ ts.config().mood === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        {{ ts.config().mood === 'dark' ? 'Light Mode' : 'Dark Mode' }}
+      </button>
+
+      <!-- Theme studio in mobile menu -->
+      <button mat-stroked-button (click)="ts.togglePicker(); toggleMobileMenu()">
+        <mat-icon>palette</mat-icon>
+        Change Theme
+      </button>
+
+      @if (showInstallBtn()) {
+        <button mat-stroked-button (click)="installPwa()">
+          <mat-icon>install_mobile</mat-icon>
+          Install App
+        </button>
+      }
+
+      <button mat-stroked-button class="mobile-logout-btn" (click)="auth.logout()">
+        <mat-icon>logout</mat-icon>
+        Logout
+      </button>
+    </div>
+  </div>
+}
 
 <!-- Global search bar (slides down below nav) -->
 @if (searchOpen()) {
@@ -84,7 +223,7 @@
     <input #searchInput
            class="gs-input"
            type="text"
-           placeholder="Search guest name across all events…"
+           placeholder="Search guest name or event across all records…"
            [(ngModel)]="searchQuery"
            (input)="onSearchInput()"
            (keydown.escape)="closeSearch()" />
@@ -93,18 +232,32 @@
         <mat-icon>close</mat-icon>
       </button>
     }
+    @if (eventResults().length > 0) {
+      <div class="gs-results">
+        <div class="gs-section-heading">Events</div>
+        @for (ev of eventResults(); track ev.id) {
+          <a class="gs-result-item" [routerLink]="['/events', ev.id]" (click)="closeSearch()">
+            <mat-icon class="gs-result-icon">celebration</mat-icon>
+            <span class="gs-guest">{{ ev.primary_name }}</span>
+            <span class="gs-event">{{ ev.event_date }}</span>
+          </a>
+        }
+      </div>
+    }
     @if (searchResults().length > 0) {
       <div class="gs-results">
+        <div class="gs-section-heading">Moi Entries</div>
         @for (r of searchResults(); track r.id) {
-          <a class="gs-result-item" [routerLink]="['/events', r.event_id]" (click)="closeSearch()">
+          <a class="gs-result-item" [routerLink]="['/events', r.event_id]" [queryParams]="{highlight: r.id}" (click)="closeSearch()">
+            <mat-icon class="gs-result-icon">payments</mat-icon>
             <span class="gs-guest">{{ r.guest_name }}</span>
             <span class="gs-amount">{{ r.amount | currency:'INR':'symbol':'1.0-0' }}</span>
             <span class="gs-event">{{ r.event_name }}</span>
           </a>
         }
       </div>
-    } @else if (searchQuery.length >= 2 && !searchLoading()) {
-      <div class="gs-results"><span class="gs-empty">No guests found</span></div>
+    } @else if (searchQuery.length >= 2 && !searchLoading() && eventResults().length === 0) {
+      <div class="gs-results"><span class="gs-empty">No results found</span></div>
     }
   </div>
 }

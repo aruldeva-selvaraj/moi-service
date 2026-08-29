@@ -104,7 +104,7 @@ export function getEventTypeLabel(type: EventType | string): string {
   return (EVENT_TYPE_CONFIGS[type as EventType] ?? EVENT_TYPE_CONFIGS['other']).label;
 }
 
-export type EventStatus = 'pending' | 'approved';
+export type EventStatus = 'pending' | 'approved' | 'completed' | 'rejected';
 
 export interface Event {
   id: number;
@@ -152,4 +152,5 @@ export interface EventReport {
   cash_amount: number;
   cheque_amount: number;
   online_amount: number;
+  dd_amount: number;
 }

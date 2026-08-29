@@ -18,6 +18,7 @@ export interface MoiEntry {
   received_by?: string;
   created_at: string;
   updated_at: string;
+  created_by_username?: string;
 }
 
 export interface MoiEntryCreate {
@@ -55,15 +56,31 @@ export interface RelationshipReport {
   relationship: string;
   count: number;
   total_amount: number;
+  avg_amount: number;
+}
+
+export interface GeoBreakdownItem {
+  city?: string;
+  district?: string;
+  count: number;
+  total_amount: number;
 }
 
 export interface MoiFilter {
-  event_id?: number;
-  side?: Side;
-  payment_mode?: PaymentMode;
   search?: string;
-  city?: string;
-  district?: string;
+  side?: 'groom' | 'bride' | 'both';
+  payment_mode?: string;
+  event_id?: number;
   page: number;
   page_size: number;
+  city?: string;
+  district?: string;
+  date_from?: string;
+  date_to?: string;
+  sort_field?: string;
+  sort_dir?: 'asc' | 'desc';
+  amount_min?: number | null;
+  amount_max?: number | null;
+  relationship?: string;
+  received_by?: string;
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -17,6 +17,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { EventService } from '../../../core/services/event.service';
 import { MoiService } from '../../../core/services/moi.service';
 import { ReceiptService, PaperSize, PrintSide, PrintFilter, ReceiptLang } from '../../../core/services/receipt.service';
@@ -34,12 +36,15 @@ import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntr
     MatIconModule, MatTableModule, MatProgressSpinnerModule, MatSnackBarModule,
     MatDividerModule, MatTooltipModule, MatChipsModule, MatTabsModule,
     MatButtonToggleModule, MatAutocompleteModule, MatDialogModule,
+    MatPaginatorModule, MatCheckboxModule,
     StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent,
   ],
   templateUrl: './wedding-detail.component.html',
   styleUrls: ['./wedding-detail.component.scss'],
 })
-export class WeddingDetailComponent implements OnInit {
+export class WeddingDetailComponent implements OnInit, OnDestroy {
+  protected readonly String = String;
+
   private readonly route = inject(ActivatedRoute);
   private readonly eventService = inject(EventService);
   private readonly moiService = inject(MoiService);
@@ -70,9 +75,18 @@ export class WeddingDetailComponent implements OnInit {
   editSubmitting = signal(false);
   justAddedId = signal<number | null>(null);
   activityLog = signal<{ id: number; name: string; amount: number; time: Date }[]>([]);
+  autoPrint = signal(true);
+  topDonors = signal<any[]>([]);
+  highlightId = signal<number | null>(null);
+  filterReceivedBy = '';
+  entriesPage = signal(1);
+  pageSize = signal(20);
 
-  readonly amountPresets = [500, 1000, 2000, 5000, 10000];
+  // CONFIGURABLE PRESETS: signal-based, loaded from localStorage per event
+  amountPresets = signal<number[]>([500, 1000, 2000, 5000, 10000]);
+
   private readonly pendingDeletes = new Map<number, ReturnType<typeof setTimeout>>();
+  private sessionWarningTimer?: ReturnType<typeof setTimeout>;
 
   readonly citySuggestions = computed(() =>
     [...new Set(this.entries().map(e => e.city).filter((v): v is string => !!v?.trim()))].sort()
@@ -119,6 +133,7 @@ export class WeddingDetailComponent implements OnInit {
       phone: '',
       notes: '',
       received_by: '',
+      party_size: 1,
     };
   }
 
@@ -126,33 +141,36 @@ export class WeddingDetailComponent implements OnInit {
     guest_name: ['', Validators.required],
     relationship: [''],
     side: ['groom'],
-    amount: [null, [Validators.required, Validators.min(1)]],
+    amount: [null, [Validators.required, Validators.min(1), Validators.pattern(/^[0-9]+$/)]],
     payment_mode: ['cash'],
     cheque_number: [''],
     transaction_ref: [''],
     city: [''],
     district: [''],
-    phone: [''],
+    phone: ['', Validators.pattern(/^[0-9]{10}$/)],
     notes: [''],
     received_by: [''],
+    party_size: [1, Validators.min(1)],
   });
 
   editForm: FormGroup = this.fb.group({
     guest_name: ['', Validators.required],
     relationship: [''],
     side: ['groom'],
-    amount: [null, [Validators.required, Validators.min(1)]],
+    amount: [null, [Validators.required, Validators.min(1), Validators.pattern(/^[0-9]+$/)]],
     payment_mode: ['cash'],
     cheque_number: [''],
     transaction_ref: [''],
     city: [''],
     district: [''],
-    phone: [''],
+    phone: ['', Validators.pattern(/^[0-9]{10}$/)],
     notes: [''],
     received_by: [''],
+    party_size: [1, Validators.min(1)],
   });
 
   private get settingsKey() { return `moify_last_${this.eventId}`; }
+  private get presetsKey() { return `moify_presets_${this.eventId}`; }
 
   private loadLastSettings(): void {
     try {
@@ -163,6 +181,8 @@ export class WeddingDetailComponent implements OnInit {
           side: s.side ?? 'groom',
           payment_mode: s.payment_mode ?? 'cash',
           received_by: s.received_by ?? '',
+          city: s.city ?? '',
+          district: s.district ?? '',
         });
       }
     } catch {}
@@ -175,8 +195,39 @@ export class WeddingDetailComponent implements OnInit {
         side: v.side,
         payment_mode: v.payment_mode,
         received_by: v.received_by,
+        city: v.city,
+        district: v.district,
       }));
     } catch {}
+  }
+
+  private loadPresetsFromStorage(): void {
+    try {
+      const saved = localStorage.getItem(this.presetsKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.amountPresets.set(parsed.map(Number).filter(n => !isNaN(n) && n > 0));
+        }
+      }
+    } catch {}
+  }
+
+  /** Update a single preset by index and persist to localStorage */
+  setPreset(index: number, value: number): void {
+    if (index < 0 || value <= 0) return;
+    this.amountPresets.update(presets => {
+      const updated = [...presets];
+      if (index < updated.length) {
+        updated[index] = value;
+      } else {
+        updated.push(value);
+      }
+      try {
+        localStorage.setItem(this.presetsKey, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
   }
 
   private playKaChing(): void {
@@ -199,14 +250,32 @@ export class WeddingDetailComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   onKeyDown(e: KeyboardEvent): void {
+    // Ctrl+Enter → submit form
     if (e.ctrlKey && e.key === 'Enter' && !this.submitting() && !this.loading()) {
       e.preventDefault();
       this.submitMoi();
     }
+    // F1–F5 → set amount to preset 0–4
+    if (e.key === 'F1') { e.preventDefault(); this.setAmount(this.amountPresets()[0]); }
+    if (e.key === 'F2') { e.preventDefault(); this.setAmount(this.amountPresets()[1]); }
+    if (e.key === 'F3') { e.preventDefault(); this.setAmount(this.amountPresets()[2]); }
+    if (e.key === 'F4') { e.preventDefault(); this.setAmount(this.amountPresets()[3]); }
+    if (e.key === 'F5') { e.preventDefault(); this.setAmount(this.amountPresets()[4]); }
+    // Ctrl+L → focus guest name field
+    if (e.ctrlKey && e.key === 'l') {
+      e.preventDefault();
+      this.guestNameInput?.nativeElement?.focus();
+    }
+    // Ctrl+D → toggle side groom/bride
+    if (e.ctrlKey && e.key === 'd') {
+      e.preventDefault();
+      const currentSide = this.moiForm.get('side')?.value;
+      this.moiForm.get('side')?.setValue(currentSide === 'groom' ? 'bride' : 'groom');
+    }
   }
 
   setAmount(val: number): void {
-    this.moiForm.get('amount')?.setValue(val);
+    this.moiForm.get('amount')?.setValue(String(val));
   }
 
   checkDuplicate(): void {
@@ -224,6 +293,40 @@ export class WeddingDetailComponent implements OnInit {
     this.loadEvent();
     this.loadEntries();
     this.loadLastSettings();
+    this.loadPresetsFromStorage();
+    // Read highlight param
+    const h = this.route.snapshot.queryParamMap.get('highlight');
+    if (h && Number.isInteger(+h) && +h > 0) this.highlightId.set(+h);
+    // Load top donors
+    this.moiService.getTopDonors(this.eventId, 5).subscribe({ next: (d) => this.topDonors.set(d), error: () => {} });
+    // Load activity from localStorage
+    try {
+      const saved = localStorage.getItem('moify_activity_' + this.eventId);
+      if (saved) this.activityLog.set(JSON.parse(saved).filter((a: any) => Date.now() - new Date(a.time).getTime() < 86400000));
+    } catch {}
+
+    // Session expiry warning
+    const token = localStorage.getItem('moify_token') || localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        const expiresIn = payload.exp * 1000 - Date.now();
+        const warnAt = expiresIn - 5 * 60 * 1000; // 5 min before expiry
+        if (warnAt > 0) {
+          this.sessionWarningTimer = setTimeout(() => {
+            this.snackBar.open('Your session expires in 5 minutes. Save your work!', 'OK', {
+              duration: 30000, panelClass: 'warn-snackbar',
+            });
+          }, warnAt);
+        }
+      } catch {}
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.sessionWarningTimer) {
+      clearTimeout(this.sessionWarningTimer);
+    }
   }
 
   loadEvent() {
@@ -238,13 +341,14 @@ export class WeddingDetailComponent implements OnInit {
     this.entriesLoading.set(true);
     const filter: MoiFilter = {
       event_id: this.eventId,
-      page: 1,
-      page_size: 200,
+      page: this.entriesPage(),
+      page_size: this.pageSize(),
       side: (this.filterSide as any) || undefined,
       payment_mode: (this.filterPayment as any) || undefined,
       search: this.searchQuery || undefined,
       city: this.filterCity || undefined,
       district: this.filterDistrict || undefined,
+      received_by: this.filterReceivedBy || undefined,
     };
     this.moiService.getAll(filter).subscribe({
       next: (resp) => {
@@ -266,15 +370,23 @@ export class WeddingDetailComponent implements OnInit {
       return;
     }
     this.submitting.set(true);
-    const data: MoiEntryCreate = { ...this.moiForm.value, event_id: this.eventId };
+    const formValue = { ...this.moiForm.value };
+    // Coerce text amount to number before sending
+    if (formValue.amount !== null && formValue.amount !== undefined) {
+      formValue.amount = Number(formValue.amount);
+    }
+    const data: MoiEntryCreate = { ...formValue, event_id: this.eventId };
 
     this.moiService.create(data).subscribe({
       next: (entry: MoiEntry) => {
         this.snackBar.open('Moi recorded! Printing receipt... 🖨️', 'Close', {
           duration: 4000, panelClass: 'success-snackbar',
         });
-        const receiptNo = (this.event()?.moi_count ?? 0) + 1;
-        this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo, this.receiptLang());
+        // Use DB id as global unique receipt number
+        const receiptNo = entry.id;
+        if (this.autoPrint()) {
+          this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo, this.receiptLang());
+        }
         this.saveLastSettings();
         this.moiForm.reset(this.defaultMoiValues);
         this.loadLastSettings();
@@ -300,8 +412,8 @@ export class WeddingDetailComponent implements OnInit {
 
   printEntry(entry: MoiEntry): void {
     if (this.event()) {
-      const idx = this.entries().findIndex(e => e.id === entry.id);
-      const receiptNo = idx >= 0 ? idx + 1 : undefined;
+      // Use DB id as global unique receipt number
+      const receiptNo = entry.id;
       this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo, this.receiptLang());
     }
   }
@@ -343,7 +455,7 @@ export class WeddingDetailComponent implements OnInit {
       guest_name:    entry.guest_name,
       relationship:  entry.relationship  ?? '',
       side:          entry.side,
-      amount:        entry.amount,
+      amount:        String(entry.amount),
       payment_mode:  entry.payment_mode,
       cheque_number: entry.cheque_number ?? '',
       transaction_ref: entry.transaction_ref ?? '',
@@ -352,6 +464,7 @@ export class WeddingDetailComponent implements OnInit {
       phone:         entry.phone         ?? '',
       notes:         entry.notes         ?? '',
       received_by:   entry.received_by   ?? '',
+      party_size:    (entry as any).party_size ?? 1,
     });
   }
 
@@ -363,7 +476,11 @@ export class WeddingDetailComponent implements OnInit {
     if (this.editForm.invalid) return;
     this.editSubmitting.set(true);
     const entry = this.editingEntry()!;
-    this.moiService.update(entry.id, { ...this.editForm.value, event_id: this.eventId }).subscribe({
+    const formValue = { ...this.editForm.value };
+    if (formValue.amount !== null && formValue.amount !== undefined) {
+      formValue.amount = Number(formValue.amount);
+    }
+    this.moiService.update(entry.id, { ...formValue, event_id: this.eventId }).subscribe({
       next: () => {
         this.editingEntry.set(null);
         this.editSubmitting.set(false);
@@ -472,8 +589,11 @@ export class WeddingDetailComponent implements OnInit {
           this.snackBar.open('Moi recorded! Printing receipt... 🖨️', 'Close', {
             duration: 4000, panelClass: 'success-snackbar',
           });
-          const receiptNo = (this.event()?.moi_count ?? 0) + 1;
-          this.receiptService.printReceipt(entry, this.event()!, '80', receiptNo, this.receiptLang());
+          // Use DB id as global unique receipt number
+          const receiptNo = entry.id;
+          if (this.autoPrint()) {
+            this.receiptService.printReceipt(entry, this.event()!, '80', receiptNo, this.receiptLang());
+          }
           this.submitting.set(false);
           this.playKaChing();
           this.justAddedId.set(entry.id);
@@ -641,7 +761,7 @@ export class WeddingDetailComponent implements OnInit {
         if (field === 'amount') {
           const num = this.voice.parseAmount(transcript);
           if (num !== null) {
-            this.moiForm.get('amount')?.setValue(num);
+            this.moiForm.get('amount')?.setValue(String(num));
             this.snackBar.open(`Amount set: ₹${num}`, 'Close', { duration: 2000, panelClass: 'success-snackbar' });
           } else {
             onError(`Could not parse amount from: "${transcript}"`);
@@ -655,5 +775,105 @@ export class WeddingDetailComponent implements OnInit {
       },
       onError
     );
+  }
+
+  onPageChange(e: PageEvent): void {
+    this.entriesPage.set(e.pageIndex + 1);
+    this.pageSize.set(e.pageSize);
+    this.loadEntries();
+  }
+
+  parseCSVLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
+    while (i < line.length) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { current += '"'; i += 2; continue; }
+        inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+        i++;
+        continue;
+      } else {
+        current += ch;
+      }
+      i++;
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  onImportFile(fileEvent: globalThis.Event): void {
+    const input = fileEvent.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = (e.target?.result as string) ?? '';
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) {
+        this.snackBar.open('CSV must have a header row and at least one data row', 'Close', { duration: 3000 });
+        return;
+      }
+      const headers = this.parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/\s+/g, '_'));
+      const entries: any[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = this.parseCSVLine(lines[i]);
+        const row: any = {};
+        headers.forEach((h, idx) => { row[h] = cols[idx] ?? ''; });
+        if (!row.guest_name || !row.amount) continue;
+        const amt = parseFloat(row.amount);
+        if (isNaN(amt) || amt <= 0) continue;
+        entries.push({
+          guest_name: row.guest_name,
+          amount: amt,
+          side: row.side || 'groom',
+          payment_mode: row.payment_mode || 'cash',
+          relationship: row.relationship || '',
+          city: row.city || '',
+          district: row.district || '',
+          phone: row.phone || '',
+          received_by: row.received_by || '',
+          notes: row.notes || '',
+        });
+      }
+      if (entries.length === 0) {
+        this.snackBar.open('No valid rows found in CSV', 'Close', { duration: 3000 });
+        return;
+      }
+      this.moiService.bulkCreate({ event_id: this.eventId, entries }).subscribe({
+        next: (res) => {
+          this.snackBar.open(`Imported ${res.created} entries${res.errors.length ? ', ' + res.errors.length + ' failed' : ''}`, 'Close', { duration: 4000, panelClass: 'success-snackbar' });
+          this.loadEvent();
+          this.loadEntries();
+        },
+        error: () => this.snackBar.open('Import failed', 'Close', { duration: 3000, panelClass: 'error-snackbar' }),
+      });
+    };
+    reader.readAsText(file);
+    input.value = '';
+  }
+
+  exportCsv(): void {
+    this.moiService.getAll({ event_id: this.eventId, page: 1, page_size: this.totalEntries() || 9999 }).subscribe({
+      next: (resp) => {
+        const cols = ['guest_name', 'relationship', 'side', 'amount', 'payment_mode', 'cheque_number', 'transaction_ref', 'city', 'district', 'phone', 'received_by', 'notes'];
+        const header = cols.map(c => '"' + c + '"').join(',');
+        const rows = resp.items.map((e: any) =>
+          cols.map(c => '"' + (e[c] ?? '').toString().replace(/"/g, '""') + '"').join(',')
+        );
+        const csv = '﻿' + [header, ...rows].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'moi-event-' + this.eventId + '.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 150);
+      },
+    });
   }
 }

@@ -26,6 +26,7 @@
     "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",
     "loopback-connector-postgresql": "^7.1.4",
+    "express-rate-limit": "^7.4.0",
     "pg": "^8.13.0",
     "tslib": "^2.6.3"
   },

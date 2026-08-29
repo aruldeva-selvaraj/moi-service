@@ -1,0 +1,196 @@
+<div class="page-container">
+  <app-page-header title="My Profile" subtitle="View your account details, change your password and personalise the app" />
+
+  <div class="profile-layout">
+
+    <!-- ── Account info card ─────────────────────────────────────────────── -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <div class="avatar" mat-card-avatar>
+          {{ auth.currentUser()?.full_name?.[0]?.toUpperCase() || auth.currentUser()?.username?.[0]?.toUpperCase() }}
+        </div>
+        <mat-card-title>{{ auth.currentUser()?.full_name || auth.currentUser()?.username }}</mat-card-title>
+        <mat-card-subtitle>{{ auth.currentUser()?.role | titlecase }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-row">
+          <mat-icon>person</mat-icon>
+          <span>{{ auth.currentUser()?.username }}</span>
+        </div>
+        @if (auth.currentUser()?.mobile_number) {
+          <div class="info-row">
+            <mat-icon>phone</mat-icon>
+            <span>{{ auth.currentUser()?.mobile_number }}</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ── Edit profile card ─────────────────────────────────────────────── -->
+    <mat-card class="edit-card">
+      <mat-card-header>
+        <mat-card-title>Edit Profile</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="editForm" (ngSubmit)="updateProfile()" class="edit-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Full Name</mat-label>
+            <input matInput formControlName="full_name" />
+            @if (editForm.get('full_name')?.invalid && editForm.get('full_name')?.touched) {
+              <mat-error>Full name is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Mobile Number</mat-label>
+            <input matInput formControlName="mobile_number" />
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit" [disabled]="editForm.invalid || profileSaving()">
+            <mat-icon>save</mat-icon>
+            {{ profileSaving() ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ── Language preference card ─────────────────────────────────────── -->
+    <mat-card class="language-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>language</mat-icon>
+          Language Preference
+        </mat-card-title>
+        <mat-card-subtitle>Choose the display language for Moify</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="lang-buttons">
+          <button
+            mat-stroked-button
+            [color]="language() === 'en' ? 'primary' : ''"
+            [class.active-lang]="language() === 'en'"
+            (click)="setLanguage('en')"
+            type="button">
+            <mat-icon>translate</mat-icon>
+            English
+          </button>
+          <button
+            mat-stroked-button
+            [color]="language() === 'ta' ? 'primary' : ''"
+            [class.active-lang]="language() === 'ta'"
+            (click)="setLanguage('ta')"
+            type="button">
+            <mat-icon>translate</mat-icon>
+            Tamil
+          </button>
+        </div>
+        <p class="lang-hint">Currently active: <strong>{{ language() === 'ta' ? 'Tamil' : 'English' }}</strong></p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ── Theme card ────────────────────────────────────────────────────── -->
+    <mat-card class="theme-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>palette</mat-icon>
+          Theme
+        </mat-card-title>
+        <mat-card-subtitle>
+          Current preset &mdash;
+          <strong>{{ themeService.config().mood | titlecase }}</strong>
+          &bull;
+          <strong>{{ themeService.config().depth | titlecase }}</strong>
+          &bull;
+          <strong>{{ themeService.config().vibe | titlecase }}</strong>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="theme-swatch-row">
+          <span class="swatch" [style.background]="themeService.config().primaryColor" title="Primary colour"></span>
+          <span class="swatch" [style.background]="themeService.config().accentColor" title="Accent colour"></span>
+        </div>
+        <app-theme-picker />
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ── Change password card ──────────────────────────────────────────── -->
+    <mat-card class="password-card">
+      <mat-card-header>
+        <mat-card-title>Change Password</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="pwForm" (ngSubmit)="changePassword()" class="pw-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Current Password</mat-label>
+            <input matInput [type]="showCurrent() ? 'text' : 'password'" formControlName="currentPassword" />
+            <button mat-icon-button matSuffix type="button" (click)="showCurrent.set(!showCurrent())">
+              <mat-icon>{{ showCurrent() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (pwForm.get('currentPassword')?.errors?.['required'] && pwForm.get('currentPassword')?.touched) {
+              <mat-error>Current password is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>New Password</mat-label>
+            <input matInput [type]="showNew() ? 'text' : 'password'" formControlName="newPassword" />
+            <button mat-icon-button matSuffix type="button" (click)="showNew.set(!showNew())">
+              <mat-icon>{{ showNew() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (pwForm.get('newPassword')?.errors?.['required'] && pwForm.get('newPassword')?.touched) {
+              <mat-error>New password is required</mat-error>
+            }
+            @if (pwForm.get('newPassword')?.errors?.['minlength'] && pwForm.get('newPassword')?.touched) {
+              <mat-error>Minimum 6 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Confirm New Password</mat-label>
+            <input matInput [type]="showConfirm() ? 'text' : 'password'" formControlName="confirmPassword" />
+            <button mat-icon-button matSuffix type="button" (click)="showConfirm.set(!showConfirm())">
+              <mat-icon>{{ showConfirm() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (pwForm.get('confirmPassword')?.errors?.['required'] && pwForm.get('confirmPassword')?.touched) {
+              <mat-error>Please confirm your password</mat-error>
+            }
+            @if (pwForm.errors?.['mismatch'] && pwForm.get('confirmPassword')?.touched) {
+              <mat-error>Passwords do not match</mat-error>
+            }
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit" [disabled]="pwForm.invalid || saving()">
+            <mat-icon>lock_reset</mat-icon>
+            {{ saving() ? 'Saving...' : 'Change Password' }}
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ── Data & privacy card ───────────────────────────────────────────── -->
+    <mat-card class="data-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>download</mat-icon>
+          Data &amp; Privacy
+        </mat-card-title>
+        <mat-card-subtitle>Export a copy of all your events and contributions</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="data-hint">
+          Download a JSON file containing all events and Moi records associated with your account.
+        </p>
+        <button
+          mat-raised-button
+          color="accent"
+          type="button"
+          [disabled]="downloading()"
+          (click)="downloadMyData()">
+          <mat-icon>cloud_download</mat-icon>
+          {{ downloading() ? 'Preparing...' : 'Download My Data' }}
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+</div>

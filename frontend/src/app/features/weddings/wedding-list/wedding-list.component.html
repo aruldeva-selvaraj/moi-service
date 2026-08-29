@@ -93,10 +93,46 @@
         <div class="section-label">Approved Events</div>
       }
 
-      <div class="results-count">{{ approvedEvents().length }} approved event(s)</div>
+      <div class="results-count">{{ filteredEvents().length }} approved event(s)</div>
+
+      <div class="filter-bar">
+        <mat-form-field appearance="outline" class="filter-search">
+          <mat-label>Search</mat-label>
+          <input matInput [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" placeholder="Search events…">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-type">
+          <mat-label>Event Type</mat-label>
+          <mat-select [value]="typeFilter()" (selectionChange)="typeFilter.set($event.value)">
+            <mat-option value="">All Types</mat-option>
+            <mat-option value="wedding">Wedding</mat-option>
+            <mat-option value="birthday">Birthday</mat-option>
+            <mat-option value="baby_shower">Baby Shower</mat-option>
+            <mat-option value="anniversary">Anniversary</mat-option>
+            <mat-option value="other">Other</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-button-toggle-group [value]="upcomingFilter()" (change)="upcomingFilter.set($event.value)" class="filter-upcoming">
+          <mat-button-toggle value="all">All</mat-button-toggle>
+          <mat-button-toggle value="upcoming">Upcoming</mat-button-toggle>
+          <mat-button-toggle value="past">Past</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <mat-form-field appearance="outline" class="filter-moi">
+          <mat-label>Min Moi (₹)</mat-label>
+          <input matInput type="number" [value]="totalMoiMin()" (input)="totalMoiMin.set(+$any($event.target).value || 0)">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-moi">
+          <mat-label>Max Moi (₹)</mat-label>
+          <input matInput type="number" [value]="totalMoiMax()" (input)="totalMoiMax.set(+$any($event.target).value || 0)">
+        </mat-form-field>
+      </div>
 
       <div class="grid-3">
-        @for (ev of approvedEvents(); track ev.id) {
+        @for (ev of pagedEvents(); track ev.id) {
           <div class="wedding-card">
             <div class="card-top">
               <div class="card-title-area">
@@ -113,6 +149,14 @@
                     matTooltip="Edit" (click)="$event.stopPropagation()">
                     <mat-icon>edit</mat-icon>
                   </a>
+                  <button mat-icon-button matTooltip="Clone" (click)="cloneEvent(ev.id, $event)">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  @if (auth.isAdmin()) {
+                    <button mat-icon-button matTooltip="Mark Complete" (click)="completeEvent(ev, $event)">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                  }
                   <button mat-icon-button color="warn" matTooltip="Delete"
                     (click)="confirmDelete(ev, $event)">
                     <mat-icon>delete</mat-icon>
@@ -159,6 +203,13 @@
           </div>
         }
       </div>
+
+      <mat-paginator
+        [length]="filteredEvents().length"
+        [pageSize]="eventsPageSize()"
+        [pageIndex]="eventsPage() - 1"
+        (page)="onPageChange($event)">
+      </mat-paginator>
 
     } @else if (!auth.isAdmin()) {
       <!-- User has only pending events (no approved yet) -->

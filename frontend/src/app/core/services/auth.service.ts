@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { Observable, firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 const TOKEN_KEY    = 'moify_token';
 const USER_KEY     = 'moify_user';
@@ -80,9 +80,20 @@ export class AuthService {
     }
   }
 
-  logout(): void {
+  /**
+   * Extends the current session by exchanging the existing token for a fresh one.
+   */
+  refreshToken(): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(`${this.apiBase}/api/auth/refresh-token`, {});
+  }
+
+  logout(options?: { reason?: string }): void {
     this.clearSession();
-    this.router.navigate(['/login']);
+    if (options?.reason) {
+      this.router.navigate(['/login'], { queryParams: { reason: options.reason } });
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   isAdmin(): boolean {
@@ -138,6 +149,19 @@ export class AuthService {
 
   getToken(): string | null {
     return sessionStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(TOKEN_KEY);
+  }
+
+  updateCurrentUser(partial: Partial<AuthUser>): void {
+    const current = this.currentUser();
+    if (!current) return;
+    const updated = { ...current, ...partial };
+    this.currentUser.set(updated);
+    // Persist to whichever storage holds the user record
+    if (localStorage.getItem(TOKEN_KEY)) {
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
+    } else {
+      sessionStorage.setItem(USER_KEY, JSON.stringify(updated));
+    }
   }
 
   private clearSession(): void {

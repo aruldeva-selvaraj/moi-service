@@ -57,7 +57,7 @@ export class ReceiptService {
   }
 
   private openA4Window(entries: MoiEntry[], event: Event, filter: PrintFilter, mode: 'print' | 'download'): void {
-    const html = this.buildA4Html(entries, event, filter, mode);
+    const html = this.buildA4Html(entries, event, filter, mode, true);
     const win = this.doc.defaultView?.open(
       '', '_blank',
       `width=960,height=750,toolbar=no,location=no,directories=no,status=no,menubar=yes,scrollbars=yes`
@@ -113,7 +113,7 @@ export class ReceiptService {
     }, 500);
   }
 
-  private buildA4Html(entries: MoiEntry[], event: Event, filter: PrintFilter, mode: 'print' | 'download' = 'print'): string {
+  private buildA4Html(entries: MoiEntry[], event: Event, filter: PrintFilter, mode: 'print' | 'download' = 'print', isManagedExternally = false): string {
     const cfg = getEventConfig(event.event_type);
     const title = getEventTitle(event);
     const { side, city: cityFilter, district: districtFilter } = filter;
@@ -583,10 +583,10 @@ export class ReceiptService {
   </div>
   <script>
     document.body.classList.add('has-download-bar');
-  </script>` : `
+  </script>` : (!isManagedExternally ? `
   <script>
     window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
-  </script>`}
+  </script>` : '')}
 </body>
 </html>`;
   }
@@ -932,6 +932,7 @@ export class ReceiptService {
   <div class="amount-block">
     ${e(L.amountLabel)} : ${e(amountFormatted)}
   </div>
+  <div class="amount-words">${this.numberToWords(entry.amount)}</div>
 
   <table>
     ${row(L.payment, L.payLabels[entry.payment_mode] || e(entry.payment_mode))}
@@ -974,5 +975,35 @@ export class ReceiptService {
   <div class="dline">================================</div>
 </body>
 </html>`;
+  }
+
+  numberToWords(n: number): string {
+    if (n < 0) return 'Minus ' + this.numberToWords(-n);
+    if (n === 0) return 'Rupees Zero Only';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+      'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const twoDigit = (num: number): string => {
+      if (num < 20) return ones[num];
+      return (tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '')).trim();
+    };
+
+    const threeDigit = (num: number): string => {
+      if (num >= 100) return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' ' + twoDigit(num % 100) : '');
+      return twoDigit(num);
+    };
+
+    const int = Math.floor(n);
+    let rem = int;
+    let parts: string[] = [];
+
+    if (rem >= 10000000) { parts.push(threeDigit(Math.floor(rem / 10000000)) + ' Crore'); rem %= 10000000; }
+    if (rem >= 100000)   { parts.push(threeDigit(Math.floor(rem / 100000)) + ' Lakh'); rem %= 100000; }
+    if (rem >= 1000)     { parts.push(threeDigit(Math.floor(rem / 1000)) + ' Thousand'); rem %= 1000; }
+    if (rem > 0)         { parts.push(threeDigit(rem)); }
+
+    return 'Rupees ' + parts.join(' ') + ' Only';
   }
 }

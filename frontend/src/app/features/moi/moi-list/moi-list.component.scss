@@ -67,3 +67,35 @@
   border: 1px solid var(--border-color, #f0d080);
   border-top: none;
 }
+
+.filter-row-secondary {
+  margin-top: 12px;
+}
+
+.filter-amount       { width: 160px; }
+.filter-relationship { width: 200px; }
+.filter-received     { width: 200px; }
+
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  background: var(--color-primary-light, #fff3e0);
+  border: 1px solid var(--color-primary, #8B4513);
+  border-radius: var(--radius-md, 12px);
+
+  .bulk-count {
+    font-weight: 600;
+    color: var(--color-primary, #8B4513);
+    margin-right: 4px;
+  }
+}
+
+.fab-add {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+}

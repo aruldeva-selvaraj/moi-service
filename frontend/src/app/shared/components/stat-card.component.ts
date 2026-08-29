@@ -5,7 +5,7 @@ import { Component, Input } from '@angular/core';
   standalone: true,
   template: `
     <div class="stat-card">
-      <div class="stat-icon">{{ icon }}</div>
+      <div class="stat-icon"><span aria-hidden="true">{{ icon }}</span></div>
       <div class="stat-value">{{ value }}</div>
       <div class="stat-label">{{ label }}</div>
       @if (sub) {

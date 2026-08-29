@@ -1,0 +1,67 @@
+@if (webglFailed) {
+  <div class="webgl-fallback">
+    <p>3D visualization not available on this device.</p>
+  </div>
+}
+<div class="canvas-section" #sectionEl [style.display]="webglFailed ? 'none' : null">
+  <canvas class="three-canvas" #canvasEl></canvas>
+
+  <div class="scroll-hint">
+    <span class="scroll-arrow">↓</span>
+    <span>Scroll to explore</span>
+  </div>
+
+  <!-- Phase 0: Intro overview -->
+  <div class="phase-overlay phase-0" #phase0El>
+    <div class="phase-card">
+      <div class="phase-heading">{{ totalGuests }} Contributions</div>
+      <div class="phase-sub">Total MOI collected</div>
+      <div class="phase-value">{{ totalAmt }}</div>
+    </div>
+  </div>
+
+  <!-- Phase 1: Groom vs Bride split -->
+  <div class="phase-overlay phase-1" #phase1El>
+    <div class="sides-layout">
+      <div class="side-block side-a">
+        <div class="side-emoji">{{ config.sideAEmoji }}</div>
+        <div class="side-label">{{ config.sideALabel }}</div>
+        <div class="side-count">{{ groomCount }} guests</div>
+        <div class="side-amount">{{ groomAmt }}</div>
+        <div class="side-pct">{{ groomPct }}</div>
+      </div>
+      <div class="vs-divider">vs</div>
+      <div class="side-block side-b">
+        <div class="side-emoji">{{ config.sideBEmoji }}</div>
+        <div class="side-label">{{ config.sideBLabel }}</div>
+        <div class="side-count">{{ brideCount }} guests</div>
+        <div class="side-amount">{{ brideAmt }}</div>
+        <div class="side-pct">{{ bridePct }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2: Payment mode columns -->
+  <div class="phase-overlay phase-2" #phase2El>
+    <div class="payments-layout">
+      <div class="pay-block">
+        <div class="pay-icon">💵</div>
+        <div class="pay-label">Cash</div>
+        <div class="pay-amount">{{ cashAmt }}</div>
+        <div class="pay-pct">{{ cashPct }}</div>
+      </div>
+      <div class="pay-block">
+        <div class="pay-icon">📝</div>
+        <div class="pay-label">Cheque</div>
+        <div class="pay-amount">{{ chequeAmt }}</div>
+        <div class="pay-pct">{{ chequePct }}</div>
+      </div>
+      <div class="pay-block">
+        <div class="pay-icon">📱</div>
+        <div class="pay-label">Online / UPI</div>
+        <div class="pay-amount">{{ onlineAmt }}</div>
+        <div class="pay-pct">{{ onlinePct }}</div>
+      </div>
+    </div>
+  </div>
+</div>

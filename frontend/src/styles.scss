@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600&display=swap');
+
 @use '@angular/material' as mat;
 
 // ── Static Material theme (compiled at build time) ─────────────────────────
@@ -137,7 +139,7 @@ $wedding-theme: mat.m2-define-light-theme((
 
 html, body {
   height: 100%;
-  font-family: 'Inter', 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', system-ui, Arial, sans-serif;
+  font-family: 'Inter', 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', 'Noto Sans Tamil', system-ui, Arial, sans-serif;
   background-color: var(--bg-page);
   color: var(--text-body);
   transition: background-color 0.4s ease, color 0.4s ease;
@@ -333,6 +335,19 @@ html, body {
   .mat-mdc-paginator {
     background: var(--bg-card) !important;
     color: var(--text-muted) !important;
+  }
+
+  // Chip dark mode
+  .mat-mdc-chip { background-color: #333 !important; color: #eee !important; }
+  .mat-mdc-chip.mat-mdc-chip-selected { background-color: var(--color-primary) !important; }
+
+  // Tooltip dark mode
+  .mat-mdc-tooltip { background-color: #424242 !important; color: #fff !important; }
+
+  // Snackbar dark mode
+  .mdc-snackbar__surface {
+    background-color: #323232 !important;
+    color: #fff !important;
   }
 }
 
@@ -577,3 +592,37 @@ html, body {
   @media (max-width: 1200px) { grid-template-columns: repeat(2, 1fr); }
   @media (max-width: 600px)  { grid-template-columns: 1fr; }
 }
+
+// ── Mobile hamburger navigation ───────────────────────────────────────────
+.desktop-nav-links {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .desktop-nav-links { display: none; }
+}
+
+.mobile-only { display: none; }
+
+@media (max-width: 600px) {
+  .mobile-only { display: block; }
+}
+
+// ── FAB add button ────────────────────────────────────────────────────────
+.fab-add {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+}
+
+// ── Touch targets — amount preset chips ──────────────────────────────────
+.amount-preset {
+  min-height: 44px !important;
+  min-width: 44px !important;
+  padding: 8px 16px !important;
+}
+
+// ── ARIA live region styles ───────────────────────────────────────────────
+[role="alert"] { outline: none; }

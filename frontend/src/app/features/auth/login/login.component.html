@@ -1,8 +1,10 @@
 <div class="login-page" [class.success-bg]="loginState === 'success'">
 
   <!-- Falling petals background -->
-  <div class="petals-container" *ngIf="loginState !== 'success'">
-    <div class="petal" *ngFor="let p of petals"
+  @if (loginState !== 'success') {
+  <div class="petals-container">
+    @for (p of petals; track p) {
+    <div class="petal"
          [style.left.%]="p.left"
          [style.animationDelay.s]="p.delay"
          [style.animationDuration.s]="p.duration"
@@ -10,10 +12,13 @@
          [style.height.px]="p.size"
          [style.background]="p.color">
     </div>
+    }
   </div>
+  }
 
   <!-- Success overlay -->
-  <div class="success-overlay" *ngIf="loginState === 'success'">
+  @if (loginState === 'success') {
+  <div class="success-overlay">
     <div class="success-burst">
       <div class="burst-ring r1"></div>
       <div class="burst-ring r2"></div>
@@ -23,12 +28,16 @@
     <div class="success-text">வணக்கம்! Welcome!</div>
     <div class="success-sub">Redirecting to Moify…</div>
     <div class="fireworks">
-      <div class="fw" *ngFor="let n of [1,2,3,4,5,6,7,8]" [class]="'fw-' + n"></div>
+      @for (n of [1,2,3,4,5,6,7,8]; track n) {
+      <div [class]="'fw-' + n"></div>
+      }
     </div>
   </div>
+  }
 
   <!-- Login card -->
-  <div class="login-card" [class.shake]="loginState === 'error'" *ngIf="loginState !== 'success'">
+  @if (loginState !== 'success') {
+  <div class="login-card" [class.shake]="loginState === 'error'">
 
     <!-- Characters -->
     <div class="characters">
@@ -164,9 +173,11 @@
         </div>
       </div>
 
-      <div class="error-msg" *ngIf="errorMsg">
+      @if (errorMsg) {
+      <div class="error-msg">
         ⚠️ {{ errorMsg }}
       </div>
+      }
 
       <label class="remember-row">
         <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" />
@@ -176,10 +187,13 @@
       <button type="submit" class="login-btn"
               [class.loading]="loginState === 'loading'"
               [disabled]="loginState === 'loading'">
-        <span *ngIf="loginState !== 'loading'">🪔 Login to Moify</span>
-        <span *ngIf="loginState === 'loading'" class="spinner-wrap">
+        @if (loginState !== 'loading') {
+        <span>🪔 Login to Moify</span>
+        } @else {
+        <span class="spinner-wrap">
           <span class="btn-spinner"></span> Signing in…
         </span>
+        }
       </button>
     </form>
 
@@ -188,133 +202,146 @@
       <button type="button" class="forgot-link" (click)="showForgot()">Forgot Password?</button>
     </div>
   </div>
+  }
 
   <!-- ── Forgot Password Panel ───────────────────────────────────────────── -->
-  <div class="login-card forgot-card" *ngIf="forgotStep !== 'off' && loginState !== 'success'">
+  @if (forgotStep !== 'off' && loginState !== 'success') {
+  <div class="login-card forgot-card">
 
     <!-- Step 1: Lookup user -->
-    <ng-container *ngIf="forgotStep === 'lookup'">
-      <div class="fp-header">
-        <div class="fp-icon">🔑</div>
-        <h2 class="fp-title">Forgot Password</h2>
-        <p class="fp-subtitle">Enter your username or mobile number to continue</p>
-      </div>
+    @if (forgotStep === 'lookup') {
+    <div class="fp-header">
+      <div class="fp-icon">🔑</div>
+      <h2 class="fp-title">Forgot Password</h2>
+      <p class="fp-subtitle">Enter your username or mobile number to continue</p>
+    </div>
 
-      <div class="fp-form">
-        <div class="form-group">
-          <label>Username or Mobile Number</label>
-          <div class="input-wrap">
-            <span class="input-icon">👤</span>
-            <input type="text" [(ngModel)]="fpIdentifier" name="fpIdentifier"
-                   placeholder="e.g. admin or 9789616611"
-                   (input)="fpError = ''" (keyup.enter)="lookupUser()" />
-          </div>
+    <div class="fp-form">
+      <div class="form-group">
+        <label>Username or Mobile Number</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" [(ngModel)]="fpIdentifier" name="fpIdentifier"
+                 placeholder="e.g. admin or 9789616611"
+                 (input)="fpError = ''" (keyup.enter)="lookupUser()" />
         </div>
-
-        <div class="error-msg" *ngIf="fpError">⚠️ {{ fpError }}</div>
-
-        <button type="button" class="login-btn" [class.loading]="fpLoading"
-                [disabled]="fpLoading" (click)="lookupUser()">
-          <span *ngIf="!fpLoading">🔍 Find Account</span>
-          <span *ngIf="fpLoading" class="spinner-wrap">
-            <span class="btn-spinner"></span> Searching…
-          </span>
-        </button>
-
-        <button type="button" class="back-link" (click)="backToLogin()">← Back to Login</button>
       </div>
-    </ng-container>
+
+      @if (fpError) {
+      <div class="error-msg">⚠️ {{ fpError }}</div>
+      }
+
+      <button type="button" class="login-btn" [class.loading]="fpLoading"
+              [disabled]="fpLoading" (click)="lookupUser()">
+        @if (!fpLoading) {
+        <span>🔍 Find Account</span>
+        } @else {
+        <span class="spinner-wrap">
+          <span class="btn-spinner"></span> Searching…
+        </span>
+        }
+      </button>
+
+      <button type="button" class="back-link" (click)="backToLogin()">← Back to Login</button>
+    </div>
+    }
 
     <!-- Step 2: Admin confirm + new password -->
-    <ng-container *ngIf="forgotStep === 'confirm'">
-      <div class="fp-header">
-        <div class="fp-icon">🛡️</div>
-        <h2 class="fp-title">Admin Confirmation</h2>
-        <p class="fp-subtitle">Admin must authorize this password reset</p>
+    @if (forgotStep === 'confirm') {
+    <div class="fp-header">
+      <div class="fp-icon">🛡️</div>
+      <h2 class="fp-title">Admin Confirmation</h2>
+      <p class="fp-subtitle">Admin must authorize this password reset</p>
+    </div>
+
+    <div class="fp-found-badge">
+      <span class="fp-found-label">Resetting password for</span>
+      <span class="fp-found-name">{{ fpMaskedName || fpIdentifier }}</span>
+    </div>
+
+    <div class="fp-form">
+      <div class="form-group">
+        <label>Admin Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" [(ngModel)]="fpAdminUsername" name="fpAdminUsername"
+                 placeholder="Admin username" (input)="fpError = ''" />
+        </div>
       </div>
 
-      <div class="fp-found-badge">
-        <span class="fp-found-label">Resetting password for</span>
-        <span class="fp-found-name">{{ fpMaskedName || fpIdentifier }}</span>
+      <div class="form-group">
+        <label>Admin Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input [type]="fpShowAdminPw ? 'text' : 'password'"
+                 [(ngModel)]="fpAdminPassword" name="fpAdminPassword"
+                 placeholder="Admin password" (input)="fpError = ''" />
+          <button type="button" class="toggle-pw" (click)="fpShowAdminPw = !fpShowAdminPw">
+            {{ fpShowAdminPw ? '🙈' : '👁️' }}
+          </button>
+        </div>
       </div>
 
-      <div class="fp-form">
-        <div class="form-group">
-          <label>Admin Username</label>
-          <div class="input-wrap">
-            <span class="input-icon">👤</span>
-            <input type="text" [(ngModel)]="fpAdminUsername" name="fpAdminUsername"
-                   placeholder="Admin username" (input)="fpError = ''" />
-          </div>
+      <div class="fp-divider"></div>
+
+      <div class="form-group">
+        <label>New Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input [type]="fpShowNewPw ? 'text' : 'password'"
+                 [(ngModel)]="fpNewPassword" name="fpNewPassword"
+                 placeholder="Min 6 characters" (input)="fpError = ''" />
+          <button type="button" class="toggle-pw" (click)="fpShowNewPw = !fpShowNewPw">
+            {{ fpShowNewPw ? '🙈' : '👁️' }}
+          </button>
         </div>
-
-        <div class="form-group">
-          <label>Admin Password</label>
-          <div class="input-wrap">
-            <span class="input-icon">🔒</span>
-            <input [type]="fpShowAdminPw ? 'text' : 'password'"
-                   [(ngModel)]="fpAdminPassword" name="fpAdminPassword"
-                   placeholder="Admin password" (input)="fpError = ''" />
-            <button type="button" class="toggle-pw" (click)="fpShowAdminPw = !fpShowAdminPw">
-              {{ fpShowAdminPw ? '🙈' : '👁️' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="fp-divider"></div>
-
-        <div class="form-group">
-          <label>New Password</label>
-          <div class="input-wrap">
-            <span class="input-icon">🔑</span>
-            <input [type]="fpShowNewPw ? 'text' : 'password'"
-                   [(ngModel)]="fpNewPassword" name="fpNewPassword"
-                   placeholder="Min 6 characters" (input)="fpError = ''" />
-            <button type="button" class="toggle-pw" (click)="fpShowNewPw = !fpShowNewPw">
-              {{ fpShowNewPw ? '🙈' : '👁️' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Confirm New Password</label>
-          <div class="input-wrap">
-            <span class="input-icon">✅</span>
-            <input [type]="fpShowConfirmPw ? 'text' : 'password'"
-                   [(ngModel)]="fpConfirmPassword" name="fpConfirmPassword"
-                   placeholder="Re-enter new password" (input)="fpError = ''"
-                   (keyup.enter)="resetPassword()" />
-            <button type="button" class="toggle-pw" (click)="fpShowConfirmPw = !fpShowConfirmPw">
-              {{ fpShowConfirmPw ? '🙈' : '👁️' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="error-msg" *ngIf="fpError">⚠️ {{ fpError }}</div>
-
-        <button type="button" class="reset-btn" [class.loading]="fpLoading"
-                [disabled]="fpLoading" (click)="resetPassword()">
-          <span *ngIf="!fpLoading">🔒 Reset Password</span>
-          <span *ngIf="fpLoading" class="spinner-wrap">
-            <span class="btn-spinner"></span> Resetting…
-          </span>
-        </button>
-
-        <button type="button" class="back-link" (click)="forgotStep = 'lookup'; fpError = ''">← Back</button>
       </div>
-    </ng-container>
+
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">✅</span>
+          <input [type]="fpShowConfirmPw ? 'text' : 'password'"
+                 [(ngModel)]="fpConfirmPassword" name="fpConfirmPassword"
+                 placeholder="Re-enter new password" (input)="fpError = ''"
+                 (keyup.enter)="resetPassword()" />
+          <button type="button" class="toggle-pw" (click)="fpShowConfirmPw = !fpShowConfirmPw">
+            {{ fpShowConfirmPw ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+
+      @if (fpError) {
+      <div class="error-msg">⚠️ {{ fpError }}</div>
+      }
+
+      <button type="button" class="reset-btn" [class.loading]="fpLoading"
+              [disabled]="fpLoading" (click)="resetPassword()">
+        @if (!fpLoading) {
+        <span>🔒 Reset Password</span>
+        } @else {
+        <span class="spinner-wrap">
+          <span class="btn-spinner"></span> Resetting…
+        </span>
+        }
+      </button>
+
+      <button type="button" class="back-link" (click)="forgotStep = 'lookup'; fpError = ''">← Back</button>
+    </div>
+    }
 
     <!-- Step 3: Done -->
-    <ng-container *ngIf="forgotStep === 'done'">
-      <div class="fp-header">
-        <div class="fp-icon">✅</div>
-        <h2 class="fp-title">Password Reset!</h2>
-        <p class="fp-subtitle">The password has been updated successfully.</p>
-      </div>
-      <button type="button" class="login-btn" (click)="backToLogin()">
-        🪔 Back to Login
-      </button>
-    </ng-container>
+    @if (forgotStep === 'done') {
+    <div class="fp-header">
+      <div class="fp-icon">✅</div>
+      <h2 class="fp-title">Password Reset!</h2>
+      <p class="fp-subtitle">The password has been updated successfully.</p>
+    </div>
+    <button type="button" class="login-btn" (click)="backToLogin()">
+      🪔 Back to Login
+    </button>
+    }
 
   </div>
+  }
 </div>

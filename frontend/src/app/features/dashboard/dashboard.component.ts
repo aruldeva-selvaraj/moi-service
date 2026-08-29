@@ -14,6 +14,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/models/event.model';
 import { SummaryStats } from '../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../shared/components/index';
+import { MoiCanvas3DComponent } from '../../shared/components/moi-canvas3d/moi-canvas3d.component';
+import { OnboardingOverlayComponent } from '../../shared/components/onboarding-overlay.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,6 +25,8 @@ import { StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpi
     MatButtonModule, MatIconModule, MatDividerModule,
     MatFormFieldModule, MatSelectModule,
     StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent,
+    MoiCanvas3DComponent,
+    OnboardingOverlayComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -32,6 +36,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly moiService = inject(MoiService);
   private readonly receiptService = inject(ReceiptService);
   readonly auth = inject(AuthService);
+
+  showOnboarding = signal(!localStorage.getItem('moify_onboarded'));
 
   // ── Carousel ──────────────────────────────────────────────
   readonly banners = [
@@ -47,7 +53,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedEventId = signal<number | null>(null);
   eventReport = signal<EventReport | null>(null);
 
-  approvedEvents = computed(() => this.events().filter((ev: Event) => ev.status === 'approved'));
+  // Include both approved and completed events
+  approvedEvents = computed(() =>
+    this.events().filter((ev: Event) => ev.status === 'approved' || ev.status === 'completed')
+  );
   pendingCount = computed(() => this.events().filter((ev: Event) => ev.status === 'pending').length);
 
   selectedEvent = computed(() =>
@@ -95,6 +104,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadEventReport(eventId);
   }
 
+  // Export moi entries for the selected event as CSV with BOM
+  exportEventCsv() {
+    const eventId = this.selectedEventId();
+    if (!eventId) return;
+
+    this.moiService.getAll({ event_id: eventId, page: 1, page_size: 5000 }).subscribe({
+      next: (r) => {
+        const entries = r.items;
+        if (!entries.length) return;
+        const cols = ['guest_name', 'relationship', 'side', 'amount', 'payment_mode', 'city', 'district', 'received_by'];
+        const header = cols.map(c => `"${c}"`).join(',');
+        const rows = entries.map((e: any) =>
+          cols.map(c => `"${(e[c] ?? '').toString().replace(/"/g, '""')}"`).join(',')
+        );
+        const csv = '﻿' + [header, ...rows].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `moi-entries-event-${eventId}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      },
+    });
+  }
+
   generatePdfReport() {
     const ev = this.selectedEvent();
     const report = this.eventReport();
@@ -111,10 +148,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.eventService.getAll().subscribe({
       next: (data) => {
         this.events.set(data);
-        const approved = data.filter((ev: Event) => ev.status === 'approved');
-        if (approved.length > 0) {
-          this.selectedEventId.set(approved[0].id);
-          this.loadEventReport(approved[0].id);
+        const approvedOrCompleted = data.filter(
+          (ev: Event) => ev.status === 'approved' || ev.status === 'completed'
+        );
+        if (approvedOrCompleted.length > 0) {
+          this.selectedEventId.set(approvedOrCompleted[0].id);
+          this.loadEventReport(approvedOrCompleted[0].id);
         }
         checkDone();
       },

@@ -38,10 +38,21 @@ export class WeddingFormComponent implements OnInit {
   isEdit = false;
   eventId?: number;
   submitting = signal(false);
+  submitted = false;
 
   readonly eventTypes: { value: EventType; label: string; emoji: string }[] = Object.entries(EVENT_TYPE_CONFIGS).map(
     ([value, cfg]) => ({ value: value as EventType, label: cfg.label, emoji: cfg.emoji })
   );
+
+  readonly ceremonyTypes = [
+    'Engagement',
+    'Nalangu',
+    'Muhurtham',
+    'Reception',
+    'Birthday',
+    'Anniversary',
+    'Other',
+  ];
 
   form: FormGroup = this.fb.group({
     event_type: ['wedding', Validators.required],
@@ -53,10 +64,22 @@ export class WeddingFormComponent implements OnInit {
     city: [''],
     district: [''],
     notes: [''],
+    contact_phone: ['', Validators.pattern(/^[0-9]{10}$/)],
+    ceremony_start: [''],
+    ceremony_end: [''],
+    expected_guests: [null, Validators.min(1)],
+    logo_url: [''],
+    ceremony_type: [''],
   });
 
   get selectedEventConfig() {
     return getEventConfig(this.form.get('event_type')?.value ?? 'wedding');
+  }
+
+  get isPastDate(): boolean {
+    const d = this.form.get('event_date')?.value;
+    if (!d) return false;
+    return new Date(d) < new Date(new Date().setHours(0, 0, 0, 0));
   }
 
   ngOnInit() {
@@ -66,13 +89,23 @@ export class WeddingFormComponent implements OnInit {
       this.eventId = +id;
       this.eventService.getById(this.eventId).subscribe({
         next: (ev) => {
-          this.form.patchValue({ ...ev, event_date: new Date(ev.event_date) });
+          this.form.patchValue({
+            ...ev,
+            event_date: new Date(ev.event_date),
+            contact_phone: ev.contact_phone ?? '',
+            ceremony_start: ev.ceremony_start ?? '',
+            ceremony_end: ev.ceremony_end ?? '',
+            expected_guests: ev.expected_guests ?? null,
+            logo_url: ev.logo_url ?? '',
+            ceremony_type: ev.ceremony_type ?? '',
+          });
         },
       });
     }
   }
 
   onSubmit() {
+    this.submitted = true;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -103,4 +136,6 @@ export class WeddingFormComponent implements OnInit {
       },
     });
   }
+
+  hasUnsavedChanges(): boolean { return this.form.dirty && !this.submitting(); }
 }

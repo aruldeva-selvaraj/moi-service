@@ -1,0 +1,9 @@
+{
+  "NAV": { "EVENTS": "நிகழ்வுகள்", "MOI_ENTRIES": "மொய் பதிவுகள்", "REPORTS": "அறிக்கைகள்", "DASHBOARD": "முகப்பு", "PROFILE": "சுயவிவரம்", "USERS": "பயனர்களை நிர்வகி", "LOGOUT": "வெளியேறு", "INSTALL": "நிரலை நிறுவு" },
+  "DASHBOARD": { "TITLE": "மொய்ஃபை", "SUBTITLE_ADMIN": "திருமண பரிசு பதிவேடு — அனைத்து நிகழ்வுகள்", "ADD_EVENT": "புதிய நிகழ்வு சேர்", "ALL_MOI": "அனைத்து மொய் பதிவுகள்", "VIEW_REPORTS": "அறிக்கைகளை பார்" },
+  "EVENTS": { "TITLE": "நிகழ்வுகள்", "NEW": "புதிய நிகழ்வு", "SEARCH": "நிகழ்வுகளை தேடு...", "CLONE": "நகலெடு", "COMPLETE": "முடிந்தது என குறி", "APPROVE": "அனுமதி", "REJECT": "நிராகரி", "DELETE": "நீக்கு" },
+  "MOI": { "GUEST_NAME": "விருந்தினர் பெயர்", "AMOUNT": "தொகை (₹)", "SIDE": "பக்கம்", "PAYMENT_MODE": "செலுத்தும் முறை", "CITY": "நகரம்", "DISTRICT": "மாவட்டம்", "PHONE": "தொலைபேசி", "RELATIONSHIP": "உறவு முறை", "RECEIVED_BY": "பெற்றவர்", "NOTES": "குறிப்புகள்", "PARTY_SIZE": "குழு அளவு", "CASH": "பணம்", "CHEQUE": "காசோலை", "ONLINE": "ஆன்லைன் / UPI", "DD": "வரைவோலை", "GROOM": "மணமகன்", "BRIDE": "மணமகள்", "BOTH": "இருவரும்" },
+  "REPORTS": { "TITLE": "அறிக்கைகள்", "EXPORT_CSV": "CSV இறக்கு", "PRINT_A4": "A4 அச்சிடு", "TOTAL_GUESTS": "மொத்த விருந்தினர்கள்", "TOTAL_AMOUNT": "மொத்த தொகை", "BY_SIDE": "பக்கம் வாரியாக", "BY_PAYMENT": "செலுத்தும் முறை வாரியாக", "BY_RELATIONSHIP": "உறவு முறை வாரியாக", "BY_CITY": "நகரம் வாரியாக", "BY_DISTRICT": "மாவட்டம் வாரியாக", "RECEIVED_BY": "பெற்றவர் வாரியாக" },
+  "AUTH": { "LOGIN": "உள்நுழை", "LOGOUT": "வெளியேறு", "USERNAME": "பயனர் பெயர்", "PASSWORD": "கடவுச்சொல்", "FORGOT_PASSWORD": "கடவுச்சொல் மறந்தீர்களா?", "CHANGE_PASSWORD": "கடவுச்சொல் மாற்று" },
+  "COMMON": { "SAVE": "சேமி", "CANCEL": "ரத்து செய்", "DELETE": "நீக்கு", "EDIT": "திருத்து", "LOADING": "ஏற்றுகிறது...", "NO_DATA": "தரவு இல்லை", "CONFIRM": "உறுதிப்படுத்து", "CLOSE": "மூடு", "SEARCH": "தேடு", "FILTER": "வடிகட்டு", "CLEAR": "அழி", "EXPORT": "இறக்கு", "PRINT": "அச்சிடு" }
+}

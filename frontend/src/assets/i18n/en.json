@@ -1,0 +1,9 @@
+{
+  "NAV": { "EVENTS": "Events", "MOI_ENTRIES": "Moi Entries", "REPORTS": "Reports", "DASHBOARD": "Dashboard", "PROFILE": "Profile", "USERS": "Manage Users", "LOGOUT": "Logout", "INSTALL": "Install App" },
+  "DASHBOARD": { "TITLE": "Moify", "SUBTITLE_ADMIN": "Smart Digital Wedding Gift Ledger — All Events", "ADD_EVENT": "Add New Event", "ALL_MOI": "All Moi Entries", "VIEW_REPORTS": "View Reports" },
+  "EVENTS": { "TITLE": "Events", "NEW": "New Event", "SEARCH": "Search events...", "CLONE": "Clone", "COMPLETE": "Mark Complete", "APPROVE": "Approve", "REJECT": "Reject", "DELETE": "Delete" },
+  "MOI": { "GUEST_NAME": "Guest Name", "AMOUNT": "Amount (₹)", "SIDE": "Side", "PAYMENT_MODE": "Payment Mode", "CITY": "City", "DISTRICT": "District", "PHONE": "Phone", "RELATIONSHIP": "Relationship", "RECEIVED_BY": "Received By", "NOTES": "Notes", "PARTY_SIZE": "Party Size", "CASH": "Cash", "CHEQUE": "Cheque", "ONLINE": "Online / UPI", "DD": "Demand Draft", "GROOM": "Groom", "BRIDE": "Bride", "BOTH": "Both" },
+  "REPORTS": { "TITLE": "Reports", "EXPORT_CSV": "Export CSV", "PRINT_A4": "Print A4", "TOTAL_GUESTS": "Total Guests", "TOTAL_AMOUNT": "Total Amount", "BY_SIDE": "By Side", "BY_PAYMENT": "By Payment Mode", "BY_RELATIONSHIP": "By Relationship", "BY_CITY": "By City", "BY_DISTRICT": "By District", "RECEIVED_BY": "By Collector" },
+  "AUTH": { "LOGIN": "Login", "LOGOUT": "Logout", "USERNAME": "Username", "PASSWORD": "Password", "FORGOT_PASSWORD": "Forgot Password?", "CHANGE_PASSWORD": "Change Password" },
+  "COMMON": { "SAVE": "Save", "CANCEL": "Cancel", "DELETE": "Delete", "EDIT": "Edit", "LOADING": "Loading...", "NO_DATA": "No data found", "CONFIRM": "Confirm", "CLOSE": "Close", "SEARCH": "Search", "FILTER": "Filter", "CLEAR": "Clear", "EXPORT": "Export", "PRINT": "Print" }
+}

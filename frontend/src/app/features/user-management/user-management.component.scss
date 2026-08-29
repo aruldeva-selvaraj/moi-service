@@ -1,0 +1,20 @@
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.search-field { flex: 1; min-width: 220px; }
+.table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant, #e0e0e0); }
+.users-table { width: 100%; }
+.user-cell { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--mat-sys-primary-container, #e3f2fd);
+  color: var(--mat-sys-on-primary-container, #1565c0);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem;
+}
+.role-select { width: 110px; }
+.no-results { text-align: center; padding: 40px; color: var(--mat-sys-on-surface-variant, #666); }

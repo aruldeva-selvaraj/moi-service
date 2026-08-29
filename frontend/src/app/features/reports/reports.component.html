@@ -71,7 +71,7 @@
 
       <!-- Payment Mode Breakdown -->
       <h3 class="section-title">Payment Mode Breakdown</h3>
-      <div class="grid-3 section-gap">
+      <div class="grid-4 section-gap">
         <app-stat-card icon="💵"
           [value]="eventReport()!.cash_amount | currency:'INR':'symbol':'1.0-0'"
           label="Cash"
@@ -84,6 +84,10 @@
           [value]="eventReport()!.online_amount | currency:'INR':'symbol':'1.0-0'"
           label="Online"
           [sub]="eventReport()!.total_amount > 0 ? (eventReport()!.online_amount / eventReport()!.total_amount | percent:'1.0-1') : '0%'" />
+        <app-stat-card icon="🏦"
+          [value]="(eventReport()!.dd_amount ?? 0) | currency:'INR':'symbol':'1.0-0'"
+          label="DD"
+          [sub]="eventReport()!.total_amount > 0 ? ((eventReport()!.dd_amount ?? 0) / eventReport()!.total_amount | percent:'1.0-1') : '0%'" />
       </div>
     }
 
@@ -145,15 +149,22 @@
               </div>
               <span class="bar-value">{{ eventReport()!.cheque_amount | currency:'INR':'symbol':'1.0-0' }}</span>
             </div>
+            <div class="bar-row">
+              <span class="bar-label">🏦 DD</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-dd" [style.width.%]="barWidth(eventReport()!.dd_amount ?? 0, eventReport()!.total_amount)"></div>
+              </div>
+              <span class="bar-value">{{ (eventReport()!.dd_amount ?? 0) | currency:'INR':'symbol':'1.0-0' }}</span>
+            </div>
           </div>
         </div>
 
-        <!-- Top relationships bar chart -->
+        <!-- Top relationships bar chart — no slice cap -->
         @if (relationshipData().length > 0) {
           <div class="chart-card chart-card-wide">
             <div class="chart-title">Top Relationships by Amount</div>
             <div class="bar-chart">
-              @for (r of relationshipData().slice(0, 6); track r.relationship) {
+              @for (r of relationshipData(); track r.relationship) {
                 <div class="bar-row">
                   <span class="bar-label">{{ r.relationship }}</span>
                   <div class="bar-track">
@@ -197,12 +208,108 @@
           <ng-container matColumnDef="avg">
             <th mat-header-cell *matHeaderCellDef>Avg. per Guest</th>
             <td mat-cell *matCellDef="let r">
-              {{ (r.total_amount / r.count) | currency:'INR':'symbol':'1.0-0' }}
+              {{ avgAmount(r) | currency:'INR':'symbol':'1.0-0' }}
             </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="['rank','relationship','count','total','avg']"></tr>
           <tr mat-row *matRowDef="let row; columns: ['rank','relationship','count','total','avg'];"></tr>
+        </table>
+      </div>
+    }
+
+    <!-- Received By Breakdown -->
+    @if (selectedEventId && receivedByData().length > 0) {
+      <div class="section-header">
+        <h3 class="section-title no-margin">Received By</h3>
+      </div>
+      <div class="data-table-container section-gap">
+        <table mat-table [dataSource]="receivedByData()">
+          <ng-container matColumnDef="rank">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let r; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+          <ng-container matColumnDef="received_by">
+            <th mat-header-cell *matHeaderCellDef>Received By</th>
+            <td mat-cell *matCellDef="let r" class="rel-name">{{ r.received_by || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>No. of Entries</th>
+            <td mat-cell *matCellDef="let r">{{ r.count }}</td>
+          </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total Amount</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="amount-display">{{ r.total_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['rank','received_by','count','total']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['rank','received_by','count','total'];"></tr>
+        </table>
+      </div>
+    }
+
+    <!-- City Breakdown -->
+    @if (selectedEventId && cityData().length > 0) {
+      <div class="section-header">
+        <h3 class="section-title no-margin">By City</h3>
+      </div>
+      <div class="data-table-container section-gap">
+        <table mat-table [dataSource]="cityData()">
+          <ng-container matColumnDef="rank">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let r; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+          <ng-container matColumnDef="city">
+            <th mat-header-cell *matHeaderCellDef>City</th>
+            <td mat-cell *matCellDef="let r" class="rel-name">{{ r.city || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>No. of Guests</th>
+            <td mat-cell *matCellDef="let r">{{ r.count }}</td>
+          </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total Amount</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="amount-display">{{ r.total_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['rank','city','count','total']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['rank','city','count','total'];"></tr>
+        </table>
+      </div>
+    }
+
+    <!-- District Breakdown -->
+    @if (selectedEventId && districtData().length > 0) {
+      <div class="section-header">
+        <h3 class="section-title no-margin">By District</h3>
+      </div>
+      <div class="data-table-container section-gap">
+        <table mat-table [dataSource]="districtData()">
+          <ng-container matColumnDef="rank">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let r; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+          <ng-container matColumnDef="district">
+            <th mat-header-cell *matHeaderCellDef>District</th>
+            <td mat-cell *matCellDef="let r" class="rel-name">{{ r.district || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>No. of Guests</th>
+            <td mat-cell *matCellDef="let r">{{ r.count }}</td>
+          </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total Amount</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="amount-display">{{ r.total_amount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['rank','district','count','total']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['rank','district','count','total'];"></tr>
         </table>
       </div>
     }

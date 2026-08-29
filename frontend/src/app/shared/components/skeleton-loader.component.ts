@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="skeleton-wrapper" [attr.data-variant]="variant">
+    <div class="skeleton-wrapper" role="status" aria-label="Loading..." [attr.data-variant]="variant">
       @if (variant === 'cards') {
         <div class="sk-grid">
           @for (_ of rows; track $index) {

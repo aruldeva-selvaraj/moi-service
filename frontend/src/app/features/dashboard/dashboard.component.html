@@ -1,3 +1,7 @@
+@if (showOnboarding()) {
+  <app-onboarding-overlay (closed)="showOnboarding.set(false)" />
+}
+
 <div class="page-container">
   <app-page-header title="🪔 Moify"
     [subtitle]="auth.isAdmin()
@@ -50,10 +54,10 @@
       </div>
     }
 
-    <!-- Event Selector Row — only approved events -->
+    <!-- Event Selector Row — approved and completed events -->
     <div class="event-selector-row">
       <mat-form-field appearance="outline" class="event-select">
-        <mat-label>{{ auth.isAdmin() ? 'Select Approved Event' : 'Select My Event' }}</mat-label>
+        <mat-label>{{ auth.isAdmin() ? 'Select Event' : 'Select My Event' }}</mat-label>
         <mat-select [value]="selectedEventId()" (selectionChange)="onEventChange($event.value)">
           <mat-option [value]="null">— All Events —</mat-option>
           @for (ev of approvedEvents(); track ev.id) {
@@ -135,9 +139,9 @@
               : '0%'" />
         </div>
 
-        <!-- Payment Mode -->
+        <!-- Payment Mode — 4 cards including DD -->
         <h3 class="subsection-title">By Payment Mode</h3>
-        <div class="grid-3 stats-section">
+        <div class="grid-4 stats-section">
           <app-stat-card
             icon="💵"
             [value]="eventReport()!.cash_amount | currency:'INR':'symbol':'1.0-0'"
@@ -159,6 +163,13 @@
             [sub]="eventReport()!.total_amount > 0
               ? (eventReport()!.online_amount / eventReport()!.total_amount | percent:'1.0-1')
               : '0%'" />
+          <app-stat-card
+            icon="🏦"
+            [value]="(eventReport()!.dd_amount ?? 0) | currency:'INR':'symbol':'1.0-0'"
+            label="DD"
+            [sub]="eventReport()!.total_amount > 0
+              ? ((eventReport()!.dd_amount ?? 0) / eventReport()!.total_amount | percent:'1.0-1')
+              : '0%'" />
         </div>
       </div>
 
@@ -178,6 +189,11 @@
           [value]="(stats()?.avg_amount || 0) | currency:'INR':'symbol':'1.0-0'"
           label="Avg. Gift Amount" />
       </div>
+    } @else {
+      <app-empty-state
+        icon="📭"
+        title="No data available for this event"
+        message="The report for the selected event could not be loaded. Please try again later." />
     }
 
     <!-- Quick Actions -->

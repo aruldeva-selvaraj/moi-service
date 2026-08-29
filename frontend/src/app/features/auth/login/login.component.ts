@@ -1,19 +1,21 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
-  private readonly auth   = inject(AuthService);
-  private readonly router = inject(Router);
+  private readonly auth    = inject(AuthService);
+  private readonly router  = inject(Router);
+  private readonly route   = inject(ActivatedRoute);
+  private readonly snackBar = inject(MatSnackBar);
 
   username = '';
   password = '';
@@ -43,6 +45,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.auth.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
       return;
+    }
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+    if (reason === 'session_expired') {
+      this.snackBar.open('Your session has expired. Please log in again.', 'Dismiss', { duration: 5000 });
     }
     this.generatePetals();
   }

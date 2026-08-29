@@ -155,7 +155,8 @@
                 <div>
                   <mat-form-field appearance="outline" style="width:100%">
                     <mat-label>Amount (₹) *</mat-label>
-                    <input matInput type="number" formControlName="amount" placeholder="0" min="1">
+                    <input matInput type="text" inputmode="numeric" pattern="[0-9]*"
+                           formControlName="amount" placeholder="0">
                     <mat-icon matPrefix>currency_rupee</mat-icon>
                     <button mat-icon-button matSuffix type="button"
                       [class.voice-active]="voice.activeField() === 'amount'"
@@ -169,11 +170,16 @@
                     @if (moiForm.get('amount')?.hasError('min') && moiForm.get('amount')?.touched) {
                       <mat-error>Amount must be positive</mat-error>
                     }
+                    @if (moiForm.get('amount')?.hasError('pattern') && moiForm.get('amount')?.touched) {
+                      <mat-error>Amount must be a whole number</mat-error>
+                    }
                   </mat-form-field>
                   <div class="amount-chips">
-                    @for (preset of amountPresets; track preset) {
+                    @for (preset of amountPresets(); track preset; let i = $index) {
                       <button type="button" class="amount-chip"
-                        [class.amount-chip-active]="moiForm.get('amount')?.value === preset"
+                        style="min-height: 44px;"
+                        [class.amount-chip-active]="moiForm.get('amount')?.value === String(preset)"
+                        [matTooltip]="'F' + (i + 1) + ' key'"
                         (click)="setAmount(preset)">
                         ₹{{ preset | number }}
                       </button>
@@ -188,6 +194,7 @@
                     <mat-option value="bride">{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }}</mat-option>
                     <mat-option value="both">Both</mat-option>
                   </mat-select>
+                  <mat-hint>Ctrl+D to toggle</mat-hint>
                 </mat-form-field>
               </div>
 
@@ -254,8 +261,11 @@
               <div class="grid-2">
                 <mat-form-field appearance="outline">
                   <mat-label>Phone</mat-label>
-                  <input matInput formControlName="phone" placeholder="10-digit mobile">
+                  <input matInput formControlName="phone" placeholder="10-digit mobile" inputmode="numeric">
                   <mat-icon matPrefix>phone</mat-icon>
+                  @if (moiForm.get('phone')?.hasError('pattern') && moiForm.get('phone')?.touched) {
+                    <mat-error>Enter a valid 10-digit mobile number</mat-error>
+                  }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -277,10 +287,19 @@
                   <input matInput formControlName="notes" placeholder="Additional notes">
                   <mat-icon matPrefix>notes</mat-icon>
                 </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Party Size</mat-label>
+                  <input matInput type="number" formControlName="party_size" placeholder="1" min="1">
+                  <mat-icon matPrefix>group</mat-icon>
+                  @if (moiForm.get('party_size')?.hasError('min') && moiForm.get('party_size')?.touched) {
+                    <mat-error>Party size must be at least 1</mat-error>
+                  }
+                </mat-form-field>
               </div>
 
               @if (dupWarning()) {
-                <div class="dup-warning">
+                <div class="dup-warning" role="alert">
                   <mat-icon class="dup-icon">warning_amber</mat-icon>
                   <span>Similar name already recorded: <strong>{{ dupWarning()!.name }}</strong> ({{ dupWarning()!.amount | currency:'INR':'symbol':'1.0-0' }})</span>
                   <button mat-icon-button type="button" class="dup-close" matTooltip="Dismiss" (click)="dupWarning.set(null)">
@@ -290,7 +309,7 @@
               }
 
               @if (voice.isListening()) {
-                <div class="voice-listening-banner">
+                <div class="voice-listening-banner" role="alert">
                   <span class="voice-pulse-dot"></span>
                   <mat-icon>mic</mat-icon>
                   Listening for <strong>{{ voice.activeField() === 'guest_name' ? 'Guest Name' : voice.activeField() === 'city' ? 'City' : 'Amount' }}</strong>… speak clearly
@@ -312,11 +331,14 @@
                     <mat-button-toggle value="ta">தமிழ்</mat-button-toggle>
                   </mat-button-toggle-group>
                 </div>
+                <mat-checkbox [checked]="autoPrint()" (change)="autoPrint.set($event.checked)">Auto-print receipt</mat-checkbox>
                 <div class="form-buttons">
-                  <button mat-stroked-button type="button" (click)="moiForm.reset(defaultMoiValues)">
+                  <button mat-stroked-button type="button" (click)="moiForm.reset(defaultMoiValues)"
+                          matTooltip="Clear all fields">
                     Reset
                   </button>
-                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting()">
+                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting()"
+                          matTooltip="Submit (Ctrl+Enter)">
                     @if (submitting()) {
                       <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
                     }
@@ -325,7 +347,10 @@
                 </div>
               </div>
               <div class="kbd-hint">
-                <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit without mouse
+                <kbd>Ctrl</kbd>+<kbd>Enter</kbd> submit &nbsp;|&nbsp;
+                <kbd>F1</kbd>–<kbd>F5</kbd> presets &nbsp;|&nbsp;
+                <kbd>Ctrl</kbd>+<kbd>L</kbd> focus name &nbsp;|&nbsp;
+                <kbd>Ctrl</kbd>+<kbd>D</kbd> toggle side
               </div>
             </form>
 
@@ -348,8 +373,19 @@
       </mat-tab>
 
       <!-- Moi List Tab -->
-      <mat-tab [label]="'📋 Moi List (' + entries().length + ')'">
+      <mat-tab [label]="'📋 Moi List (' + totalEntries() + ')'">
         <div class="tab-content">
+
+          <!-- CSV Import / Export toolbar -->
+          <div class="csv-toolbar">
+            <input type="file" #csvImport hidden accept=".csv" (change)="onImportFile($event)">
+            <button mat-stroked-button (click)="csvImport.click()">
+              <mat-icon>upload</mat-icon> Import CSV
+            </button>
+            <button mat-stroked-button (click)="exportCsv()">
+              <mat-icon>download</mat-icon> Export CSV
+            </button>
+          </div>
 
           <!-- Filters -->
           <div class="filter-row">
@@ -385,12 +421,30 @@
               <mat-icon matSuffix>map</mat-icon>
             </mat-form-field>
 
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Filter by Received By</mat-label>
+              <input matInput [(ngModel)]="filterReceivedBy" (input)="applyFilter()" placeholder="Received by...">
+              <mat-icon matSuffix>how_to_reg</mat-icon>
+            </mat-form-field>
+
             <mat-form-field appearance="outline" class="search-field">
               <mat-label>Search Guest</mat-label>
               <input matInput [(ngModel)]="searchQuery" (input)="applyFilter()" placeholder="Search by name...">
               <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
           </div>
+
+          @if (topDonors().length > 0) {
+            <div class="top-donors">
+              <div class="top-donors-title">Top Donors</div>
+              @for (donor of topDonors(); track donor.id) {
+                <div class="top-donor-item">
+                  <span class="top-donor-name">{{ donor.guest_name }}</span>
+                  <span class="top-donor-amount">{{ donor.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+          }
 
           @if (entriesLoading()) {
             <app-loading-spinner [diameter]="32" />
@@ -482,7 +536,10 @@
                           </mat-form-field>
                           <mat-form-field appearance="outline" class="edit-field">
                             <mat-label>Amount (₹)</mat-label>
-                            <input matInput type="number" formControlName="amount">
+                            <input matInput type="text" inputmode="numeric" pattern="[0-9]*" formControlName="amount">
+                            @if (editForm.get('amount')?.hasError('pattern') && editForm.get('amount')?.touched) {
+                              <mat-error>Amount must be a whole number</mat-error>
+                            }
                           </mat-form-field>
                           <mat-form-field appearance="outline" class="edit-field">
                             <mat-label>Side</mat-label>
@@ -515,11 +572,21 @@
                           </mat-form-field>
                           <mat-form-field appearance="outline" class="edit-field">
                             <mat-label>Phone</mat-label>
-                            <input matInput formControlName="phone">
+                            <input matInput formControlName="phone" inputmode="numeric">
+                            @if (editForm.get('phone')?.hasError('pattern') && editForm.get('phone')?.touched) {
+                              <mat-error>Enter a valid 10-digit mobile number</mat-error>
+                            }
                           </mat-form-field>
                           <mat-form-field appearance="outline" class="edit-field">
                             <mat-label>Notes</mat-label>
                             <input matInput formControlName="notes">
+                          </mat-form-field>
+                          <mat-form-field appearance="outline" class="edit-field">
+                            <mat-label>Party Size</mat-label>
+                            <input matInput type="number" formControlName="party_size" min="1">
+                            @if (editForm.get('party_size')?.hasError('min') && editForm.get('party_size')?.touched) {
+                              <mat-error>Party size must be at least 1</mat-error>
+                            }
                           </mat-form-field>
                         </div>
                         <div class="edit-actions">
@@ -537,7 +604,8 @@
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;"
                   [class.editing-row]="editingEntry()?.id === row.id"
-                  [class.just-added]="justAddedId() === row.id"></tr>
+                  [class.just-added]="justAddedId() === row.id"
+                  [class.highlighted]="highlightId() === row.id"></tr>
                 <tr mat-row *matRowDef="let row; columns: expandedColumns;" class="edit-row"></tr>
               </table>
             </div>
@@ -545,6 +613,14 @@
             <div class="entries-footer">
               Showing {{ entries().length }} of {{ totalEntries() }} entries
             </div>
+
+            <mat-paginator
+              [length]="totalEntries()"
+              [pageSize]="pageSize()"
+              [pageSizeOptions]="[10, 20, 50, 100]"
+              (page)="onPageChange($event)"
+              showFirstLastButtons>
+            </mat-paginator>
           }
 
         </div>

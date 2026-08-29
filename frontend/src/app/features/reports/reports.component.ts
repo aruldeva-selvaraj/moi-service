@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EventService } from '../../core/services/event.service';
 import { MoiService } from '../../core/services/moi.service';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/models/event.model';
@@ -23,7 +24,7 @@ import { StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent } from 
   imports: [
     CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe, PercentPipe,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule,
-    MatProgressSpinnerModule, MatTableModule, MatTooltipModule,
+    MatProgressSpinnerModule, MatTableModule, MatTooltipModule, MatSnackBarModule,
     StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent,
   ],
   templateUrl: './reports.component.html',
@@ -33,12 +34,17 @@ export class ReportsComponent implements OnInit {
   private readonly eventService = inject(EventService);
   private readonly moiService = inject(MoiService);
   private readonly receiptService = inject(ReceiptService);
+  private readonly snackBar = inject(MatSnackBar);
 
   loading = signal(true);
+  reportLoading = signal(false);
   events = signal<Event[]>([]);
   eventReport = signal<EventReport | null>(null);
   relationshipData = signal<RelationshipReport[]>([]);
   allEntries = signal<MoiEntry[]>([]);
+  receivedByData = signal<{received_by: string; count: number; total_amount: number}[]>([]);
+  cityData = signal<{city: string; count: number; total_amount: number}[]>([]);
+  districtData = signal<{district: string; count: number; total_amount: number}[]>([]);
   selectedEventId: number | null = null;
   showPrintModal = signal(false);
   printFilterCity = '';
@@ -46,7 +52,14 @@ export class ReportsComponent implements OnInit {
 
   ngOnInit() {
     this.eventService.getAll().subscribe({
-      next: (data) => { this.events.set(data); this.loadReport(); },
+      next: (data) => {
+        const filtered = data.filter(
+          ev => ev.status === 'approved' || ev.status === 'completed'
+        );
+        this.events.set(filtered);
+        this.loadReport();
+      },
+      error: () => this.loading.set(false),
     });
   }
 
@@ -71,23 +84,54 @@ export class ReportsComponent implements OnInit {
     this.loading.set(true);
     this.eventReport.set(null);
     this.allEntries.set([]);
+    this.receivedByData.set([]);
+    this.cityData.set([]);
+    this.districtData.set([]);
 
     if (this.selectedEventId) {
+      const eventId = this.selectedEventId;
       let loaded = 0;
-      const done = () => { if (++loaded === 3) this.loading.set(false); };
+      const total = 6;
+      const done = () => { if (++loaded === total) this.loading.set(false); };
 
-      this.eventService.getReport(this.selectedEventId).subscribe({
+      this.eventService.getReport(eventId).subscribe({
         next: (r) => { this.eventReport.set(r); done(); },
         error: () => done(),
       });
 
-      this.moiService.getByRelationship(this.selectedEventId).subscribe({
+      this.moiService.getByRelationship(eventId).subscribe({
         next: (r) => { this.relationshipData.set(r); done(); },
         error: () => done(),
       });
 
-      this.moiService.getAll({ event_id: this.selectedEventId, page: 1, page_size: 1000 }).subscribe({
-        next: (r) => { this.allEntries.set(r.items); done(); },
+      // Paginated fetch: use page_size 5000; warn if result hits the cap
+      this.moiService.getAll({ event_id: eventId, page: 1, page_size: 5000 }).subscribe({
+        next: (r) => {
+          this.allEntries.set(r.items);
+          if (r.items.length >= 5000) {
+            this.snackBar.open(
+              'Warning: Only the first 5000 entries are loaded. Some records may be missing.',
+              'Dismiss',
+              { duration: 6000, panelClass: ['snack-warn'] }
+            );
+          }
+          done();
+        },
+        error: () => done(),
+      });
+
+      this.moiService.getByReceivedBy(eventId).subscribe({
+        next: (d) => { this.receivedByData.set(d); done(); },
+        error: () => done(),
+      });
+
+      this.moiService.getByCityBreakdown(eventId).subscribe({
+        next: (d) => { this.cityData.set(d); done(); },
+        error: () => done(),
+      });
+
+      this.moiService.getByDistrictBreakdown(eventId).subscribe({
+        next: (d) => { this.districtData.set(d); done(); },
         error: () => done(),
       });
     } else {
@@ -140,6 +184,40 @@ export class ReportsComponent implements OnInit {
     }
   }
 
+  exportCsv(): void {
+    const entries = this.allEntries();
+    if (!entries.length) return;
+    const cols = ['guest_name','relationship','side','amount','payment_mode','city','district','received_by'];
+    const header = cols.map(c => '"'+c+'"').join(',');
+    const rows = entries.map((e:any) => cols.map(c => '"'+(e[c]??'').toString().replace(/"/g,'""')+'"').join(','));
+    const csv = '﻿' + [header,...rows].join('\r\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='moi-entries.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),150);
+  }
+
+  exportSummaryCsv(): void {
+    const report = this.eventReport();
+    if (!report) return;
+    const rows = [
+      ['"Metric"','"Value"'],
+      ['"Total Guests"',report.moi_count],
+      ['"Total Amount"',report.total_amount],
+      ['"Cash"',report.cash_amount],
+      ['"Cheque"',report.cheque_amount],
+      ['"Online"',report.online_amount],
+      ['"DD"',report.dd_amount ?? 0],
+    ];
+    const csv = '﻿' + rows.map(r=>r.join(',')).join('\r\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='event-summary.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),150);
+  }
+
   // ── Chart helpers ──────────────────────────────────────────────────────────
 
   private readonly C = 251.3; // 2 * π * 40
@@ -161,6 +239,13 @@ export class ReportsComponent implements OnInit {
   topRelMax(): number {
     const data = this.relationshipData();
     return data.length ? Math.max(...data.map(r => r.total_amount)) : 1;
+  }
+
+  avgAmount(r: RelationshipReport): number {
+    if ((r as any).avg_amount !== undefined && (r as any).avg_amount !== null) {
+      return (r as any).avg_amount;
+    }
+    return r.count > 0 ? r.total_amount / r.count : 0;
   }
 
   // ── WhatsApp / Share summary ───────────────────────────────────────────────
@@ -191,6 +276,7 @@ export class ReportsComponent implements OnInit {
       `💵 Cash: ${fmt(report.cash_amount)}`,
       `📱 Online: ${fmt(report.online_amount)}`,
       `📝 Cheque: ${fmt(report.cheque_amount)}`,
+      report.dd_amount ? `🏦 DD: ${fmt(report.dd_amount)}` : '',
       ``,
       `_Generated by Moify_ 📱`,
     ].filter(Boolean).join('\n');

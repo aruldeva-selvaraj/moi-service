@@ -189,6 +189,11 @@ INSERT INTO moi_entries (event_id, guest_name, relationship, side, amount, payme
 --
 -- COMMIT;
 
+-- ─── Missing columns on existing tables ──────────────────────────────────────
+
+ALTER TABLE public.moi_entries ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES public.users(id);
+ALTER TABLE public.moi_entries ADD COLUMN IF NOT EXISTS received_by VARCHAR(100);
+
 -- ─── Soft-delete columns ──────────────────────────────────────────────────────
 
 ALTER TABLE public.moi_entries ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;

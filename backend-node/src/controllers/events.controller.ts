@@ -255,7 +255,13 @@ export class EventsController {
       Object.entries(data).filter(([k, v]) => v !== undefined && ALLOWED_EVENT_FIELDS.includes(k)),
     );
     const fields = Object.entries(filtered);
-    if (!fields.length) return this.getEvent(id);
+    if (!fields.length) {
+      const rows = await this.eventRepo.query(
+        `SELECT ${EVENT_SELECT} FROM events e ${EVENT_JOIN} WHERE e.id = $1 AND e.deleted_at IS NULL GROUP BY e.id`,
+        [id],
+      );
+      return rows[0] ?? {};
+    }
 
     const setClauses = fields.map(([k], i) => `${k} = $${i + 1}`).join(', ');
     const values: unknown[] = fields.map(([, v]) => v);
@@ -268,7 +274,12 @@ export class EventsController {
       `UPDATE events SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx}`,
       values,
     );
-    return this.getEvent(id);
+
+    const updated = await this.eventRepo.query(
+      `SELECT ${EVENT_SELECT} FROM events e ${EVENT_JOIN} WHERE e.id = $1 AND e.deleted_at IS NULL GROUP BY e.id`,
+      [id],
+    );
+    return updated[0] ?? {};
   }
 
   // ── PATCH /api/events/:id/approve ─────────────────────

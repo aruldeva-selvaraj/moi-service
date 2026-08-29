@@ -381,7 +381,7 @@ export class MoiListComponent implements OnInit {
   printEntry(entry: any): void {
     const ev = this.events().find(e => e.id === entry.event_id);
     if (!ev) { this.snackBar?.open('Event not found', 'Close', { duration: 2000 }); return; }
-    this.receiptService.printReceipt(entry, ev, '80', undefined, 'en');
+    this.receiptService.printReceipt(entry, ev, '80', entry.receipt_no ?? 1, 'en');
   }
 
   openDeleteDialog(entry: any): void {

@@ -122,7 +122,9 @@ export class MoiController {
 
     const dataParams = [...params, pageSize, (page - 1) * pageSize];
     const items = await this.moiRepo.query(
-      `SELECT m.*, u2.username AS created_by_username ${joinClause} ${where}
+      `SELECT m.*, u2.username AS created_by_username,
+         ROW_NUMBER() OVER (PARTITION BY m.event_id ORDER BY m.created_at, m.id)::int AS receipt_no
+       ${joinClause} ${where}
        ${orderBy}
        LIMIT $${pIdx} OFFSET $${pIdx + 1}`,
       dataParams,

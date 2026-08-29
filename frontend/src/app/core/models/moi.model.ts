@@ -16,6 +16,7 @@ export interface MoiEntry {
   phone?: string;
   notes?: string;
   received_by?: string;
+  receipt_no?: number;
   created_at: string;
   updated_at: string;
   created_by_username?: string;

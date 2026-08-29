@@ -25,7 +25,7 @@ import { ReceiptService, PaperSize, PrintSide, PrintFilter, ReceiptLang } from '
 import { VoiceRecognitionService } from '../../../core/services/voice-recognition.service';
 import { Event, getEventConfig, getEventTitle, EventTypeConfig } from '../../../core/models/event.model';
 import { MoiEntry, MoiEntryCreate, MoiFilter } from '../../../core/models/moi.model';
-import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent, AiEntryDialogData } from '../../../shared/components/index';
+import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent, AiEntryDialogData, ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/index';
 
 @Component({
   selector: 'app-wedding-detail',
@@ -85,7 +85,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   // CONFIGURABLE PRESETS: signal-based, loaded from localStorage per event
   amountPresets = signal<number[]>([500, 1000, 2000, 5000, 10000]);
 
-  private readonly pendingDeletes = new Map<number, ReturnType<typeof setTimeout>>();
   private sessionWarningTimer?: ReturnType<typeof setTimeout>;
 
   readonly citySuggestions = computed(() =>
@@ -382,8 +381,7 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
         this.snackBar.open('Moi recorded! Printing receipt... 🖨️', 'Close', {
           duration: 4000, panelClass: 'success-snackbar',
         });
-        // Use DB id as global unique receipt number
-        const receiptNo = entry.id;
+        const receiptNo = entry.receipt_no ?? 1;
         if (this.autoPrint()) {
           this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo, this.receiptLang());
         }
@@ -412,40 +410,38 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
 
   printEntry(entry: MoiEntry): void {
     if (this.event()) {
-      // Use DB id as global unique receipt number
-      const receiptNo = entry.id;
-      this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo, this.receiptLang());
+      this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), entry.receipt_no ?? 1, this.receiptLang());
     }
   }
 
   deleteEntry(entry: MoiEntry): void {
-    if (this.editingEntry()?.id === entry.id) this.editingEntry.set(null);
-    this.entries.update(list => list.filter(e => e.id !== entry.id));
-    this.totalEntries.update(n => n - 1);
-
-    const ref = this.snackBar.open(`Deleted: ${entry.guest_name}`, 'UNDO', {
-      duration: 5000, panelClass: 'warn-snackbar',
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete Entry',
+        message: `Delete moi entry for "${entry.guest_name}" (₹${Number(entry.amount).toLocaleString('en-IN')})? This action cannot be undone.`,
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        confirmColor: 'warn',
+        icon: 'delete_forever',
+      } satisfies ConfirmDialogData,
+      width: '400px',
+      disableClose: false,
     });
 
-    const timerId = setTimeout(() => {
-      this.pendingDeletes.delete(entry.id);
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      if (this.editingEntry()?.id === entry.id) this.editingEntry.set(null);
       this.moiService.delete(entry.id).subscribe({
-        next: () => this.loadEvent(),
+        next: () => {
+          this.entries.update(list => list.filter(e => e.id !== entry.id));
+          this.totalEntries.update(n => n - 1);
+          this.snackBar.open(`Deleted: ${entry.guest_name}`, 'Close', { duration: 3000, panelClass: 'warn-snackbar' });
+          this.loadEvent();
+        },
         error: () => {
-          this.entries.update(list => [entry, ...list].sort((a, b) => b.id - a.id));
-          this.totalEntries.update(n => n + 1);
-          this.snackBar.open('Delete failed — entry restored', 'Close', { duration: 3000 });
+          this.snackBar.open('Delete failed. Please try again.', 'Close', { duration: 3000, panelClass: 'error-snackbar' });
         },
       });
-    }, 5000);
-
-    this.pendingDeletes.set(entry.id, timerId);
-
-    ref.onAction().subscribe(() => {
-      clearTimeout(this.pendingDeletes.get(entry.id));
-      this.pendingDeletes.delete(entry.id);
-      this.entries.update(list => [entry, ...list].sort((a, b) => b.id - a.id));
-      this.totalEntries.update(n => n + 1);
     });
   }
 
@@ -455,7 +451,7 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
       guest_name:    entry.guest_name,
       relationship:  entry.relationship  ?? '',
       side:          entry.side,
-      amount:        String(entry.amount),
+      amount:        String(Math.round(Number(entry.amount))),
       payment_mode:  entry.payment_mode,
       cheque_number: entry.cheque_number ?? '',
       transaction_ref: entry.transaction_ref ?? '',
@@ -466,6 +462,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
       received_by:   entry.received_by   ?? '',
       party_size:    (entry as any).party_size ?? 1,
     });
+    this.editForm.markAsPristine();
+    this.editForm.markAsUntouched();
   }
 
   cancelEdit(): void {
@@ -473,7 +471,11 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   }
 
   saveEdit(): void {
-    if (this.editForm.invalid) return;
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      this.snackBar.open('Please fix the highlighted errors before saving', 'Close', { duration: 3000, panelClass: 'error-snackbar' });
+      return;
+    }
     this.editSubmitting.set(true);
     const entry = this.editingEntry()!;
     const formValue = { ...this.editForm.value };
@@ -589,10 +591,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
           this.snackBar.open('Moi recorded! Printing receipt... 🖨️', 'Close', {
             duration: 4000, panelClass: 'success-snackbar',
           });
-          // Use DB id as global unique receipt number
-          const receiptNo = entry.id;
           if (this.autoPrint()) {
-            this.receiptService.printReceipt(entry, this.event()!, '80', receiptNo, this.receiptLang());
+            this.receiptService.printReceipt(entry, this.event()!, '80', entry.receipt_no ?? 1, this.receiptLang());
           }
           this.submitting.set(false);
           this.playKaChing();

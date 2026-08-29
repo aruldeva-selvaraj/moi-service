@@ -49,15 +49,7 @@
 
     <!-- Secondary Filters: Amount Range, Relationship, Received By -->
     <div class="filter-row filter-row-secondary">
-      <mat-form-field appearance="outline" class="filter-amount">
-        <mat-label>Min Amount (₹)</mat-label>
-        <input matInput type="number" [ngModel]="amountMin()" (ngModelChange)="amountMin.set($event !== '' && $event !== null ? +$event : null); applyFilter()" placeholder="0">
-      </mat-form-field>
 
-      <mat-form-field appearance="outline" class="filter-amount">
-        <mat-label>Max Amount (₹)</mat-label>
-        <input matInput type="number" [ngModel]="amountMax()" (ngModelChange)="amountMax.set($event !== '' && $event !== null ? +$event : null); applyFilter()" placeholder="Any">
-      </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-relationship">
         <mat-label>Relationship</mat-label>

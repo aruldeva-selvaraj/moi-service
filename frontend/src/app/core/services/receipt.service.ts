@@ -142,28 +142,17 @@ export class ReceiptService {
     const invoiceNum = `#MOI-${year}-${String(event.id).padStart(6, '0')}`;
     const eventOfLabel = cfg.label + ' of';
 
-    const payBadge = (pm: string): string => {
-      const styleMap: Record<string, string> = {
-        cash:   'color:#2e7d32;border:1.5px solid #2e7d32;',
-        cheque: 'color:#e65100;border:1.5px solid #e65100;',
-        online: 'color:#1565c0;border:1.5px solid #1565c0;',
-        dd:     'color:#6a1b9a;border:1.5px solid #6a1b9a;',
-      };
-      const labelMap: Record<string, string> = { cash: 'Cash', cheque: 'Cheque', online: 'Online', dd: 'DD' };
-      const st = styleMap[pm] ?? 'color:#333;border:1.5px solid #999;';
-      return `<span style="font-size:9.5px;padding:2px 8px;border-radius:12px;${st}font-weight:700;">${labelMap[pm] ?? pm}</span>`;
-    };
-
     const tableRows = filtered.map((x, i) => {
-      const d = x.created_at ? new Date(x.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : eventDate;
+      const tamilName = (x as any).guest_name_tamil;
+      const nameCell = tamilName
+        ? `${esc(x.guest_name)}<div class="tname-tamil">${esc(tamilName)}</div>`
+        : esc(x.guest_name);
       return `<tr style="background:${i % 2 === 0 ? '#ffffff' : '#fdf5f7'};">
         <td class="tc tn">${i + 1}</td>
-        <td class="tc td">${d}</td>
-        <td class="tl tname">${esc(x.guest_name)}${x.phone ? `<div class="tphone">${esc(x.phone)}</div>` : ''}</td>
-        <td class="tl trel">${esc(x.relationship || '')}</td>
-        <td class="tc">${payBadge(x.payment_mode)}</td>
-        <td class="tr tamt">${fmtNum(Number(x.amount))}</td>
-        <td class="tl tremark">${esc(x.notes || '')}</td>
+        <td class="tl tname">${nameCell}</td>
+        <td class="tl td">${esc(x.city || '—')}</td>
+        <td class="tl td">${esc(x.district || '—')}</td>
+        <td class="tr tamt">&#8377;&nbsp;${fmtNum(Number(x.amount))}</td>
       </tr>`;
     }).join('');
 
@@ -262,9 +251,10 @@ export class ReceiptService {
     /* ── Document Header ── */
     .doc-header {
       display:flex; align-items:flex-start; justify-content:space-between;
-      padding:136px 20px 14px;
+      padding:10px 20px 14px;
       border-bottom:2px solid #c9a86c;
     }
+    .h-left { padding-top:120px; }
     .h-left .bill-lbl  { font-size:15px; font-weight:800; color:#7b1a36; font-family:Georgia,serif; }
     .h-left .inv-num   { font-size:13px; font-weight:800; color:#1a1a1a; margin-top:5px; letter-spacing:.5px; }
     .h-left .inv-row   { font-size:11px; color:#444; margin-top:5px; display:flex; align-items:center; gap:5px; }
@@ -289,7 +279,7 @@ export class ReceiptService {
     .c-heart { color:#c4932a; font-size:24px; vertical-align:middle; }
     .ornament { font-size:11px; color:#8b7a2a; margin-top:5px; letter-spacing:4px; }
 
-    .h-right { text-align:right; min-width:95px; }
+    .h-right { text-align:right; min-width:95px; padding-top:120px; }
     .ty-text { font-size:17px; color:#c0392b; font-style:italic; font-family:Georgia,serif; font-weight:700; }
     .ty-heart { color:#c0392b; font-size:15px; margin:3px 0; }
     .ty-msg   { font-size:10px; color:#555; line-height:1.5; margin-top:4px; }
@@ -323,8 +313,9 @@ export class ReceiptService {
     .tl { text-align:left; }
     .tn      { color:#888; font-size:10px; }
     .td      { color:#555; font-size:10px; white-space:nowrap; }
-    .tname   { font-weight:600; color:#1a1a1a; }
-    .tphone  { font-size:9px; color:#999; margin-top:1px; }
+    .tname       { font-weight:600; color:#1a1a1a; }
+    .tname-tamil { font-size:9.5px; color:#7b1a36; margin-top:2px; font-style:italic; }
+    .tphone      { font-size:9px; color:#999; margin-top:1px; }
     .trel    { font-style:italic; color:#555; }
     .tamt    { font-weight:700; font-family:'Courier New',Courier,monospace; white-space:nowrap; }
     .tremark { font-size:10px; color:#666; }
@@ -444,17 +435,15 @@ export class ReceiptService {
   <table class="moi-tbl">
     <thead>
       <tr>
-        <th style="width:30px">S.No</th>
-        <th style="width:72px">Date</th>
-        <th class="tl" style="min-width:110px">Guest Name</th>
-        <th class="tl" style="min-width:90px">Relation / Company</th>
-        <th style="width:65px">Gift Type &#127873;</th>
-        <th style="width:72px">Amount (&#8377;)</th>
-        <th class="tl" style="min-width:60px">Remarks</th>
+        <th style="width:32px">S.No</th>
+        <th class="tl" style="min-width:140px">Guest Name (English | Tamil)<br><span style="font-size:8.5px;font-weight:400;opacity:.85;">விருந்தினர் பெயர்</span></th>
+        <th class="tl" style="width:80px">City</th>
+        <th class="tl" style="width:90px">District</th>
+        <th style="width:80px">Amount (&#8377;)</th>
       </tr>
     </thead>
     <tbody>
-      ${tableRows || `<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa;">No entries found</td></tr>`}
+      ${tableRows || `<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">No entries found</td></tr>`}
     </tbody>
   </table>
 

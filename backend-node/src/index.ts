@@ -37,7 +37,11 @@ async function runStartupMigration(): Promise<void> {
       `UPDATE public.users SET mobile_number = '9789616611'
        WHERE username = 'admin' AND mobile_number IS NULL`,
     );
-    console.log('✅ Startup migration complete (mobile_number column ready)');
+    // Add Tamil guest name column for bilingual PDF support
+    await pool.query(
+      `ALTER TABLE public.moi_entries ADD COLUMN IF NOT EXISTS guest_name_tamil TEXT`,
+    );
+    console.log('✅ Startup migration complete (mobile_number + guest_name_tamil columns ready)');
   } catch (err) {
     // Table may not exist on first boot — not fatal
     console.warn('⚠️  Startup migration skipped (users table not ready yet):', (err as Error).message);

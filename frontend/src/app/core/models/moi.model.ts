@@ -5,6 +5,7 @@ export interface MoiEntry {
   id: number;
   event_id: number;
   guest_name: string;
+  guest_name_tamil?: string;
   relationship?: string;
   side: Side;
   amount: number;
@@ -25,6 +26,7 @@ export interface MoiEntry {
 export interface MoiEntryCreate {
   event_id: number;
   guest_name: string;
+  guest_name_tamil?: string;
   relationship?: string;
   side: Side;
   amount: number;

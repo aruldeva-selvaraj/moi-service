@@ -123,6 +123,12 @@ export interface Event {
   created_by?: number;
   created_at: string;
   updated_at: string;
+  contact_phone?: string;
+  ceremony_start?: string;
+  ceremony_end?: string;
+  expected_guests?: number;
+  logo_url?: string;
+  ceremony_type?: string;
 }
 
 export interface EventCreate {

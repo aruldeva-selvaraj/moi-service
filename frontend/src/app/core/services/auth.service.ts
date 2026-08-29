@@ -101,6 +101,10 @@ export class AuthService {
     return role === 'admin' || role === 'superadmin';
   }
 
+  isSuperAdmin(): boolean {
+    return this.currentUser()?.role === 'superadmin';
+  }
+
   async createUser(
     payload: { username: string; password: string; role: string; full_name?: string; mobile_number?: string }
   ): Promise<{ ok: boolean; error?: string }> {

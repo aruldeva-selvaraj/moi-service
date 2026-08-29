@@ -14,7 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EventService } from '../../core/services/event.service';
 import { MoiService } from '../../core/services/moi.service';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/models/event.model';
-import { RelationshipReport, MoiEntry } from '../../core/models/moi.model';
+import { RelationshipReport, MoiEntry, GeoBreakdownItem } from '../../core/models/moi.model';
 import { ReceiptService, PrintSide, PrintFilter } from '../../core/services/receipt.service';
 import { StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../shared/components/index';
 
@@ -43,8 +43,8 @@ export class ReportsComponent implements OnInit {
   relationshipData = signal<RelationshipReport[]>([]);
   allEntries = signal<MoiEntry[]>([]);
   receivedByData = signal<{received_by: string; count: number; total_amount: number}[]>([]);
-  cityData = signal<{city: string; count: number; total_amount: number}[]>([]);
-  districtData = signal<{district: string; count: number; total_amount: number}[]>([]);
+  cityData = signal<GeoBreakdownItem[]>([]);
+  districtData = signal<GeoBreakdownItem[]>([]);
   selectedEventId: number | null = null;
   showPrintModal = signal(false);
   printFilterCity = '';

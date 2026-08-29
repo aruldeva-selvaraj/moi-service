@@ -85,15 +85,6 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Contact Phone</mat-label>
-          <input matInput formControlName="contact_phone" placeholder="10-digit mobile number" maxlength="10" inputmode="tel">
-          <mat-icon matPrefix>phone</mat-icon>
-          @if (form.get('contact_phone')?.hasError('pattern') && form.get('contact_phone')?.touched) {
-            <mat-error>Enter a valid 10-digit phone number</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
           <mat-label>Notes (optional)</mat-label>
           <textarea matInput formControlName="notes" rows="3"
             placeholder="Any additional notes about the event..."></textarea>
@@ -108,68 +99,6 @@
           The selected event date is in the past. Please verify before saving.
         </div>
       }
-
-      <!-- Additional Details (collapsible) -->
-      <div class="form-section">
-        <details>
-          <summary class="form-section-title additional-details-summary">Additional Details</summary>
-
-          <div class="additional-details-body">
-
-            <!-- Ceremony Type -->
-            <mat-form-field appearance="outline" style="width:100%">
-              <mat-label>Ceremony Type</mat-label>
-              <mat-select formControlName="ceremony_type">
-                <mat-option value="">-- Select --</mat-option>
-                @for (ct of ceremonyTypes; track ct) {
-                  <mat-option [value]="ct">{{ ct }}</mat-option>
-                }
-              </mat-select>
-              <mat-icon matPrefix>church</mat-icon>
-            </mat-form-field>
-
-            <!-- Ceremony Start / End Time -->
-            <div class="grid-2">
-              <mat-form-field appearance="outline">
-                <mat-label>Ceremony Start Time</mat-label>
-                <input matInput type="time" formControlName="ceremony_start">
-                <mat-icon matPrefix>schedule</mat-icon>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Ceremony End Time</mat-label>
-                <input matInput type="time" formControlName="ceremony_end">
-                <mat-icon matPrefix>schedule</mat-icon>
-              </mat-form-field>
-            </div>
-
-            <!-- Expected Guests -->
-            <mat-form-field appearance="outline" style="width:100%">
-              <mat-label>Expected Guests</mat-label>
-              <input matInput type="number" formControlName="expected_guests" placeholder="e.g., 500" min="1">
-              <mat-icon matPrefix>groups</mat-icon>
-              @if (form.get('expected_guests')?.hasError('min') && form.get('expected_guests')?.touched) {
-                <mat-error>Number of guests must be at least 1</mat-error>
-              }
-            </mat-form-field>
-
-            <!-- Logo URL -->
-            <mat-form-field appearance="outline" style="width:100%">
-              <mat-label>Logo URL</mat-label>
-              <input matInput formControlName="logo_url" placeholder="https://example.com/logo.png">
-              <mat-icon matPrefix>image</mat-icon>
-            </mat-form-field>
-
-            @if (form.get('logo_url')?.value) {
-              <div class="logo-preview">
-                <img [src]="form.get('logo_url')?.value" alt="Logo preview"
-                  style="max-height:80px; max-width:160px; object-fit:contain; border:1px solid #ddd; border-radius:4px; padding:4px;">
-              </div>
-            }
-
-          </div>
-        </details>
-      </div>
 
       <div class="form-actions">
         <a mat-stroked-button routerLink="/events">Cancel</a>

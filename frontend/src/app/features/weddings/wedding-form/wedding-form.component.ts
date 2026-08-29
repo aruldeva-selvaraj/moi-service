@@ -44,16 +44,6 @@ export class WeddingFormComponent implements OnInit {
     ([value, cfg]) => ({ value: value as EventType, label: cfg.label, emoji: cfg.emoji })
   );
 
-  readonly ceremonyTypes = [
-    'Engagement',
-    'Nalangu',
-    'Muhurtham',
-    'Reception',
-    'Birthday',
-    'Anniversary',
-    'Other',
-  ];
-
   form: FormGroup = this.fb.group({
     event_type: ['wedding', Validators.required],
     primary_name: ['', [Validators.required, Validators.minLength(1)]],
@@ -64,12 +54,6 @@ export class WeddingFormComponent implements OnInit {
     city: [''],
     district: [''],
     notes: [''],
-    contact_phone: ['', Validators.pattern(/^[0-9]{10}$/)],
-    ceremony_start: [''],
-    ceremony_end: [''],
-    expected_guests: [null, Validators.min(1)],
-    logo_url: [''],
-    ceremony_type: [''],
   });
 
   get selectedEventConfig() {
@@ -92,12 +76,6 @@ export class WeddingFormComponent implements OnInit {
           this.form.patchValue({
             ...ev,
             event_date: new Date(ev.event_date),
-            contact_phone: ev.contact_phone ?? '',
-            ceremony_start: ev.ceremony_start ?? '',
-            ceremony_end: ev.ceremony_end ?? '',
-            expected_guests: ev.expected_guests ?? null,
-            logo_url: ev.logo_url ?? '',
-            ceremony_type: ev.ceremony_type ?? '',
           });
         },
       });

@@ -146,6 +146,7 @@ export class ReceiptService {
       return `<tr style="background:${i % 2 === 0 ? '#ffffff' : '#fdf5f7'};">
         <td class="tc tn">${i + 1}</td>
         <td class="tl tname">${esc(x.guest_name)}</td>
+        <td class="tl trel">${esc(x.relationship || '—')}</td>
         <td class="tl td">${esc(x.city || '—')}</td>
         <td class="tl td">${esc(x.district || '—')}</td>
         <td class="tr tamt">&#8377;&nbsp;${fmtNum(Number(x.amount))}</td>
@@ -431,14 +432,15 @@ export class ReceiptService {
     <thead>
       <tr>
         <th style="width:32px">S.No</th>
-        <th class="tl" style="min-width:140px">Guest Name</th>
-        <th class="tl" style="width:80px">City</th>
-        <th class="tl" style="width:90px">District</th>
+        <th class="tl" style="min-width:130px">Guest Name</th>
+        <th class="tl" style="min-width:100px">Relationship</th>
+        <th class="tl" style="width:75px">City</th>
+        <th class="tl" style="width:85px">District</th>
         <th style="width:80px">Amount (&#8377;)</th>
       </tr>
     </thead>
     <tbody>
-      ${tableRows || `<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">No entries found</td></tr>`}
+      ${tableRows || `<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">No entries found</td></tr>`}
     </tbody>
   </table>
 

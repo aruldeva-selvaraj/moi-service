@@ -489,11 +489,10 @@ export class MoiController {
       const idIdx  = fields.length + 2;
       values.push(new Date());
       values.push(id);
-      const result = await this.moiRepo.query(
-        `UPDATE moi_entries SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx} RETURNING id`,
+      await this.moiRepo.query(
+        `UPDATE moi_entries SET ${setClauses}, updated_at = $${updIdx} WHERE id = $${idIdx}`,
         values,
       );
-      if (!result.length) throw new HttpErrors.NotFound('Moi entry not found');
     }
 
     // Direct SELECT — never call route handlers internally (causes response side-effects)
@@ -612,11 +611,10 @@ export class MoiController {
     );
     if (!existing.length) throw new HttpErrors.NotFound('Moi entry not found');
 
-    const result = await this.moiRepo.query(
-      `UPDATE public.moi_entries SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING id`,
+    await this.moiRepo.query(
+      `UPDATE public.moi_entries SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`,
       [id],
     );
-    if (!result.length) throw new HttpErrors.NotFound('Moi entry not found');
 
     await this.moiRepo.query(
       `INSERT INTO public.audit_log(actor_id,actor_username,action,entity_type,entity_id,new_value)

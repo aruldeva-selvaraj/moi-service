@@ -116,7 +116,7 @@ class QuickAddMoiDialog {
 @Component({
   selector: 'app-edit-moi-dialog',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule],
+  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule, MatSnackBarModule],
   template: `
     <h2 mat-dialog-title>Edit Moi Entry</h2>
     <mat-dialog-content>
@@ -178,6 +178,7 @@ class EditMoiDialog {
   data = inject(MAT_DIALOG_DATA) as { entry: MoiEntry; events: Event[] };
   private readonly dialogRef = inject(MatDialogRef);
   private readonly moiService = inject(MoiService);
+  private readonly snackBar = inject(MatSnackBar);
   form: FormGroup = inject(FormBuilder).group({
     event_id: [this.data.entry.event_id, Validators.required],
     guest_name: [this.data.entry.guest_name, Validators.required],
@@ -192,7 +193,7 @@ class EditMoiDialog {
     if (this.form.invalid) return;
     this.moiService.update(this.data.entry.id, this.form.value).subscribe({
       next: () => this.dialogRef.close(true),
-      error: () => {},
+      error: () => this.snackBar.open('Error updating entry. Please try again.', 'Close', { duration: 3000, panelClass: 'error-snackbar' }),
     });
   }
 }
@@ -235,8 +236,7 @@ export class MoiListComponent implements OnInit {
   page = signal(1);
   pageSize = 20;
 
-  amountMin = signal<number | null>(null);
-  amountMax = signal<number | null>(null);
+
   relationshipFilter = signal('');
   receivedByFilter = signal('');
   sortField = signal('created_at');
@@ -313,8 +313,7 @@ export class MoiListComponent implements OnInit {
       side: (this.filterSide as any) || undefined,
       payment_mode: (this.filterPayment as any) || undefined,
       search: this.searchQuery() || undefined,
-      amount_min: this.amountMin() ?? undefined,
-      amount_max: this.amountMax() ?? undefined,
+
       relationship: this.relationshipFilter() || undefined,
       received_by: this.receivedByFilter() || undefined,
       sort_field: this.sortField(),
@@ -340,8 +339,7 @@ export class MoiListComponent implements OnInit {
     this.filterSide = '';
     this.filterPayment = '';
     this.searchQuery.set('');
-    this.amountMin.set(null);
-    this.amountMax.set(null);
+
     this.relationshipFilter.set('');
     this.receivedByFilter.set('');
     this.page.set(1);

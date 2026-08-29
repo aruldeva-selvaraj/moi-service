@@ -143,13 +143,9 @@ export class ReceiptService {
     const eventOfLabel = cfg.label + ' of';
 
     const tableRows = filtered.map((x, i) => {
-      const tamilName = (x as any).guest_name_tamil;
-      const nameCell = tamilName
-        ? `${esc(x.guest_name)}<div class="tname-tamil">${esc(tamilName)}</div>`
-        : esc(x.guest_name);
       return `<tr style="background:${i % 2 === 0 ? '#ffffff' : '#fdf5f7'};">
         <td class="tc tn">${i + 1}</td>
-        <td class="tl tname">${nameCell}</td>
+        <td class="tl tname">${esc(x.guest_name)}</td>
         <td class="tl td">${esc(x.city || '—')}</td>
         <td class="tl td">${esc(x.district || '—')}</td>
         <td class="tr tamt">&#8377;&nbsp;${fmtNum(Number(x.amount))}</td>
@@ -313,9 +309,8 @@ export class ReceiptService {
     .tl { text-align:left; }
     .tn      { color:#888; font-size:10px; }
     .td      { color:#555; font-size:10px; white-space:nowrap; }
-    .tname       { font-weight:600; color:#1a1a1a; }
-    .tname-tamil { font-size:9.5px; color:#7b1a36; margin-top:2px; font-style:italic; }
-    .tphone      { font-size:9px; color:#999; margin-top:1px; }
+    .tname   { font-weight:600; color:#1a1a1a; }
+    .tphone  { font-size:9px; color:#999; margin-top:1px; }
     .trel    { font-style:italic; color:#555; }
     .tamt    { font-weight:700; font-family:'Courier New',Courier,monospace; white-space:nowrap; }
     .tremark { font-size:10px; color:#666; }
@@ -436,7 +431,7 @@ export class ReceiptService {
     <thead>
       <tr>
         <th style="width:32px">S.No</th>
-        <th class="tl" style="min-width:140px">Guest Name (English | Tamil)<br><span style="font-size:8.5px;font-weight:400;opacity:.85;">விருந்தினர் பெயர்</span></th>
+        <th class="tl" style="min-width:140px">Guest Name</th>
         <th class="tl" style="width:80px">City</th>
         <th class="tl" style="width:90px">District</th>
         <th style="width:80px">Amount (&#8377;)</th>

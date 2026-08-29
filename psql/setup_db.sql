@@ -241,11 +241,3 @@ CREATE INDEX IF NOT EXISTS idx_token_blocklist_expires ON public.token_blocklist
 
 ALTER TABLE public.moi_entries ADD COLUMN IF NOT EXISTS party_size INTEGER DEFAULT 1 CHECK (party_size > 0);
 
--- ─── Extra event metadata columns ────────────────────────────────────────────
-
-ALTER TABLE public.events ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(20) DEFAULT NULL;
-ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ceremony_start TIME DEFAULT NULL;
-ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ceremony_end TIME DEFAULT NULL;
-ALTER TABLE public.events ADD COLUMN IF NOT EXISTS expected_guests INTEGER DEFAULT NULL;
-ALTER TABLE public.events ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT NULL;
-ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ceremony_type VARCHAR(50) DEFAULT NULL;

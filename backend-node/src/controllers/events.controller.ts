@@ -16,12 +16,6 @@ interface EventRow {
   city: string | null;
   district: string | null;
   notes: string | null;
-  contact_phone: string | null;
-  ceremony_start: string | null;
-  ceremony_end: string | null;
-  expected_guests: number | null;
-  logo_url: string | null;
-  ceremony_type: string | null;
   created_by: number;
   status: string;
   created_at: string;
@@ -47,19 +41,11 @@ interface EventCreateDto {
   city?: string;
   district?: string;
   notes?: string;
-  contact_phone?: string;
-  ceremony_start?: string;
-  ceremony_end?: string;
-  expected_guests?: number;
-  logo_url?: string;
-  ceremony_type?: string;
 }
 
 const EVENT_SELECT = `
   e.id, e.event_type, e.primary_name, e.secondary_name,
   e.family_name, e.event_date::text, e.venue, e.city, e.district, e.notes,
-  e.contact_phone, e.ceremony_start, e.ceremony_end, e.expected_guests,
-  e.logo_url, e.ceremony_type,
   e.created_by, e.status, e.created_at, e.updated_at,
   COALESCE(SUM(m.amount), 0)::float AS total_moi,
   COUNT(m.id)::int                  AS moi_count`;
@@ -69,8 +55,6 @@ const EVENT_JOIN = `LEFT JOIN moi_entries m ON e.id = m.event_id AND m.deleted_a
 const ALLOWED_EVENT_FIELDS = [
   'primary_name', 'secondary_name', 'family_name', 'event_date',
   'venue', 'city', 'district', 'notes', 'event_type',
-  'contact_phone', 'ceremony_start', 'ceremony_end',
-  'expected_guests', 'logo_url', 'ceremony_type',
 ];
 
 export class EventsController {
@@ -185,32 +169,24 @@ export class EventsController {
       `INSERT INTO events
          (event_type, primary_name, secondary_name, family_name,
           event_date, venue, city, district, notes,
-          contact_phone, ceremony_start, ceremony_end, expected_guests, logo_url, ceremony_type,
           created_by, status, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING id, event_type, primary_name, secondary_name, family_name,
                  event_date::text, venue, city, district, notes,
-                 contact_phone, ceremony_start, ceremony_end, expected_guests, logo_url, ceremony_type,
                  created_by, status,
                  created_at, updated_at,
                  0::float AS total_moi, 0::int AS moi_count`,
       [
         data.event_type ?? 'wedding',
         data.primary_name,
-        data.secondary_name   ?? null,
-        data.family_name      ?? null,
+        data.secondary_name ?? null,
+        data.family_name    ?? null,
         data.event_date,
-        data.venue            ?? null,
-        data.city             ?? null,
-        data.district         ?? null,
-        data.notes            ?? null,
-        data.contact_phone    ?? null,
-        data.ceremony_start   ?? null,
-        data.ceremony_end     ?? null,
-        data.expected_guests  ?? null,
-        data.logo_url         ?? null,
-        data.ceremony_type    ?? null,
-        caller?.sub           ?? null,
+        data.venue          ?? null,
+        data.city           ?? null,
+        data.district       ?? null,
+        data.notes          ?? null,
+        caller?.sub         ?? null,
         status,
         now,
         now,
@@ -389,8 +365,7 @@ export class EventsController {
     const ownerClause = isOwnerRestricted ? `AND created_by = $2` : '';
     const existing = await this.eventRepo.query(
       `SELECT event_type, primary_name, secondary_name, family_name,
-              event_date, venue, city, district, notes,
-              contact_phone, ceremony_start, ceremony_end, expected_guests, logo_url, ceremony_type
+              event_date, venue, city, district, notes
        FROM events WHERE id = $1 AND deleted_at IS NULL ${ownerClause}`,
       fetchParams,
     );
@@ -402,32 +377,24 @@ export class EventsController {
       `INSERT INTO events
          (event_type, primary_name, secondary_name, family_name,
           event_date, venue, city, district, notes,
-          contact_phone, ceremony_start, ceremony_end, expected_guests, logo_url, ceremony_type,
           created_by, status, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING id, event_type, primary_name, secondary_name, family_name,
                  event_date::text, venue, city, district, notes,
-                 contact_phone, ceremony_start, ceremony_end, expected_guests, logo_url, ceremony_type,
                  created_by, status,
                  created_at, updated_at,
                  0::float AS total_moi, 0::int AS moi_count`,
       [
         src.event_type,
         src.primary_name,
-        src.secondary_name   ?? null,
-        src.family_name      ?? null,
+        src.secondary_name ?? null,
+        src.family_name    ?? null,
         src.event_date,
-        src.venue            ?? null,
-        src.city             ?? null,
-        src.district         ?? null,
-        src.notes            ?? null,
-        src.contact_phone    ?? null,
-        src.ceremony_start   ?? null,
-        src.ceremony_end     ?? null,
-        src.expected_guests  ?? null,
-        src.logo_url         ?? null,
-        src.ceremony_type    ?? null,
-        caller.sub           ?? null,
+        src.venue          ?? null,
+        src.city           ?? null,
+        src.district       ?? null,
+        src.notes          ?? null,
+        caller.sub         ?? null,
         status,
         now,
         now,

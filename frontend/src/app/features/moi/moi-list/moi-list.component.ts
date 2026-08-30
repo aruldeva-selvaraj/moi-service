@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,8 +15,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subject, lastValueFrom } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MoiService } from '../../../core/services/moi.service';
@@ -95,7 +94,7 @@ class ConfirmDeleteMoiDialog {
 })
 class QuickAddMoiDialog {
   data = inject(MAT_DIALOG_DATA) as { events: Event[] };
-  private readonly dialogRef = inject(MatDialogRef);
+  private readonly dialogRef = inject<MatDialogRef<QuickAddMoiDialog>>(MatDialogRef);
   private readonly moiService = inject(MoiService);
   form: FormGroup = inject(FormBuilder).group({
     event_id: [null, Validators.required],
@@ -116,7 +115,7 @@ class QuickAddMoiDialog {
 @Component({
   selector: 'app-edit-moi-dialog',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule, MatSnackBarModule],
+  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule],
   template: `
     <h2 mat-dialog-title>Edit Moi Entry</h2>
     <mat-dialog-content>
@@ -175,20 +174,27 @@ class QuickAddMoiDialog {
   `
 })
 class EditMoiDialog {
-  data = inject(MAT_DIALOG_DATA) as { entry: MoiEntry; events: Event[] };
-  private readonly dialogRef = inject(MatDialogRef);
+  readonly data = inject(MAT_DIALOG_DATA) as { entry: MoiEntry; events: Event[] };
+  private readonly dialogRef = inject<MatDialogRef<EditMoiDialog>>(MatDialogRef);
   private readonly moiService = inject(MoiService);
   private readonly snackBar = inject(MatSnackBar);
-  form: FormGroup = inject(FormBuilder).group({
-    event_id: [this.data.entry.event_id, Validators.required],
-    guest_name: [this.data.entry.guest_name, Validators.required],
-    amount: [this.data.entry.amount, [Validators.required, Validators.min(1)]],
-    relationship: [this.data.entry.relationship ?? ''],
-    city: [(this.data.entry as any).city ?? ''],
-    side: [(this.data.entry as any).side ?? 'groom'],
-    payment_mode: [(this.data.entry as any).payment_mode ?? 'cash'],
-    received_by: [(this.data.entry as any).received_by ?? ''],
-  });
+  private readonly fb = inject(FormBuilder);
+  form!: FormGroup;
+
+  constructor() {
+    const e = this.data.entry;
+    this.form = this.fb.group({
+      event_id:     [e.event_id,           Validators.required],
+      guest_name:   [e.guest_name,         Validators.required],
+      amount:       [e.amount,             [Validators.required, Validators.min(1)]],
+      relationship: [e.relationship ?? ''],
+      city:         [e.city         ?? ''],
+      side:         [e.side         ?? 'groom'],
+      payment_mode: [e.payment_mode ?? 'cash'],
+      received_by:  [e.received_by  ?? ''],
+    });
+  }
+
   submit(): void {
     if (this.form.invalid) return;
     this.moiService.update(this.data.entry.id, this.form.value).subscribe({
@@ -278,7 +284,7 @@ export class MoiListComponent implements OnInit {
         this.loadEntries();
       },
       error: () => {
-        this.snackBar?.open('Failed to load events', 'Close', { duration: 3000, panelClass: 'error-snackbar' });
+        this.snackBar.open('Failed to load events', 'Close', { duration: 3000, panelClass: 'error-snackbar' });
         this.loadEntries();
       },
     });
@@ -378,7 +384,7 @@ export class MoiListComponent implements OnInit {
 
   printEntry(entry: any): void {
     const ev = this.events().find(e => e.id === entry.event_id);
-    if (!ev) { this.snackBar?.open('Event not found', 'Close', { duration: 2000 }); return; }
+    if (!ev) { this.snackBar.open('Event not found', 'Close', { duration: 2000 }); return; }
     this.receiptService.printReceipt(entry, ev, '80', entry.receipt_no ?? 1, 'en');
   }
 
@@ -394,7 +400,7 @@ export class MoiListComponent implements OnInit {
       data: { events: this.events() }, width: '520px', maxWidth: '95vw',
     });
     ref.afterClosed().subscribe(result => {
-      if (result) { this.snackBar?.open('Moi entry added!', 'Close', { duration: 2000, panelClass: 'success-snackbar' }); this.loadEntries(); }
+      if (result) { this.snackBar.open('Moi entry added!', 'Close', { duration: 2000, panelClass: 'success-snackbar' }); this.loadEntries(); }
     });
   }
 
@@ -424,7 +430,7 @@ export class MoiListComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDeleteMoiDialog, { data: { name: ids.length + ' entries' }, width: '360px' });
     ref.afterClosed().subscribe(ok => {
       if (!ok) return;
-      Promise.all(ids.map(id => this.moiService.delete(id).toPromise())).then(() => {
+      Promise.all(ids.map(id => lastValueFrom(this.moiService.delete(id)))).then(() => {
         this.selectedIds.set(new Set());
         this.loadEntries();
         this.snackBar.open('Deleted ' + ids.length + ' entries', 'Close', { duration: 3000 });
@@ -437,7 +443,7 @@ export class MoiListComponent implements OnInit {
       data: { entry, events: this.events() }, width: '520px', maxWidth: '95vw',
     });
     ref.afterClosed().subscribe(result => {
-      if (result) { this.snackBar?.open('Entry updated!', 'Close', { duration: 2000, panelClass: 'success-snackbar' }); this.loadEntries(); }
+      if (result) { this.snackBar.open('Entry updated!', 'Close', { duration: 2000, panelClass: 'success-snackbar' }); this.loadEntries(); }
     });
   }
 }

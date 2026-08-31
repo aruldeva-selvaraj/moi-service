@@ -9,8 +9,13 @@
         <mat-icon>picture_as_pdf</mat-icon> PDF Report
       </button>
       <button mat-stroked-button (click)="shareEventSummary()"
-              matTooltip="Share summary via WhatsApp / copy to clipboard">
-        <mat-icon>share</mat-icon> Share
+              [disabled]="sharing()"
+              matTooltip="Share PDF report via any app">
+        @if (sharing()) {
+          <mat-icon class="spin-icon">sync</mat-icon> Preparing...
+        } @else {
+          <mat-icon>share</mat-icon> Share PDF
+        }
       </button>
     }
     @if (selectedEventId && allEntries().length > 0) {
@@ -93,13 +98,18 @@
 
     <!-- 3D Coin Visualisation -->
     @if (eventReport() && selectedEventId && eventReport()!.moi_count > 0) {
-      <app-moi-canvas3d
-        [report]="eventReport()!"
-        [config]="getSelectedEventConfig()" />
+      @defer (on viewport) {
+        <app-moi-canvas3d
+          [report]="eventReport()!"
+          [config]="getSelectedEventConfig()" />
+      } @placeholder {
+        <div style="height:80px"></div>
+      }
     }
 
     <!-- Analytics Charts -->
     @if (eventReport() && selectedEventId) {
+      @defer (on viewport) {
       <h3 class="section-title">Visual Analytics</h3>
       <div class="charts-row section-gap">
 
@@ -185,9 +195,11 @@
         }
 
       </div>
+      } @loading { <div style="height:40px"></div> }
     }
 
     <!-- Relationship Analysis -->
+    @defer (on viewport) {
     @if (relationshipData().length > 0) {
       <div class="section-header">
         <h3 class="section-title no-margin">Contributions by Relationship</h3>
@@ -257,7 +269,10 @@
       </div>
     }
 
+    }
+
     <!-- City Breakdown -->
+    @defer (on viewport) {
     @if (selectedEventId && cityData().length > 0) {
       <div class="section-header">
         <h3 class="section-title no-margin">By City</h3>
@@ -320,8 +335,10 @@
         </table>
       </div>
     }
+    }
 
     <!-- All Events Summary -->
+    @defer (on viewport) {
     @if (!selectedEventId && events().length > 0) {
       <h3 class="section-title">Event-wise Summary</h3>
       <div class="data-table-container">
@@ -370,6 +387,7 @@
           <tr mat-row *matRowDef="let row; columns: ['event','type','date','venue','guests','total','action'];"></tr>
         </table>
       </div>
+    }
     }
 
   }

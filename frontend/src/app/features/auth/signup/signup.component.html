@@ -59,8 +59,8 @@
       <div class="form-field">
         <label>Role <span class="required">*</span></label>
         <div class="role-selector">
+          @for (r of roles; track r.value) {
           <button type="button"
-                  *ngFor="let r of roles"
                   class="role-btn"
                   [class.selected]="role === r.value"
                   [attr.data-role]="r.value"
@@ -68,6 +68,7 @@
             <mat-icon>{{ r.icon }}</mat-icon>
             <span>{{ r.label }}</span>
           </button>
+          }
         </div>
         <div class="role-desc" [attr.data-role]="role">
           <ng-container [ngSwitch]="role">

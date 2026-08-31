@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +11,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { EventService } from '../../../core/services/event.service';
@@ -41,10 +40,11 @@ class ConfirmCompleteDialog {
 @Component({
   selector: 'app-wedding-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, RouterLink, CurrencyPipe, DatePipe,
     MatButtonModule, MatIconModule, MatSnackBarModule, MatTooltipModule, MatDividerModule, MatChipsModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonToggleModule, MatPaginatorModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonToggleModule,
     MatDialogModule, FormsModule,
     EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent,
     ConfirmCompleteDialog,
@@ -52,7 +52,7 @@ class ConfirmCompleteDialog {
   templateUrl: './wedding-list.component.html',
   styleUrls: ['./wedding-list.component.scss'],
 })
-export class WeddingListComponent implements OnInit {
+export class WeddingListComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly eventService = inject(EventService);
   private readonly snackBar = inject(MatSnackBar);
   readonly auth = inject(AuthService);
@@ -61,13 +61,16 @@ export class WeddingListComponent implements OnInit {
   loading = signal(true);
   events = signal<Event[]>([]);
 
+  @ViewChild('sentinel') sentinelEl!: ElementRef<HTMLDivElement>;
+  private observer?: IntersectionObserver;
+  private readonly BATCH = 12;
+
   searchQuery = signal('');
   typeFilter = signal('');
   upcomingFilter = signal<'all' | 'upcoming' | 'past'>('all');
   totalMoiMin = signal<number | null>(null);
   totalMoiMax = signal<number | null>(null);
-  eventsPage = signal(1);
-  eventsPageSize = signal(12);
+  visibleCount = signal(this.BATCH);
 
   filteredEvents = computed(() => {
     let list = this.events();
@@ -91,14 +94,23 @@ export class WeddingListComponent implements OnInit {
 
   pendingEvents = computed(() => this.events().filter(e => e.status === 'pending'));
   approvedEvents = computed(() => this.events().filter(e => e.status === 'approved'));
-
-  pagedEvents = computed(() => {
-    const start = (this.eventsPage() - 1) * this.eventsPageSize();
-    return this.filteredEvents().slice(start, start + this.eventsPageSize());
-  });
+  displayedEvents = computed(() => this.filteredEvents().slice(0, this.visibleCount()));
 
   ngOnInit() {
     this.loadEvents();
+  }
+
+  ngAfterViewInit() {
+    this.observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        this.visibleCount.update(n => Math.min(n + this.BATCH, this.filteredEvents().length));
+      }
+    }, { threshold: 0.1 });
+    if (this.sentinelEl) this.observer.observe(this.sentinelEl.nativeElement);
+  }
+
+  ngOnDestroy() {
+    this.observer?.disconnect();
   }
 
   loadEvents() {
@@ -212,8 +224,4 @@ export class WeddingListComponent implements OnInit {
     });
   }
 
-  onPageChange(e: PageEvent): void {
-    this.eventsPage.set(e.pageIndex + 1);
-    this.eventsPageSize.set(e.pageSize);
-  }
 }

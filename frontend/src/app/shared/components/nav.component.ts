@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ElementRef, ViewChild, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,6 +24,7 @@ interface SearchResult extends MoiEntry { event_name: string; }
 @Component({
   selector: 'app-nav',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule, RouterLink, RouterLinkActive, CurrencyPipe, DatePipe,
     MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule,
@@ -55,6 +56,25 @@ export class NavComponent implements OnInit {
   showInstallBtn = signal(false);
 
   private events: Event[] = [];
+
+  readonly userInitials = computed(() => {
+    const user = this.auth.currentUser?.();
+    if (!user) return '?';
+    const name = (user as any).full_name || (user as any).username || '';
+    return name.split(' ').slice(0, 2).map((w: string) => w[0]?.toUpperCase() || '').join('') || '?';
+  });
+
+  readonly displayName = computed(() => {
+    const user = this.auth.currentUser?.();
+    if (!user) return 'User';
+    return (user as any).full_name || (user as any).username || 'User';
+  });
+
+  readonly userRole = computed(() => {
+    const user = this.auth.currentUser?.();
+    if (!user) return '';
+    return (user as any).role || '';
+  });
 
   ngOnInit(): void {
     this.refreshPendingCount();
@@ -133,32 +153,9 @@ export class NavComponent implements OnInit {
     });
   }
 
-  getUserInitials(): string {
-    const user = this.auth.currentUser?.();
-    if (!user) return '?';
-    const name: string = (user as any).full_name || (user as any).username || '';
-    return name
-      .split(' ')
-      .slice(0, 2)
-      .map((w: string) => w[0]?.toUpperCase() || '')
-      .join('') || '?';
-  }
-
-  getDisplayName(): string {
-    const user = this.auth.currentUser?.();
-    if (!user) return 'User';
-    return (user as any).full_name || (user as any).username || 'User';
-  }
-
-  getRole(): string {
-    const user = this.auth.currentUser?.();
-    if (!user) return '';
-    return (user as any).role || '';
-  }
-
   private loadEvents(): void {
     if (this.events.length) return;
-    this.eventService.getAll().subscribe({ next: evs => this.events = evs });
+    this.eventService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: evs => this.events = evs });
   }
 
   onSearchInput(): void {

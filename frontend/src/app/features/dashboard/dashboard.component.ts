@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,18 +14,17 @@ import { AuthService } from '../../core/services/auth.service';
 import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/models/event.model';
 import { SummaryStats } from '../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../shared/components/index';
-import { MoiCanvas3DComponent } from '../../shared/components/moi-canvas3d/moi-canvas3d.component';
 import { OnboardingOverlayComponent } from '../../shared/components/onboarding-overlay.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, RouterLink, CurrencyPipe, DatePipe, PercentPipe, FormsModule,
     MatButtonModule, MatIconModule, MatDividerModule,
     MatFormFieldModule, MatSelectModule,
     StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent,
-    MoiCanvas3DComponent,
     OnboardingOverlayComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -58,6 +57,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.events().filter((ev: Event) => ev.status === 'approved' || ev.status === 'completed')
   );
   pendingCount = computed(() => this.events().filter((ev: Event) => ev.status === 'pending').length);
+  recentEvents = computed(() => this.approvedEvents().slice(0, 6));
 
   selectedEvent = computed(() =>
     this.approvedEvents().find((ev: Event) => ev.id === this.selectedEventId()) ?? null

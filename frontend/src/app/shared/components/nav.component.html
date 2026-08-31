@@ -95,17 +95,17 @@
             matTooltip="Account"
             matTooltipPosition="below"
             aria-label="Open account menu">
-      <span class="avatar-initials">{{ getUserInitials() }}</span>
+      <span class="avatar-initials">{{ userInitials() }}</span>
     </button>
 
     <mat-menu #avatarMenu="matMenu" class="avatar-dropdown-menu">
       <!-- User info header -->
       <div class="avatar-menu-header" (click)="$event.stopPropagation()">
-        <div class="avatar-menu-initials">{{ getUserInitials() }}</div>
+        <div class="avatar-menu-initials">{{ userInitials() }}</div>
         <div class="avatar-menu-info">
-          <span class="avatar-menu-name">{{ getDisplayName() }}</span>
-          @if (getRole()) {
-            <span class="avatar-menu-role">{{ getRole() }}</span>
+          <span class="avatar-menu-name">{{ displayName() }}</span>
+          @if (userRole()) {
+            <span class="avatar-menu-role">{{ userRole() }}</span>
           }
         </div>
       </div>
@@ -137,11 +137,11 @@
   <div class="mobile-menu-drawer">
     <!-- Mobile menu header -->
     <div class="mobile-menu-header">
-      <div class="mobile-avatar-initials">{{ getUserInitials() }}</div>
+      <div class="mobile-avatar-initials">{{ userInitials() }}</div>
       <div class="mobile-user-info">
-        <span class="mobile-user-name">{{ getDisplayName() }}</span>
-        @if (getRole()) {
-          <span class="mobile-user-role">{{ getRole() }}</span>
+        <span class="mobile-user-name">{{ displayName() }}</span>
+        @if (userRole()) {
+          <span class="mobile-user-role">{{ userRole() }}</span>
         }
       </div>
       <button mat-icon-button class="mobile-close-btn" (click)="toggleMobileMenu()" aria-label="Close menu">

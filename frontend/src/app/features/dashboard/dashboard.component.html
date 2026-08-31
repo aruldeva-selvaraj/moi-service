@@ -175,9 +175,13 @@
 
       <!-- 3D Coin Visualisation -->
       @if (eventReport()!.moi_count > 0) {
-        <app-moi-canvas3d
-          [report]="eventReport()!"
-          [config]="selectedEventConfig()" />
+        @defer (on viewport) {
+          <app-moi-canvas3d
+            [report]="eventReport()!"
+            [config]="selectedEventConfig()" />
+        } @placeholder {
+          <div style="height:80px"></div>
+        }
       }
 
     } @else if (!selectedEventId()) {
@@ -231,7 +235,7 @@
         actionLink="/events/new" />
     } @else {
       <div class="grid-3">
-        @for (ev of approvedEvents().slice(0, 6); track ev.id) {
+        @for (ev of recentEvents(); track ev.id) {
           <div class="wedding-card" [routerLink]="['/events', ev.id]">
             <div class="card-header">
               <div>

@@ -87,6 +87,78 @@ export class ReceiptService {
     }
   }
 
+  async shareReportAsPdf(report: EventReport, event: Event): Promise<void> {
+    const html = this.buildEventReportHtml(report, event);
+
+    const [jspdfMod, h2cMod]: any[] = await Promise.all([
+      import('jspdf' as any),
+      import('html2canvas' as any),
+    ]);
+    const jsPDF = jspdfMod.jsPDF;
+    const html2canvas: (el: HTMLElement, opts?: any) => Promise<HTMLCanvasElement> = h2cMod.default;
+
+    const parser = new DOMParser();
+    const parsed = parser.parseFromString(html, 'text/html');
+
+    const container = this.doc.createElement('div');
+    container.style.cssText = 'position:fixed;top:-9999px;left:0;width:794px;background:#fff;';
+    parsed.querySelectorAll('style').forEach(s => {
+      const clone = this.doc.createElement('style');
+      clone.textContent = s.textContent;
+      container.appendChild(clone);
+    });
+    const inner = this.doc.createElement('div');
+    inner.innerHTML = parsed.body.innerHTML;
+    container.appendChild(inner);
+    this.doc.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      const pageW = 210;
+      const pageH = 297;
+      const ratio = canvas.width / pageW;
+      const slicePx = pageH * ratio;
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      let y = 0;
+
+      while (y < canvas.height) {
+        const h = Math.min(slicePx, canvas.height - y);
+        const slice = this.doc.createElement('canvas') as HTMLCanvasElement;
+        slice.width = canvas.width;
+        slice.height = Math.ceil(h);
+        slice.getContext('2d')!.drawImage(canvas, 0, Math.round(y), canvas.width, Math.ceil(h), 0, 0, canvas.width, Math.ceil(h));
+        pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pageW, Math.ceil(h) / ratio);
+        y += slicePx;
+        if (y < canvas.height) pdf.addPage();
+      }
+
+      const blob = pdf.output('blob');
+      const title = `${getEventTitle(event)} — Moi Report`;
+      const fileName = `moify-${getEventTitle(event).replace(/[\s/\\]/g, '-')}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = this.doc.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+    } finally {
+      this.doc.body.removeChild(container);
+    }
+  }
+
   printEventReport(report: EventReport, event: Event): void {
     const html = this.buildEventReportHtml(report, event);
     const win = this.doc.defaultView?.open('', '_blank', 'width=820,height=700,toolbar=no,menubar=yes,scrollbars=yes');
@@ -236,7 +308,8 @@ export class ReceiptService {
     body.has-dl-bar .page { margin-top:56px; }
 
     /* Page */
-    .page { width:195mm; margin:0 auto; position:relative; background:#fff; min-height:277mm; }
+    .page { width:195mm; margin:0 auto; position:relative; background:#fff; min-height:277mm; display:flex; flex-direction:column; }
+    .flex-spacer { flex:1; min-height:16px; }
 
     /* Floral corners */
     .fc-tl, .fc-tr {
@@ -319,7 +392,8 @@ export class ReceiptService {
     /* ── Summary Row ── */
     .summary-row {
       display:flex; align-items:center; justify-content:space-between;
-      margin-top:14px; gap:12px;
+      margin-top:0; padding-top:12px; gap:12px;
+      border-top:1.5px dashed #ddc8a0;
     }
     .tg-box {
       display:flex; align-items:center; gap:12px;
@@ -443,6 +517,9 @@ export class ReceiptService {
       ${tableRows || `<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">No entries found</td></tr>`}
     </tbody>
   </table>
+
+  <!-- Spacer pushes totals + authorized to bottom when table is short -->
+  <div class="flex-spacer"></div>
 
   <!-- Summary Row -->
   <div class="summary-row">

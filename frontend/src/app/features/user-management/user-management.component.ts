@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -103,6 +103,7 @@ export interface AppUser {
     MatSnackBarModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatTooltipModule,
     RouterLink, PageHeaderComponent, LoadingSpinnerComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss',
 })
@@ -122,14 +123,14 @@ export class UserManagementComponent implements OnInit {
   editName = signal('');
   editMobile = signal('');
 
-  get filteredUsers() {
+  filteredUsers = computed(() => {
     const q = this.search().toLowerCase();
     return this.users().filter(u =>
       !q || u.username.toLowerCase().includes(q) ||
       (u.full_name || '').toLowerCase().includes(q) ||
       (u.mobile_number || '').includes(q)
     );
-  }
+  });
 
   ngOnInit() { this.loadUsers(); }
 

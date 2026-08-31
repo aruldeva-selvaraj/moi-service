@@ -201,11 +201,30 @@ ALTER TABLE public.events ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAUL
 
 -- ─── CHECK constraints ────────────────────────────────────────────────────────
 
-ALTER TABLE public.moi_entries ADD CONSTRAINT IF NOT EXISTS chk_amount_positive CHECK (amount > 0);
-ALTER TABLE public.moi_entries ADD CONSTRAINT IF NOT EXISTS chk_side CHECK (side IN ('groom','bride','both'));
-ALTER TABLE public.moi_entries ADD CONSTRAINT IF NOT EXISTS chk_payment_mode CHECK (payment_mode IN ('cash','cheque','online','dd'));
-ALTER TABLE public.events ADD CONSTRAINT IF NOT EXISTS chk_event_status CHECK (status IN ('pending','approved','rejected','completed'));
-ALTER TABLE public.users ADD CONSTRAINT IF NOT EXISTS chk_user_role CHECK (role IN ('admin','user'));
+-- ─── CHECK constraints ────────────────────────────────────────────────────────
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_amount_positive') THEN
+        ALTER TABLE public.moi_entries ADD CONSTRAINT chk_amount_positive CHECK (amount > 0);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_side') THEN
+        ALTER TABLE public.moi_entries ADD CONSTRAINT chk_side CHECK (side IN ('groom','bride','both'));
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_payment_mode') THEN
+        ALTER TABLE public.moi_entries ADD CONSTRAINT chk_payment_mode CHECK (payment_mode IN ('cash','cheque','online','dd'));
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_event_status') THEN
+        ALTER TABLE public.events ADD CONSTRAINT chk_event_status CHECK (status IN ('pending','approved','rejected','completed'));
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_user_role') THEN
+        ALTER TABLE public.users ADD CONSTRAINT chk_user_role CHECK (role IN ('admin','user'));
+    END IF;
+END $$;
 
 -- ─── Composite indexes for paginated queries ──────────────────────────────────
 
@@ -229,6 +248,14 @@ CREATE TABLE IF NOT EXISTS public.audit_log (
 );
 CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON public.audit_log(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_actor ON public.audit_log(actor_id, created_at DESC);
+
+-- ─── Login attempt rate-limit table ──────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS public.login_attempts (
+  ip VARCHAR(45) NOT NULL,
+  attempt_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time ON public.login_attempts(ip, attempt_time DESC);
 
 -- ─── Token blocklist table ────────────────────────────────────────────────────
 

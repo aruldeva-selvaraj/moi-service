@@ -44,6 +44,12 @@ CREATE TABLE IF NOT EXISTS moi_entries (
 COMMENT ON TABLE events IS 'Events: wedding, birthday, baby_shower, engagement, anniversary, other';
 COMMENT ON TABLE moi_entries IS 'Moi (cash gift) entries per event';
 
+CREATE TABLE IF NOT EXISTS public.login_attempts (
+    ip VARCHAR(45) NOT NULL,
+    attempt_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time ON public.login_attempts(ip, attempt_time DESC);
+
 -- ─── Sample data ─────────────────────────────────────────────────────────────
 
 INSERT INTO events (event_type, primary_name, secondary_name, family_name, event_date, venue, city) VALUES

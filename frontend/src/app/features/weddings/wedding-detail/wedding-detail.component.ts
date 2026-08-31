@@ -26,6 +26,7 @@ import { Event, getEventConfig, getEventTitle, EventTypeConfig, EventReport } fr
 import { MoiEntry, MoiEntryCreate, MoiFilter } from '../../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent } from '../../../shared/components/index';
 import type { AiEntryDialogData, ConfirmDialogData } from '../../../shared/components/index';
+import { MoiCanvas3DComponent } from '../../../shared/components/moi-canvas3d/moi-canvas3d.component';
 
 
 @Component({
@@ -38,7 +39,7 @@ import type { AiEntryDialogData, ConfirmDialogData } from '../../../shared/compo
     MatDividerModule, MatTooltipModule, MatChipsModule, MatTabsModule,
     MatButtonToggleModule, MatAutocompleteModule, MatDialogModule,
     MatCheckboxModule,
-    StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent,
+    StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, MoiCanvas3DComponent,
   ],
   templateUrl: './wedding-detail.component.html',
   styleUrls: ['./wedding-detail.component.scss'],

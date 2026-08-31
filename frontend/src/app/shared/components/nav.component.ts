@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, switchMap, filter } from 'rxjs/operators';
@@ -26,7 +26,7 @@ interface SearchResult extends MoiEntry { event_name: string; }
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule, RouterLink, RouterLinkActive, CurrencyPipe, DatePipe,
+    FormsModule, RouterLink, RouterLinkActive, CurrencyPipe,
     MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule,
     MatSidenavModule, MatListModule,
   ],

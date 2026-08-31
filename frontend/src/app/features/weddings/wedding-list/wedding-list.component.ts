@@ -47,7 +47,6 @@ class ConfirmCompleteDialog {
     MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonToggleModule,
     MatDialogModule, FormsModule,
     EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent,
-    ConfirmCompleteDialog,
   ],
   templateUrl: './wedding-list.component.html',
   styleUrls: ['./wedding-list.component.scss'],

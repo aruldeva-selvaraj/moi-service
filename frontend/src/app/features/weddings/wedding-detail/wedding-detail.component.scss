@@ -1,149 +1,147 @@
 .full-width { width: 100%; }
 
-// ── Moi Wizard Stepper ───────────────────────────────────────────────────────
+.ai-smart-entry-placeholder {
+  height: 80px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary, #7b1a36) 4%, transparent);
+  margin-bottom: 20px;
+}
 
-.moi-stepper {
+// ── Moi Form Header ──────────────────────────────────────────────────────────
+
+.mf-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 12px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary, #7b1a36) 8%, transparent),
+    color-mix(in srgb, var(--color-accent, #c9920a) 4%, transparent));
+  border-radius: 10px 10px 0 0;
+  margin: -20px -20px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary, #7b1a36) 12%, transparent);
+}
+
+.mf-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary, #7b1a36);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 24px 8px;
-  gap: 0;
-}
-
-.moi-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
   flex-shrink: 0;
 
-  .moi-step-circle {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.9rem;
-    border: 2px solid var(--text-muted, #bbb);
-    color: var(--text-muted, #bbb);
-    background: transparent;
-    transition: all 0.25s ease;
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-  }
-
-  .moi-step-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-muted, #bbb);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    transition: color 0.25s ease;
-  }
-
-  &.active {
-    .moi-step-circle {
-      border-color: var(--color-primary, #6c3eb8);
-      background: var(--color-primary, #6c3eb8);
-      color: #fff;
-      box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary, #6c3eb8) 35%, transparent);
-    }
-    .moi-step-label { color: var(--color-primary, #6c3eb8); }
-  }
-
-  &.done {
-    .moi-step-circle {
-      border-color: #43a047;
-      background: #43a047;
-      color: #fff;
-    }
-    .moi-step-label { color: #43a047; }
-  }
+  mat-icon { color: #fff; font-size: 20px; width: 20px; height: 20px; }
 }
 
-.moi-step-line {
-  flex: 1;
-  height: 2px;
-  background: var(--text-muted, #ddd);
-  margin-bottom: 22px;
-  transition: background 0.25s ease;
-  max-width: 80px;
-
-  &.done { background: #43a047; }
-}
-
-// ── Wizard Step Body ─────────────────────────────────────────────────────────
-
-.moi-step-body {
-  padding: 8px 0 4px;
-  animation: stepFadeIn 0.2s ease;
-}
-
-@keyframes stepFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.moi-step-heading {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--color-primary, #6c3eb8) 6%, transparent);
-  border-left: 3px solid var(--color-primary, #6c3eb8);
-}
-
-.moi-step-icon {
-  color: var(--color-primary, #6c3eb8);
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
-  margin-top: 2px;
-}
-
-.moi-step-title {
+.mf-header-title {
   font-weight: 700;
-  font-size: 1rem;
-  color: var(--text-primary, #333);
+  font-size: 0.95rem;
+  color: var(--text-primary, #222);
 }
 
-.moi-step-sub {
-  font-size: 0.78rem;
+.mf-header-sub {
+  font-size: 0.72rem;
   color: var(--text-muted, #888);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-// ── Step Navigation Row ──────────────────────────────────────────────────────
+// ── Form Rows ────────────────────────────────────────────────────────────────
 
-.step-nav-row {
+.mf-row {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.mf-row-3 {
+  grid-template-columns: 2fr 1.2fr 1fr;
+}
+
+.mf-row-amount {
+  grid-template-columns: 1.4fr 1fr auto;
+  align-items: flex-start;
+}
+
+.mf-row-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 900px) {
+  .mf-row-3  { grid-template-columns: 1fr 1fr; }
+  .mf-row-4  { grid-template-columns: 1fr 1fr; }
+  .mf-row-amount { grid-template-columns: 1fr 1fr; }
+  .mf-name-field { grid-column: 1 / -1; }
+}
+
+@media (max-width: 600px) {
+  .mf-row-3, .mf-row-4, .mf-row-amount { grid-template-columns: 1fr; }
+}
+
+// ── Section Divider ──────────────────────────────────────────────────────────
+
+.mf-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 14px;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--divider, #e8e0e0);
+  }
+
+  span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted, #aaa);
+    white-space: nowrap;
+  }
+}
+
+// ── Preset chips row ─────────────────────────────────────────────────────────
+
+.mf-presets {
+  margin-bottom: 4px;
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────────
+
+.mf-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
-  padding-top: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--divider, #eee);
 }
 
-// ── Step 3 settings row ──────────────────────────────────────────────────────
-
-.step3-settings {
+.mf-footer-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-top: 8px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-accent, #c9920a) 5%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-accent, #c9920a) 20%, transparent);
+}
+
+.mf-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mf-toggle {
+  .mat-button-toggle { font-size: 0.75rem; }
+}
+
+.mf-auto-print {
+  font-size: 0.8rem;
 }
 
 // ── AI Smart Entry ───────────────────────────────────────────────────────────

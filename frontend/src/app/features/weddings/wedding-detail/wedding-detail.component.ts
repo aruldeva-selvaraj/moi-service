@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject, signal, computed, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -17,7 +17,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { EventService } from '../../../core/services/event.service';
 import { MoiService } from '../../../core/services/moi.service';
@@ -25,8 +24,8 @@ import { ReceiptService, PaperSize, PrintSide, PrintFilter, ReceiptLang } from '
 import { VoiceRecognitionService } from '../../../core/services/voice-recognition.service';
 import { Event, getEventConfig, getEventTitle, EventTypeConfig, EventReport } from '../../../core/models/event.model';
 import { MoiEntry, MoiEntryCreate, MoiFilter } from '../../../core/models/moi.model';
-import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent, AiEntryDialogData, ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/index';
-import { MoiCanvas3DComponent } from '../../../shared/components/moi-canvas3d/moi-canvas3d.component';
+import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent } from '../../../shared/components/index';
+import type { AiEntryDialogData, ConfirmDialogData } from '../../../shared/components/index';
 
 
 @Component({
@@ -38,14 +37,13 @@ import { MoiCanvas3DComponent } from '../../../shared/components/moi-canvas3d/mo
     MatIconModule, MatTableModule, MatProgressSpinnerModule, MatSnackBarModule,
     MatDividerModule, MatTooltipModule, MatChipsModule, MatTabsModule,
     MatButtonToggleModule, MatAutocompleteModule, MatDialogModule,
-    MatPaginatorModule, MatCheckboxModule,
-    StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent,
-    MoiCanvas3DComponent,
+    MatCheckboxModule,
+    StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent,
   ],
   templateUrl: './wedding-detail.component.html',
   styleUrls: ['./wedding-detail.component.scss'],
 })
-export class WeddingDetailComponent implements OnInit, OnDestroy {
+export class WeddingDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly String = String;
 
   private readonly route = inject(ActivatedRoute);
@@ -62,6 +60,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   aiListening = signal(false);
 
   @ViewChild('guestNameInput') guestNameInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('entriesSentinel') entriesSentinel!: ElementRef<HTMLDivElement>;
+  private scrollObserver?: IntersectionObserver;
 
   eventId!: number;
   loading = signal(true);
@@ -84,7 +84,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   eventReport = signal<EventReport | null>(null);
   filterReceivedBy = '';
   entriesPage = signal(1);
-  pageSize = signal(20);
+  pageSize = signal(30);
+  allEntriesLoaded = signal(false);
 
   // CONFIGURABLE PRESETS: signal-based, loaded from localStorage per event
   amountPresets = signal<number[]>([500, 1000, 2000, 5000, 10000]);
@@ -329,8 +330,16 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  ngAfterViewInit(): void {
+    this.scrollObserver = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) this.loadMoreEntries();
+    }, { threshold: 0.1 });
+    if (this.entriesSentinel) this.scrollObserver.observe(this.entriesSentinel.nativeElement);
+  }
+
   ngOnDestroy(): void {
     if (this.sessionWarningTimer) clearTimeout(this.sessionWarningTimer);
+    this.scrollObserver?.disconnect();
   }
 
   loadEvent() {
@@ -353,10 +362,12 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   }
 
   loadEntries() {
+    this.entriesPage.set(1);
+    this.allEntriesLoaded.set(false);
     this.entriesLoading.set(true);
     const filter: MoiFilter = {
       event_id: this.eventId,
-      page: this.entriesPage(),
+      page: 1,
       page_size: this.pageSize(),
       sort_field: 'created_at',
       sort_dir: 'desc',
@@ -371,6 +382,35 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
       next: (resp) => {
         this.entries.set(resp.items);
         this.totalEntries.set(resp.total);
+        this.allEntriesLoaded.set(resp.items.length >= resp.total);
+        this.entriesLoading.set(false);
+      },
+      error: () => this.entriesLoading.set(false),
+    });
+  }
+
+  loadMoreEntries() {
+    if (this.allEntriesLoaded() || this.entriesLoading()) return;
+    const nextPage = this.entriesPage() + 1;
+    this.entriesPage.set(nextPage);
+    this.entriesLoading.set(true);
+    const filter: MoiFilter = {
+      event_id: this.eventId,
+      page: nextPage,
+      page_size: this.pageSize(),
+      sort_field: 'created_at',
+      sort_dir: 'desc',
+      side: (this.filterSide as any) || undefined,
+      payment_mode: (this.filterPayment as any) || undefined,
+      search: this.searchQuery || undefined,
+      city: this.filterCity || undefined,
+      district: this.filterDistrict || undefined,
+      received_by: this.filterReceivedBy || undefined,
+    };
+    this.moiService.getAll(filter).subscribe({
+      next: (resp) => {
+        this.entries.update(existing => [...existing, ...resp.items]);
+        this.allEntriesLoaded.set(this.entries().length >= resp.total);
         this.entriesLoading.set(false);
       },
       error: () => this.entriesLoading.set(false),
@@ -452,7 +492,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  deleteEntry(entry: MoiEntry): void {
+  async deleteEntry(entry: MoiEntry): Promise<void> {
+    const { ConfirmDialogComponent } = await import('../../../shared/components/index');
     const ref = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Delete Entry',
@@ -461,7 +502,7 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
         cancelLabel: 'Cancel',
         confirmColor: 'warn',
         icon: 'delete_forever',
-      } satisfies ConfirmDialogData,
+      } as ConfirmDialogData,
       width: '400px',
       disableClose: false,
     });
@@ -614,7 +655,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
     );
   }
 
-  openAiDialog(): void {
+  async openAiDialog(): Promise<void> {
+    const { AiEntryDialogComponent } = await import('../../../shared/components/index');
     const parsed = this.parseAiInput(this.aiText);
     const ref = this.dialog.open(AiEntryDialogComponent, {
       data: { parsed, eventId: this.eventId, eventConfig: this.eventConfig() } as AiEntryDialogData,
@@ -817,11 +859,6 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
     );
   }
 
-  onPageChange(e: PageEvent): void {
-    this.entriesPage.set(e.pageIndex + 1);
-    this.pageSize.set(e.pageSize);
-    this.loadEntries();
-  }
 
   parseCSVLine(line: string): string[] {
     const result: string[] = [];

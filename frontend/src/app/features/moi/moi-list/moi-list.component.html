@@ -181,13 +181,11 @@
       </table>
     </div>
 
-    <mat-paginator
-      class="table-paginator"
-      [length]="total()"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="onPageChange($event)">
-    </mat-paginator>
+    @if (!allLoaded()) {
+      <div #moiSentinel class="scroll-sentinel">
+        <app-loading-spinner [diameter]="32" />
+      </div>
+    }
   }
 </div>
 

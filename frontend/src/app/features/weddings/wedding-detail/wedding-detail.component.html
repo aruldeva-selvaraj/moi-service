@@ -59,11 +59,15 @@
         label="Average per Guest" />
     </div>
 
-    <!-- 3D Coin Visualisation -->
+    <!-- 3D Coin Visualisation — defer until scrolled into view -->
     @if (eventReport() && event()!.moi_count > 0) {
-      <app-moi-canvas3d
-        [report]="eventReport()!"
-        [config]="eventConfig()" />
+      @defer (on viewport) {
+        <app-moi-canvas3d
+          [report]="eventReport()!"
+          [config]="eventConfig()" />
+      } @placeholder {
+        <div style="height:120px"></div>
+      }
     }
 
     <mat-tab-group>
@@ -85,7 +89,8 @@
             </div>
           }
 
-          <!-- ── AI Smart Entry ──────────────────────────── -->
+          <!-- ── AI Smart Entry — defer until browser is idle ── -->
+          @defer (on idle) {
           <div class="ai-smart-entry">
             <div class="ai-entry-header">
               <mat-icon class="ai-entry-icon">auto_awesome</mat-icon>
@@ -125,338 +130,248 @@
               </div>
             }
           </div>
+          } @placeholder {
+            <div class="ai-smart-entry-placeholder"></div>
+          }
 
           <div class="form-card moi-form-card">
 
-            <!-- Step Indicator -->
-            <div class="moi-stepper">
-              <div class="moi-step" [class.active]="formStep() >= 1" [class.done]="formStep() > 1">
-                <div class="moi-step-circle">
-                  @if (formStep() > 1) { <mat-icon>check</mat-icon> } @else { 1 }
-                </div>
-                <span class="moi-step-label">Guest</span>
-              </div>
-              <div class="moi-step-line" [class.done]="formStep() > 1"></div>
-              <div class="moi-step" [class.active]="formStep() >= 2" [class.done]="formStep() > 2">
-                <div class="moi-step-circle">
-                  @if (formStep() > 2) { <mat-icon>check</mat-icon> } @else { 2 }
-                </div>
-                <span class="moi-step-label">Payment</span>
-              </div>
-              <div class="moi-step-line" [class.done]="formStep() > 2"></div>
-              <div class="moi-step" [class.active]="formStep() >= 3">
-                <div class="moi-step-circle">3</div>
-                <span class="moi-step-label">Details</span>
+            <!-- Form header -->
+            <div class="mf-header">
+              <div class="mf-header-icon"><mat-icon>volunteer_activism</mat-icon></div>
+              <div>
+                <div class="mf-header-title">Record Moi Entry</div>
+                <div class="mf-header-sub">Fill all details and submit quickly</div>
               </div>
             </div>
 
             <form [formGroup]="moiForm" (ngSubmit)="submitMoi()">
 
-              <!-- ── Step 1: Guest Info ─────────────────── -->
-              @if (formStep() === 1) {
-                <div class="moi-step-body">
-                  <div class="moi-step-heading">
-                    <mat-icon class="moi-step-icon">person</mat-icon>
-                    <div>
-                      <div class="moi-step-title">Guest Information</div>
-                      <div class="moi-step-sub">Who is giving the moi?</div>
-                    </div>
-                  </div>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Guest Name *</mat-label>
-                    <input matInput formControlName="guest_name" placeholder="Enter guest's full name" #guestNameInput (input)="checkDuplicate()">
-                    <mat-icon matPrefix>person</mat-icon>
-                    <button mat-icon-button matSuffix type="button"
-                      [class.voice-active]="voice.activeField() === 'guest_name'"
-                      [matTooltip]="voice.activeField() === 'guest_name' ? 'Listening… click to stop' : 'Voice input'"
-                      (click)="startVoice('guest_name')">
-                      <mat-icon>{{ voice.activeField() === 'guest_name' ? 'mic' : 'mic_none' }}</mat-icon>
-                    </button>
-                    @if (moiForm.get('guest_name')?.hasError('required') && moiForm.get('guest_name')?.touched) {
-                      <mat-error>Guest name is required</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <div class="grid-2">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Relationship</mat-label>
-                      <input matInput formControlName="relationship" placeholder="e.g., Uncle, Friend"
-                        [matAutocomplete]="relAuto">
-                      <mat-icon matPrefix>people</mat-icon>
-                      <mat-autocomplete #relAuto="matAutocomplete">
-                        @for (opt of filterSuggestions(relationshipSuggestions(), moiForm.get('relationship')?.value); track opt) {
-                          <mat-option [value]="opt">{{ opt }}</mat-option>
-                        }
-                      </mat-autocomplete>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Side</mat-label>
-                      <mat-select formControlName="side">
-                        <mat-option value="groom">{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }}</mat-option>
-                        <mat-option value="bride">{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }}</mat-option>
-                        <mat-option value="both">Both</mat-option>
-                      </mat-select>
-                      <mat-hint>Ctrl+D to toggle</mat-hint>
-                    </mat-form-field>
-                  </div>
-
-                  @if (dupWarning()) {
-                    <div class="dup-warning" role="alert">
-                      <mat-icon class="dup-icon">warning_amber</mat-icon>
-                      <span>Similar name already recorded: <strong>{{ dupWarning()!.name }}</strong> ({{ dupWarning()!.amount | currency:'INR':'symbol':'1.0-0' }})</span>
-                      <button mat-icon-button type="button" class="dup-close" matTooltip="Dismiss" (click)="dupWarning.set(null)">
-                        <mat-icon>close</mat-icon>
-                      </button>
-                    </div>
+              <!-- Row 1: Guest Name + Relationship + Side -->
+              <div class="mf-row mf-row-3">
+                <mat-form-field appearance="outline" class="mf-name-field">
+                  <mat-label>Guest Name *</mat-label>
+                  <input matInput formControlName="guest_name" placeholder="Full name" #guestNameInput (input)="checkDuplicate()">
+                  <mat-icon matPrefix>person</mat-icon>
+                  <button mat-icon-button matSuffix type="button"
+                    [class.voice-active]="voice.activeField() === 'guest_name'"
+                    (click)="startVoice('guest_name')" matTooltip="Voice input">
+                    <mat-icon>{{ voice.activeField() === 'guest_name' ? 'mic' : 'mic_none' }}</mat-icon>
+                  </button>
+                  @if (moiForm.get('guest_name')?.hasError('required') && moiForm.get('guest_name')?.touched) {
+                    <mat-error>Required</mat-error>
                   }
+                </mat-form-field>
 
-                  <div class="step-nav-row">
-                    <span></span>
-                    <button mat-raised-button color="primary" type="button" (click)="nextStep()">
-                      Next <mat-icon>arrow_forward</mat-icon>
-                    </button>
-                  </div>
-                </div>
-              }
-
-              <!-- ── Step 2: Payment ────────────────────── -->
-              @if (formStep() === 2) {
-                <div class="moi-step-body">
-                  <div class="moi-step-heading">
-                    <mat-icon class="moi-step-icon">currency_rupee</mat-icon>
-                    <div>
-                      <div class="moi-step-title">Payment Details</div>
-                      <div class="moi-step-sub">How much and how paid?</div>
-                    </div>
-                  </div>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Amount (₹) *</mat-label>
-                    <input matInput type="text" inputmode="numeric" pattern="[0-9]*"
-                           formControlName="amount" placeholder="0">
-                    <mat-icon matPrefix>currency_rupee</mat-icon>
-                    <button mat-icon-button matSuffix type="button"
-                      [class.voice-active]="voice.activeField() === 'amount'"
-                      [matTooltip]="voice.activeField() === 'amount' ? 'Listening… click to stop' : 'Voice input for Amount'"
-                      (click)="startVoice('amount')">
-                      <mat-icon>{{ voice.activeField() === 'amount' ? 'mic' : 'mic_none' }}</mat-icon>
-                    </button>
-                    @if (moiForm.get('amount')?.hasError('required') && moiForm.get('amount')?.touched) {
-                      <mat-error>Amount is required</mat-error>
+                <mat-form-field appearance="outline">
+                  <mat-label>Relationship</mat-label>
+                  <input matInput formControlName="relationship" placeholder="Uncle, Friend…"
+                    [matAutocomplete]="relAuto">
+                  <mat-icon matPrefix>people</mat-icon>
+                  <mat-autocomplete #relAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(relationshipSuggestions(), moiForm.get('relationship')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
                     }
-                    @if (moiForm.get('amount')?.hasError('pattern') && moiForm.get('amount')?.touched) {
-                      <mat-error>Amount must be a whole number</mat-error>
-                    }
-                  </mat-form-field>
+                  </mat-autocomplete>
+                </mat-form-field>
 
-                  <div class="amount-chips">
-                    @for (preset of amountPresets(); track preset; let i = $index) {
-                      <button type="button" class="amount-chip"
-                        style="min-height: 44px;"
-                        [class.amount-chip-active]="moiForm.get('amount')?.value === String(preset)"
-                        [matTooltip]="'F' + (i + 1) + ' key'"
-                        (click)="setAmount(preset)">
-                        ₹{{ preset | number }}
-                      </button>
-                    }
-                  </div>
+                <mat-form-field appearance="outline">
+                  <mat-label>Side</mat-label>
+                  <mat-select formControlName="side">
+                    <mat-option value="groom">{{ eventConfig().sideAEmoji }} {{ eventConfig().sideALabel }}</mat-option>
+                    <mat-option value="bride">{{ eventConfig().sideBEmoji }} {{ eventConfig().sideBLabel }}</mat-option>
+                    <mat-option value="both">Both</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
 
-                  <div class="grid-2" style="margin-top:12px;">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Payment Mode</mat-label>
-                      <mat-select formControlName="payment_mode">
-                        <mat-option value="cash">💵 Cash</mat-option>
-                        <mat-option value="cheque">📝 Cheque</mat-option>
-                        <mat-option value="online">📱 Online Transfer</mat-option>
-                        <mat-option value="dd">🏦 DD</mat-option>
-                      </mat-select>
-                    </mat-form-field>
+              <!-- Divider -->
+              <div class="mf-divider"><span>Payment</span></div>
 
-                    @if (moiForm.get('payment_mode')?.value === 'cheque') {
-                      <mat-form-field appearance="outline">
-                        <mat-label>Cheque Number</mat-label>
-                        <input matInput formControlName="cheque_number">
-                        <mat-icon matPrefix>receipt</mat-icon>
-                      </mat-form-field>
-                    }
-                    @if (moiForm.get('payment_mode')?.value === 'online') {
-                      <mat-form-field appearance="outline">
-                        <mat-label>Transaction Reference</mat-label>
-                        <input matInput formControlName="transaction_ref">
-                        <mat-icon matPrefix>confirmation_number</mat-icon>
-                      </mat-form-field>
-                    }
-                    @if (moiForm.get('payment_mode')?.value === 'cash' || moiForm.get('payment_mode')?.value === 'dd') {
-                      <span></span>
-                    }
-                  </div>
-
-                  <div class="step-nav-row">
-                    <button mat-stroked-button type="button" (click)="prevStep()">
-                      <mat-icon>arrow_back</mat-icon> Back
-                    </button>
-                    <button mat-raised-button color="primary" type="button" (click)="nextStep()">
-                      Next <mat-icon>arrow_forward</mat-icon>
-                    </button>
-                  </div>
-                </div>
-              }
-
-              <!-- ── Step 3: Details + Submit ───────────── -->
-              @if (formStep() === 3) {
-                <div class="moi-step-body">
-                  <div class="moi-step-heading">
-                    <mat-icon class="moi-step-icon">location_on</mat-icon>
-                    <div>
-                      <div class="moi-step-title">More Details</div>
-                      <div class="moi-step-sub">Optional — location &amp; contact info</div>
-                    </div>
-                  </div>
-
-                  <div class="grid-2">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Guest City</mat-label>
-                      <input matInput formControlName="city" placeholder="e.g., Chennai"
-                        [matAutocomplete]="cityAuto">
-                      <mat-icon matPrefix>location_city</mat-icon>
-                      <button mat-icon-button matSuffix type="button"
-                        [class.voice-active]="voice.activeField() === 'city'"
-                        [matTooltip]="voice.activeField() === 'city' ? 'Listening… click to stop' : 'Voice input for City'"
-                        (click)="startVoice('city')">
-                        <mat-icon>{{ voice.activeField() === 'city' ? 'mic' : 'mic_none' }}</mat-icon>
-                      </button>
-                      <mat-autocomplete #cityAuto="matAutocomplete">
-                        @for (opt of filterSuggestions(citySuggestions(), moiForm.get('city')?.value); track opt) {
-                          <mat-option [value]="opt">{{ opt }}</mat-option>
-                        }
-                      </mat-autocomplete>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>District</mat-label>
-                      <input matInput formControlName="district" placeholder="e.g., Kumbakonam"
-                        [matAutocomplete]="distAuto">
-                      <mat-icon matPrefix>map</mat-icon>
-                      <mat-autocomplete #distAuto="matAutocomplete">
-                        @for (opt of filterSuggestions(districtSuggestions(), moiForm.get('district')?.value); track opt) {
-                          <mat-option [value]="opt">{{ opt }}</mat-option>
-                        }
-                      </mat-autocomplete>
-                    </mat-form-field>
-                  </div>
-
-                  <div class="grid-2">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Phone</mat-label>
-                      <input matInput formControlName="phone" placeholder="10-digit mobile" inputmode="numeric">
-                      <mat-icon matPrefix>phone</mat-icon>
-                      @if (moiForm.get('phone')?.hasError('pattern') && moiForm.get('phone')?.touched) {
-                        <mat-error>Enter a valid 10-digit mobile number</mat-error>
-                      }
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Received By</mat-label>
-                      <input matInput formControlName="received_by" placeholder="Who collected the moi"
-                        [matAutocomplete]="recvAuto">
-                      <mat-icon matPrefix>how_to_reg</mat-icon>
-                      <mat-autocomplete #recvAuto="matAutocomplete">
-                        @for (opt of filterSuggestions(receivedBySuggestions(), moiForm.get('received_by')?.value); track opt) {
-                          <mat-option [value]="opt">{{ opt }}</mat-option>
-                        }
-                      </mat-autocomplete>
-                    </mat-form-field>
-                  </div>
-
-                  <div class="grid-2">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Notes</mat-label>
-                      <input matInput formControlName="notes" placeholder="Additional notes">
-                      <mat-icon matPrefix>notes</mat-icon>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Party Size</mat-label>
-                      <input matInput type="number" formControlName="party_size" placeholder="1" min="1">
-                      <mat-icon matPrefix>group</mat-icon>
-                      @if (moiForm.get('party_size')?.hasError('min') && moiForm.get('party_size')?.touched) {
-                        <mat-error>Party size must be at least 1</mat-error>
-                      }
-                    </mat-form-field>
-                  </div>
-
-                  @if (voice.isListening()) {
-                    <div class="voice-listening-banner" role="alert">
-                      <span class="voice-pulse-dot"></span>
-                      <mat-icon>mic</mat-icon>
-                      Listening for <strong>{{ voice.activeField() === 'guest_name' ? 'Guest Name' : voice.activeField() === 'city' ? 'City' : 'Amount' }}</strong>… speak clearly
-                      <button mat-icon-button type="button" matTooltip="Stop listening" (click)="voice.stopListening()">
-                        <mat-icon>mic_off</mat-icon>
-                      </button>
-                    </div>
+              <!-- Row 2: Amount + Presets + Payment mode -->
+              <div class="mf-row mf-row-amount">
+                <mat-form-field appearance="outline" class="mf-amount-field">
+                  <mat-label>Amount (₹) *</mat-label>
+                  <input matInput type="text" inputmode="numeric" pattern="[0-9]*"
+                         formControlName="amount" placeholder="0">
+                  <mat-icon matPrefix>currency_rupee</mat-icon>
+                  <button mat-icon-button matSuffix type="button"
+                    [class.voice-active]="voice.activeField() === 'amount'"
+                    (click)="startVoice('amount')" matTooltip="Voice input">
+                    <mat-icon>{{ voice.activeField() === 'amount' ? 'mic' : 'mic_none' }}</mat-icon>
+                  </button>
+                  @if (moiForm.get('amount')?.hasError('required') && moiForm.get('amount')?.touched) {
+                    <mat-error>Required</mat-error>
                   }
+                </mat-form-field>
 
-                  <!-- Print & Submit settings -->
-                  <div class="step3-settings">
-                    <div class="paper-size-selector">
-                      <mat-icon class="paper-icon" matTooltip="Thermal paper width">print</mat-icon>
-                      <mat-button-toggle-group [value]="paperSize()" (change)="paperSize.set($event.value)">
-                        <mat-button-toggle value="58">58 mm</mat-button-toggle>
-                        <mat-button-toggle value="80">80 mm</mat-button-toggle>
-                      </mat-button-toggle-group>
-                      <mat-button-toggle-group [value]="receiptLang()" (change)="receiptLang.set($event.value)" class="lang-toggle" matTooltip="Receipt language">
-                        <mat-button-toggle value="en">EN</mat-button-toggle>
-                        <mat-button-toggle value="ta">தமிழ்</mat-button-toggle>
-                      </mat-button-toggle-group>
-                    </div>
-                    <mat-checkbox [checked]="autoPrint()" (change)="autoPrint.set($event.checked)">Auto-print receipt</mat-checkbox>
-                  </div>
+                <mat-form-field appearance="outline" class="mf-mode-field">
+                  <mat-label>Payment Mode</mat-label>
+                  <mat-select formControlName="payment_mode">
+                    <mat-option value="cash">💵 Cash</mat-option>
+                    <mat-option value="cheque">📝 Cheque</mat-option>
+                    <mat-option value="online">📱 Online</mat-option>
+                    <mat-option value="dd">🏦 DD</mat-option>
+                  </mat-select>
+                </mat-form-field>
 
-                  <div class="step-nav-row">
-                    <div style="display:flex;gap:8px;align-items:center;">
-                      <button mat-stroked-button type="button" (click)="prevStep()">
-                        <mat-icon>arrow_back</mat-icon> Back
-                      </button>
-                      <button mat-stroked-button type="button" (click)="moiForm.reset(defaultMoiValues); formStep.set(1)"
-                              matTooltip="Clear all fields">
-                        <mat-icon>refresh</mat-icon> Reset
-                      </button>
-                    </div>
-                    <button mat-raised-button color="primary" type="submit" [disabled]="submitting()"
-                            matTooltip="Submit (Ctrl+Enter)">
-                      @if (submitting()) {
-                        <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
-                      }
-                      <mat-icon>add</mat-icon> Record &amp; Print
-                    </button>
-                  </div>
+                @if (moiForm.get('payment_mode')?.value === 'cheque') {
+                  <mat-form-field appearance="outline">
+                    <mat-label>Cheque No.</mat-label>
+                    <input matInput formControlName="cheque_number">
+                    <mat-icon matPrefix>receipt</mat-icon>
+                  </mat-form-field>
+                }
+                @if (moiForm.get('payment_mode')?.value === 'online') {
+                  <mat-form-field appearance="outline">
+                    <mat-label>Txn Ref</mat-label>
+                    <input matInput formControlName="transaction_ref">
+                    <mat-icon matPrefix>confirmation_number</mat-icon>
+                  </mat-form-field>
+                }
+              </div>
 
-                  <div class="kbd-hint">
-                    <kbd>Ctrl</kbd>+<kbd>Enter</kbd> submit &nbsp;|&nbsp;
-                    <kbd>F1</kbd>–<kbd>F5</kbd> presets &nbsp;|&nbsp;
-                    <kbd>Ctrl</kbd>+<kbd>L</kbd> focus name &nbsp;|&nbsp;
-                    <kbd>Ctrl</kbd>+<kbd>D</kbd> toggle side
-                  </div>
+              <!-- Preset chips -->
+              <div class="amount-chips mf-presets">
+                @for (preset of amountPresets(); track preset; let i = $index) {
+                  <button type="button" class="amount-chip"
+                    [class.amount-chip-active]="moiForm.get('amount')?.value === String(preset)"
+                    [matTooltip]="'F' + (i + 1)"
+                    (click)="setAmount(preset)">
+                    ₹{{ preset | number }}
+                  </button>
+                }
+              </div>
+
+              <!-- Divider -->
+              <div class="mf-divider"><span>Location &amp; Details</span></div>
+
+              <!-- Row 3: City + District + Phone + Received By -->
+              <div class="mf-row mf-row-4">
+                <mat-form-field appearance="outline">
+                  <mat-label>City</mat-label>
+                  <input matInput formControlName="city" placeholder="Chennai"
+                    [matAutocomplete]="cityAuto">
+                  <mat-icon matPrefix>location_city</mat-icon>
+                  <button mat-icon-button matSuffix type="button"
+                    [class.voice-active]="voice.activeField() === 'city'"
+                    (click)="startVoice('city')" matTooltip="Voice input">
+                    <mat-icon>{{ voice.activeField() === 'city' ? 'mic' : 'mic_none' }}</mat-icon>
+                  </button>
+                  <mat-autocomplete #cityAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(citySuggestions(), moiForm.get('city')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>District</mat-label>
+                  <input matInput formControlName="district" placeholder="Kumbakonam"
+                    [matAutocomplete]="distAuto">
+                  <mat-icon matPrefix>map</mat-icon>
+                  <mat-autocomplete #distAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(districtSuggestions(), moiForm.get('district')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Phone</mat-label>
+                  <input matInput formControlName="phone" placeholder="10-digit" inputmode="numeric">
+                  <mat-icon matPrefix>phone</mat-icon>
+                  @if (moiForm.get('phone')?.hasError('pattern') && moiForm.get('phone')?.touched) {
+                    <mat-error>Invalid number</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Received By</mat-label>
+                  <input matInput formControlName="received_by" placeholder="Collector name"
+                    [matAutocomplete]="recvAuto">
+                  <mat-icon matPrefix>how_to_reg</mat-icon>
+                  <mat-autocomplete #recvAuto="matAutocomplete">
+                    @for (opt of filterSuggestions(receivedBySuggestions(), moiForm.get('received_by')?.value); track opt) {
+                      <mat-option [value]="opt">{{ opt }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                </mat-form-field>
+              </div>
+
+              <!-- Duplicate warning -->
+              @if (dupWarning()) {
+                <div class="dup-warning" role="alert">
+                  <mat-icon class="dup-icon">warning_amber</mat-icon>
+                  <span>Similar name: <strong>{{ dupWarning()!.name }}</strong> ({{ dupWarning()!.amount | currency:'INR':'symbol':'1.0-0' }})</span>
+                  <button mat-icon-button type="button" class="dup-close" (click)="dupWarning.set(null)">
+                    <mat-icon>close</mat-icon>
+                  </button>
                 </div>
               }
+
+              <!-- Voice banner -->
+              @if (voice.isListening()) {
+                <div class="voice-listening-banner" role="alert">
+                  <span class="voice-pulse-dot"></span>
+                  <mat-icon>mic</mat-icon>
+                  Listening for <strong>{{ voice.activeField() === 'guest_name' ? 'Guest Name' : voice.activeField() === 'city' ? 'City' : 'Amount' }}</strong>…
+                  <button mat-icon-button type="button" (click)="voice.stopListening()">
+                    <mat-icon>mic_off</mat-icon>
+                  </button>
+                </div>
+              }
+
+              <!-- Footer: print settings + actions -->
+              <div class="mf-footer">
+                <div class="mf-footer-left">
+                  <mat-button-toggle-group [value]="paperSize()" (change)="paperSize.set($event.value)" class="mf-toggle">
+                    <mat-button-toggle value="58">58mm</mat-button-toggle>
+                    <mat-button-toggle value="80">80mm</mat-button-toggle>
+                  </mat-button-toggle-group>
+                  <mat-button-toggle-group [value]="receiptLang()" (change)="receiptLang.set($event.value)" class="mf-toggle">
+                    <mat-button-toggle value="en">EN</mat-button-toggle>
+                    <mat-button-toggle value="ta">தமிழ்</mat-button-toggle>
+                  </mat-button-toggle-group>
+                  <mat-checkbox [checked]="autoPrint()" (change)="autoPrint.set($event.checked)" class="mf-auto-print">
+                    Auto-print
+                  </mat-checkbox>
+                </div>
+                <div class="mf-footer-right">
+                  <button mat-stroked-button type="button" (click)="moiForm.reset(defaultMoiValues)" matTooltip="Clear">
+                    <mat-icon>refresh</mat-icon>
+                  </button>
+                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting()" matTooltip="Ctrl+Enter">
+                    @if (submitting()) { <mat-spinner diameter="18" class="btn-spinner"></mat-spinner> }
+                    <mat-icon>add_circle</mat-icon> Record &amp; Print
+                  </button>
+                </div>
+              </div>
+
+              <div class="kbd-hint">
+                <kbd>Ctrl</kbd>+<kbd>Enter</kbd> submit &nbsp;|&nbsp;
+                <kbd>F1</kbd>–<kbd>F5</kbd> presets &nbsp;|&nbsp;
+                <kbd>Ctrl</kbd>+<kbd>L</kbd> name &nbsp;|&nbsp;
+                <kbd>Ctrl</kbd>+<kbd>D</kbd> side
+              </div>
 
             </form>
 
             <!-- Activity timeline -->
-            @if (activityLog().length > 0) {
-              <div class="activity-timeline">
-                <div class="activity-title">⚡ Recent Entries this session</div>
-                @for (item of activityLog(); track item.id) {
-                  <div class="activity-item">
-                    <span class="activity-dot"></span>
-                    <span>{{ item.name }}</span>
-                    <span class="activity-amount">{{ item.amount | currency:'INR':'symbol':'1.0-0' }}</span>
-                    <span class="activity-time">{{ item.time | date:'HH:mm:ss' }}</span>
-                  </div>
-                }
-              </div>
+            @defer (on idle) {
+              @if (activityLog().length > 0) {
+                <div class="activity-timeline">
+                  <div class="activity-title">⚡ Recent Entries this session</div>
+                  @for (item of activityLog(); track item.id) {
+                    <div class="activity-item">
+                      <span class="activity-dot"></span>
+                      <span>{{ item.name }}</span>
+                      <span class="activity-amount">{{ item.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+                      <span class="activity-time">{{ item.time | date:'HH:mm:ss' }}</span>
+                    </div>
+                  }
+                </div>
+              }
             }
           </div>
         </div>
@@ -524,16 +439,18 @@
             </mat-form-field>
           </div>
 
-          @if (topDonors().length > 0) {
-            <div class="top-donors">
-              <div class="top-donors-title">Top Donors</div>
-              @for (donor of topDonors(); track donor.id) {
-                <div class="top-donor-item">
-                  <span class="top-donor-name">{{ donor.guest_name }}</span>
-                  <span class="top-donor-amount">{{ donor.amount | currency:'INR':'symbol':'1.0-0' }}</span>
-                </div>
-              }
-            </div>
+          @defer (on viewport) {
+            @if (topDonors().length > 0) {
+              <div class="top-donors">
+                <div class="top-donors-title">Top Donors</div>
+                @for (donor of topDonors(); track donor.id) {
+                  <div class="top-donor-item">
+                    <span class="top-donor-name">{{ donor.guest_name }}</span>
+                    <span class="top-donor-amount">{{ donor.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+                  </div>
+                }
+              </div>
+            }
           }
 
           @if (entriesLoading()) {
@@ -704,13 +621,11 @@
               Showing {{ entries().length }} of {{ totalEntries() }} entries
             </div>
 
-            <mat-paginator
-              [length]="totalEntries()"
-              [pageSize]="pageSize()"
-              [pageSizeOptions]="[10, 20, 50, 100]"
-              (page)="onPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
+            @if (!allEntriesLoaded()) {
+              <div #entriesSentinel class="scroll-sentinel">
+                <app-loading-spinner [diameter]="32" />
+              </div>
+            }
           }
 
         </div>

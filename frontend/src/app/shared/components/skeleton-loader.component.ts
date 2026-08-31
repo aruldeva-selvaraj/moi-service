@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -123,14 +123,20 @@ import { CommonModule } from '@angular/common';
       flex: 1;
     }
   `],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SkeletonLoaderComponent {
+export class SkeletonLoaderComponent implements OnChanges {
   @Input() variant: 'lines' | 'cards' | 'table' = 'lines';
   @Input() count = 3;
   @Input() colCount = 6;
 
-  get rows(): number[] { return Array(this.count).fill(0); }
-  get cols(): number[] { return Array(this.colCount).fill(0); }
+  rows: number[] = Array(3).fill(0);
+  cols: number[] = Array(6).fill(0);
+
+  ngOnChanges(): void {
+    this.rows = Array(this.count).fill(0);
+    this.cols = Array(this.colCount).fill(0);
+  }
 
   lineWidth(i: number): string {
     const widths = ['100%', '80%', '90%', '65%', '75%'];

@@ -120,19 +120,10 @@
           <mat-button-toggle value="past">Past</mat-button-toggle>
         </mat-button-toggle-group>
 
-        <mat-form-field appearance="outline" class="filter-moi">
-          <mat-label>Min Moi (₹)</mat-label>
-          <input matInput type="number" [value]="totalMoiMin()" (input)="totalMoiMin.set(+$any($event.target).value || 0)">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-moi">
-          <mat-label>Max Moi (₹)</mat-label>
-          <input matInput type="number" [value]="totalMoiMax()" (input)="totalMoiMax.set(+$any($event.target).value || 0)">
-        </mat-form-field>
       </div>
 
       <div class="grid-3">
-        @for (ev of pagedEvents(); track ev.id) {
+        @for (ev of displayedEvents(); track ev.id) {
           <div class="wedding-card">
             <div class="card-top">
               <div class="card-title-area">
@@ -204,12 +195,12 @@
         }
       </div>
 
-      <mat-paginator
-        [length]="filteredEvents().length"
-        [pageSize]="eventsPageSize()"
-        [pageIndex]="eventsPage() - 1"
-        (page)="onPageChange($event)">
-      </mat-paginator>
+      <!-- Scroll sentinel -->
+      @if (displayedEvents().length < filteredEvents().length) {
+        <div #sentinel class="scroll-sentinel">
+          <app-loading-spinner [diameter]="32" />
+        </div>
+      }
 
     } @else if (!auth.isAdmin()) {
       <!-- User has only pending events (no approved yet) -->

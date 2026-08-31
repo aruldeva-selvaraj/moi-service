@@ -16,7 +16,7 @@
     <app-loading-spinner message="Loading users..." />
   } @else {
     <div class="table-wrapper">
-      <table mat-table [dataSource]="filteredUsers" class="users-table">
+      <table mat-table [dataSource]="filteredUsers()" class="users-table">
         <ng-container matColumnDef="username">
           <th mat-header-cell *matHeaderCellDef>Username</th>
           <td mat-cell *matCellDef="let u">
@@ -121,7 +121,7 @@
       </table>
     </div>
 
-    @if (filteredUsers.length === 0) {
+    @if (filteredUsers().length === 0) {
       <div class="no-results">No users found</div>
     }
   }

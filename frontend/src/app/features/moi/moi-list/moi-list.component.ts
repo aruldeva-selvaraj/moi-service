@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, DestroyRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,7 +11,6 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -211,7 +210,7 @@ class EditMoiDialog {
     CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule,
     MatIconModule, MatTableModule, MatSortModule, MatProgressSpinnerModule, MatSnackBarModule,
-    MatTooltipModule, MatPaginatorModule,
+    MatTooltipModule,
     MatAutocompleteModule, MatDialogModule, MatCheckboxModule, ReactiveFormsModule,
     EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent,
     QuickAddMoiDialog, ConfirmDeleteMoiDialog, EditMoiDialog,
@@ -219,7 +218,7 @@ class EditMoiDialog {
   templateUrl: './moi-list.component.html',
   styleUrls: ['./moi-list.component.scss'],
 })
-export class MoiListComponent implements OnInit {
+export class MoiListComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly moiService = inject(MoiService);
   private readonly eventService = inject(EventService);
   private readonly snackBar = inject(MatSnackBar);
@@ -228,19 +227,23 @@ export class MoiListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
+  @ViewChild('moiSentinel') moiSentinel!: ElementRef<HTMLDivElement>;
+  private scrollObserver?: IntersectionObserver;
+
   readonly search$ = new Subject<string>();
 
   loading = signal(true);
   entries = signal<MoiEntry[]>([]);
   events = signal<Event[]>([]);
   total = signal(0);
+  allLoaded = signal(false);
 
   selectedEventId: number | null = null;
   filterSide = '';
   filterPayment = '';
   searchQuery = signal('');
   page = signal(1);
-  pageSize = 20;
+  pageSize = 30;
 
 
   relationshipFilter = signal('');
@@ -310,25 +313,45 @@ export class MoiListComponent implements OnInit {
     return { groom: 'badge-groom', bride: 'badge-bride', both: 'badge-both' }[side] || '';
   }
 
-  loadEntries() {
-    this.loading.set(true);
-    const filter: MoiFilter = {
-      page: this.page(),
+  private buildFilter(pg: number): MoiFilter {
+    return {
+      page: pg,
       page_size: this.pageSize,
       event_id: this.selectedEventId ?? undefined,
       side: (this.filterSide as any) || undefined,
       payment_mode: (this.filterPayment as any) || undefined,
       search: this.searchQuery() || undefined,
-
       relationship: this.relationshipFilter() || undefined,
       received_by: this.receivedByFilter() || undefined,
       sort_field: this.sortField(),
       sort_dir: this.sortDir(),
     };
-    this.moiService.getAll(filter).subscribe({
+  }
+
+  loadEntries() {
+    this.page.set(1);
+    this.allLoaded.set(false);
+    this.loading.set(true);
+    this.moiService.getAll(this.buildFilter(1)).subscribe({
       next: (resp) => {
         this.entries.set(resp.items);
         this.total.set(resp.total);
+        this.allLoaded.set(resp.items.length >= resp.total);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  loadMore() {
+    if (this.allLoaded() || this.loading()) return;
+    const nextPage = this.page() + 1;
+    this.page.set(nextPage);
+    this.loading.set(true);
+    this.moiService.getAll(this.buildFilter(nextPage)).subscribe({
+      next: (resp) => {
+        this.entries.update(e => [...e, ...resp.items]);
+        this.allLoaded.set(this.entries().length >= resp.total);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -336,7 +359,6 @@ export class MoiListComponent implements OnInit {
   }
 
   applyFilter() {
-    this.page.set(1);
     this.loadEntries();
   }
 
@@ -345,10 +367,8 @@ export class MoiListComponent implements OnInit {
     this.filterSide = '';
     this.filterPayment = '';
     this.searchQuery.set('');
-
     this.relationshipFilter.set('');
     this.receivedByFilter.set('');
-    this.page.set(1);
     this.loadEntries();
   }
 
@@ -366,10 +386,15 @@ export class MoiListComponent implements OnInit {
     return this.sortDir() === 'asc' ? 'arrow_upward' : 'arrow_downward';
   }
 
-  onPageChange(event: PageEvent) {
-    this.page.set(event.pageIndex + 1);
-    this.pageSize = event.pageSize;
-    this.loadEntries();
+  ngAfterViewInit() {
+    this.scrollObserver = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) this.loadMore();
+    }, { threshold: 0.1 });
+    if (this.moiSentinel) this.scrollObserver.observe(this.moiSentinel.nativeElement);
+  }
+
+  ngOnDestroy() {
+    this.scrollObserver?.disconnect();
   }
 
   deleteEntry(entry: MoiEntry) {

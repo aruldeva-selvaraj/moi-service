@@ -331,13 +331,13 @@ export class ReceiptService {
     .tg-lbl   { font-size:10px; color:#666; margin-top:2px; }
 
     .ta-box {
-      background:#fde8ee; border:1.5px solid #e8a0b8;
-      border-radius:6px; padding:12px 24px;
-      text-align:center; flex:1;
+      border-left:3px solid #c0446a;
+      padding:6px 0 6px 14px;
+      text-align:right; flex-shrink:0;
     }
-    .ta-lbl   { font-size:11px; font-weight:700; color:#7b1a36; }
-    .ta-val   { font-size:26px; font-weight:800; color:#7b1a36; margin:4px 0 3px; }
-    .ta-words { font-size:9.5px; color:#8b3050; font-style:italic; line-height:1.4; }
+    .ta-lbl   { font-size:9.5px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.04em; }
+    .ta-val   { font-size:22px; font-weight:800; color:#7b1a36; margin:2px 0 2px; line-height:1; }
+    .ta-words { font-size:8.5px; color:#8b3050; font-style:italic; line-height:1.3; }
 
     /* ── Bottom Section ── */
     .bottom-sec { display:flex; justify-content:space-between; align-items:flex-start; margin-top:18px; gap:12px; }

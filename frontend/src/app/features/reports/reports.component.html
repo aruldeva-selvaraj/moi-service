@@ -91,6 +91,13 @@
       </div>
     }
 
+    <!-- 3D Coin Visualisation -->
+    @if (eventReport() && selectedEventId && eventReport()!.moi_count > 0) {
+      <app-moi-canvas3d
+        [report]="eventReport()!"
+        [config]="getSelectedEventConfig()" />
+    }
+
     <!-- Analytics Charts -->
     @if (eventReport() && selectedEventId) {
       <h3 class="section-title">Visual Analytics</h3>

@@ -137,8 +137,16 @@ $wedding-theme: mat.m2-define-light-theme((
   padding: 0;
 }
 
-html, body {
+html {
   height: 100%;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  height: 100%;
+  overflow-x: hidden;
+  max-width: 100vw;
   font-family: 'Inter', 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', 'Noto Sans Tamil', system-ui, Arial, sans-serif;
   background-color: var(--bg-page);
   color: var(--text-body);
@@ -353,9 +361,12 @@ html, body {
 
 // ── Layout ────────────────────────────────────────────────────────────────
 .page-container {
+  width: 100%;
   max-width: 1400px;
+  min-width: 0;           // prevents flex/grid children from forcing the container wider
   margin: 0 auto;
   padding: 24px 16px;
+  box-sizing: border-box;
 }
 
 .page-header {
@@ -466,9 +477,10 @@ html, body {
   border-radius: var(--radius-md);
   border: var(--card-border);
   box-shadow: var(--card-shadow);
-  overflow: hidden;
+  overflow-x: auto;       // table scrolls horizontally inside the card — not the whole page
+  overflow-y: hidden;
 
-  table { width: 100%; }
+  table { width: 100%; min-width: 600px; }
 
   th.mat-header-cell {
     background-color: var(--table-header-bg);

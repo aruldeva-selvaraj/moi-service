@@ -111,7 +111,7 @@ export class WeddingFormComponent implements OnInit {
           this.isEdit ? 'Event updated!' : 'Event created!',
           'Close', { duration: 3000, panelClass: 'success-snackbar' },
         );
-        this.router.navigate(['/events', ev.id]);
+        this.router.navigate(this.isEdit ? ['/events', ev.id] : ['/events']);
       },
       error: () => {
         this.submitting.set(false);

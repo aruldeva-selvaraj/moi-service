@@ -166,7 +166,7 @@
             <div class="bar-row">
               <span class="bar-label">🏦 DD</span>
               <div class="bar-track">
-                <div class="bar-fill bar-dd" [style.width.%]="barWidth(eventReport()!.dd_amount ?? 0, eventReport()!.total_amount)"></div>
+                <div class="bar-fill bar-dd" [style.width.%]="barWidth(eventReport()!.dd_amount, eventReport()!.total_amount)"></div>
               </div>
               <span class="bar-value">{{ eventReport()!.dd_amount | currency:'INR':'symbol':'1.0-0' }}</span>
             </div>

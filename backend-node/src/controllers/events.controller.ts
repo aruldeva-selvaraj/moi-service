@@ -472,14 +472,16 @@ export class EventsController {
     if (isOwnerRestricted) delParams.push(caller?.sub ?? 0);
     const ownerClause = isOwnerRestricted ? `AND created_by = $2` : '';
 
-    const result = await this.eventRepo.query(
-      `UPDATE public.events
-       SET deleted_at = NOW(), updated_at = NOW()
-       WHERE id = $1 AND deleted_at IS NULL ${ownerClause}
-       RETURNING id`,
+    const existing = await this.eventRepo.query(
+      `SELECT id FROM public.events WHERE id = $1 AND deleted_at IS NULL ${ownerClause}`,
       delParams,
     );
-    if (!result.length) throw new HttpErrors.NotFound('Event not found');
+    if (!existing.length) throw new HttpErrors.NotFound('Event not found');
+
+    await this.eventRepo.query(
+      `UPDATE public.events SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1 AND deleted_at IS NULL ${ownerClause}`,
+      delParams,
+    );
 
     await this.eventRepo.query(
       `INSERT INTO public.audit_log(actor_id,actor_username,action,entity_type,entity_id,new_value)

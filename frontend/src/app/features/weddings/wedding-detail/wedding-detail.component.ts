@@ -23,9 +23,10 @@ import { EventService } from '../../../core/services/event.service';
 import { MoiService } from '../../../core/services/moi.service';
 import { ReceiptService, PaperSize, PrintSide, PrintFilter, ReceiptLang } from '../../../core/services/receipt.service';
 import { VoiceRecognitionService } from '../../../core/services/voice-recognition.service';
-import { Event, getEventConfig, getEventTitle, EventTypeConfig } from '../../../core/models/event.model';
+import { Event, getEventConfig, getEventTitle, EventTypeConfig, EventReport } from '../../../core/models/event.model';
 import { MoiEntry, MoiEntryCreate, MoiFilter } from '../../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent, AiEntryDialogData, ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/index';
+import { MoiCanvas3DComponent } from '../../../shared/components/moi-canvas3d/moi-canvas3d.component';
 
 
 @Component({
@@ -39,6 +40,7 @@ import { StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntr
     MatButtonToggleModule, MatAutocompleteModule, MatDialogModule,
     MatPaginatorModule, MatCheckboxModule,
     StatCardComponent, EmptyStateComponent, LoadingSpinnerComponent, AiEntryDialogComponent,
+    MoiCanvas3DComponent,
   ],
   templateUrl: './wedding-detail.component.html',
   styleUrls: ['./wedding-detail.component.scss'],
@@ -79,6 +81,7 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   autoPrint = signal(true);
   topDonors = signal<any[]>([]);
   highlightId = signal<number | null>(null);
+  eventReport = signal<EventReport | null>(null);
   filterReceivedBy = '';
   entriesPage = signal(1);
   pageSize = signal(20);
@@ -106,6 +109,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
     const ev = this.event();
     return ev ? getEventTitle(ev) : '';
   });
+
+  formStep = signal(1);
 
   filterSide = '';
   filterPayment = '';
@@ -331,8 +336,19 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
   loadEvent() {
     this.loading.set(true);
     this.eventService.getById(this.eventId).subscribe({
-      next: (ev) => { this.event.set(ev); this.loading.set(false); },
+      next: (ev) => {
+        this.event.set(ev);
+        this.loading.set(false);
+        this.loadReport();
+      },
       error: () => this.loading.set(false),
+    });
+  }
+
+  private loadReport() {
+    this.eventService.getReport(this.eventId).subscribe({
+      next: (r) => this.eventReport.set(r),
+      error: () => {},
     });
   }
 
@@ -342,6 +358,8 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
       event_id: this.eventId,
       page: this.entriesPage(),
       page_size: this.pageSize(),
+      sort_field: 'created_at',
+      sort_dir: 'desc',
       side: (this.filterSide as any) || undefined,
       payment_mode: (this.filterPayment as any) || undefined,
       search: this.searchQuery || undefined,
@@ -351,7 +369,7 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
     };
     this.moiService.getAll(filter).subscribe({
       next: (resp) => {
-        this.entries.set([...resp.items].sort((a, b) => b.id - a.id));
+        this.entries.set(resp.items);
         this.totalEntries.set(resp.total);
         this.entriesLoading.set(false);
       },
@@ -361,6 +379,25 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
 
   applyFilter() {
     this.loadEntries();
+  }
+
+  nextStep(): void {
+    const step = this.formStep();
+    if (step === 1) {
+      const nameCtrl = this.moiForm.get('guest_name');
+      nameCtrl?.markAsTouched();
+      if (nameCtrl?.invalid) return;
+    }
+    if (step === 2) {
+      const amtCtrl = this.moiForm.get('amount');
+      amtCtrl?.markAsTouched();
+      if (amtCtrl?.invalid) return;
+    }
+    if (step < 3) this.formStep.set(step + 1);
+  }
+
+  prevStep(): void {
+    if (this.formStep() > 1) this.formStep.set(this.formStep() - 1);
   }
 
   submitMoi() {
@@ -390,6 +427,7 @@ export class WeddingDetailComponent implements OnInit, OnDestroy {
         this.loadLastSettings();
         this.dupWarning.set(null);
         this.submitting.set(false);
+        this.formStep.set(1);
         this.playKaChing();
         this.justAddedId.set(entry.id);
         setTimeout(() => this.justAddedId.set(null), 5000);

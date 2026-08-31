@@ -536,11 +536,11 @@ export class MoiController {
       queryParams = [eventId, userId ?? 0];
     }
     return this.moiRepo.query(
-      `SELECT city, COUNT(*)::int AS count, SUM(amount)::float AS total_amount
+      `SELECT moi_entries.city, COUNT(*)::int AS count, SUM(moi_entries.amount)::float AS total_amount
        FROM moi_entries ${joinClause}
        WHERE moi_entries.event_id = $1 AND moi_entries.city IS NOT NULL AND moi_entries.city != ''
          AND moi_entries.deleted_at IS NULL
-       GROUP BY city
+       GROUP BY moi_entries.city
        ORDER BY total_amount DESC
        LIMIT 20`,
       queryParams,
@@ -569,11 +569,11 @@ export class MoiController {
       queryParams = [eventId, userId ?? 0];
     }
     return this.moiRepo.query(
-      `SELECT district, COUNT(*)::int AS count, SUM(amount)::float AS total_amount
+      `SELECT moi_entries.district, COUNT(*)::int AS count, SUM(moi_entries.amount)::float AS total_amount
        FROM moi_entries ${joinClause}
        WHERE moi_entries.event_id = $1 AND moi_entries.district IS NOT NULL AND moi_entries.district != ''
          AND moi_entries.deleted_at IS NULL
-       GROUP BY district
+       GROUP BY moi_entries.district
        ORDER BY total_amount DESC
        LIMIT 20`,
       queryParams,

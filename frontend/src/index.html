@@ -8,53 +8,110 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
   <style>
+    body { margin: 0; background: #faf7f4; }
+
     #app-init-loader {
       position: fixed;
       inset: 0;
       z-index: 99999;
-      background: linear-gradient(135deg, #5a2d0c 0%, #8B4513 100%);
+      background: #faf7f4;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 24px;
-      transition: opacity 0.4s ease, visibility 0.4s ease;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
     }
     #app-init-loader.hidden {
       opacity: 0;
       visibility: hidden;
     }
-    .init-loader-logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.4rem;
+
+    .il-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Spinning ring around logo */
+    .il-ring {
+      position: relative;
+      width: 88px;
+      height: 88px;
+    }
+    .il-ring svg {
+      position: absolute;
+      inset: 0;
+      animation: il-spin 1.2s linear infinite;
+    }
+    @keyframes il-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Logo circle inside the ring */
+    .il-logo-circle {
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #f5f0ee;
+      box-shadow: 0 4px 18px rgba(123,26,54,0.25);
+    }
+    .il-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    /* Pulse glow */
+    .il-logo-circle::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(192,68,106,0.18) 0%, transparent 70%);
+      animation: il-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes il-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50%       { transform: scale(1.15); opacity: 0; }
+    }
+
+    .il-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.25rem;
       font-weight: 700;
-      color: #fff;
+      color: #7b1a36;
       letter-spacing: 1px;
     }
-    .init-loader-tagline {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      color: rgba(255,255,255,0.7);
+    .il-tag {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 0.72rem;
+      color: #a07060;
       letter-spacing: 0.5px;
-    }
-    .init-loader-spinner {
-      width: 44px;
-      height: 44px;
-      border: 4px solid rgba(255,255,255,0.25);
-      border-top-color: #FFD700;
-      border-radius: 50%;
-      animation: spin 0.85s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body class="mat-typography">
   <div id="app-init-loader">
-    <div class="init-loader-logo">💍 Moify</div>
-    <div class="init-loader-spinner"></div>
-    <div class="init-loader-tagline">Smart Digital Wedding Gift Ledger</div>
+    <div class="il-wrap">
+      <div class="il-ring">
+        <!-- Spinning arc -->
+        <svg viewBox="0 0 88 88" width="88" height="88" fill="none">
+          <circle cx="44" cy="44" r="40" stroke="#f0d8df" stroke-width="3.5"/>
+          <circle cx="44" cy="44" r="40"
+            stroke="#c0446a" stroke-width="3.5"
+            stroke-linecap="round"
+            stroke-dasharray="62 190"
+            stroke-dashoffset="0"/>
+        </svg>
+        <div class="il-logo-circle">
+          <img src="assets/images/brand-logo.jpeg" alt="Moify" class="il-logo-img">
+        </div>
+      </div>
+      <div class="il-name">Moify</div>
+      <div class="il-tag">Smart Digital Wedding Gift Ledger</div>
+    </div>
   </div>
   <app-root></app-root>
 </body>

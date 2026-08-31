@@ -213,7 +213,6 @@ class EditMoiDialog {
     MatTooltipModule,
     MatAutocompleteModule, MatDialogModule, MatCheckboxModule, ReactiveFormsModule,
     EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent, SkeletonLoaderComponent,
-    QuickAddMoiDialog, ConfirmDeleteMoiDialog, EditMoiDialog,
   ],
   templateUrl: './moi-list.component.html',
   styleUrls: ['./moi-list.component.scss'],

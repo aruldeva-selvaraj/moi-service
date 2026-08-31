@@ -165,10 +165,10 @@
               : '0%'" />
           <app-stat-card
             icon="🏦"
-            [value]="(eventReport()!.dd_amount ?? 0) | currency:'INR':'symbol':'1.0-0'"
+            [value]="eventReport()!.dd_amount | currency:'INR':'symbol':'1.0-0'"
             label="DD"
             [sub]="eventReport()!.total_amount > 0
-              ? ((eventReport()!.dd_amount ?? 0) / eventReport()!.total_amount | percent:'1.0-1')
+              ? (eventReport()!.dd_amount / eventReport()!.total_amount | percent:'1.0-1')
               : '0%'" />
         </div>
       </div>

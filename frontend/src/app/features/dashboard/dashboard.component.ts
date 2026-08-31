@@ -15,6 +15,7 @@ import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/mo
 import { SummaryStats } from '../../core/models/moi.model';
 import { StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../shared/components/index';
 import { OnboardingOverlayComponent } from '../../shared/components/onboarding-overlay.component';
+import { MoiCanvas3DComponent } from '../../shared/components/moi-canvas3d/moi-canvas3d.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,7 +26,7 @@ import { OnboardingOverlayComponent } from '../../shared/components/onboarding-o
     MatButtonModule, MatIconModule, MatDividerModule,
     MatFormFieldModule, MatSelectModule,
     StatCardComponent, EmptyStateComponent, PageHeaderComponent, LoadingSpinnerComponent,
-    OnboardingOverlayComponent,
+    OnboardingOverlayComponent, MoiCanvas3DComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],

@@ -17,6 +17,7 @@ import { Event, EventReport, getEventConfig, getEventTitle } from '../../core/mo
 import { RelationshipReport, MoiEntry, GeoBreakdownItem } from '../../core/models/moi.model';
 import { ReceiptService, PrintSide, PrintFilter } from '../../core/services/receipt.service';
 import { StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent } from '../../shared/components/index';
+import { MoiCanvas3DComponent } from '../../shared/components/moi-canvas3d/moi-canvas3d.component';
 
 @Component({
   selector: 'app-reports',
@@ -25,7 +26,7 @@ import { StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent } from 
     CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe, PercentPipe,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatTableModule, MatTooltipModule, MatSnackBarModule,
-    StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent,
+    StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent, MoiCanvas3DComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reports.component.html',

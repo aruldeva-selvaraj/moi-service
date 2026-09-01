@@ -459,9 +459,8 @@ export class WeddingDetailComponent implements OnInit, AfterViewInit, OnDestroy 
         this.snackBar.open('Moi recorded! Printing receipt... 🖨️', 'Close', {
           duration: 4000, panelClass: 'success-snackbar',
         });
-        const receiptNo = entry.receipt_no ?? 1;
         if (this.autoPrint()) {
-          this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), receiptNo, this.receiptLang());
+          this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), entry.receipt_no, this.receiptLang());
         }
         this.saveLastSettings();
         this.moiForm.reset(this.defaultMoiValues);
@@ -489,7 +488,7 @@ export class WeddingDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   printEntry(entry: MoiEntry): void {
     if (this.event()) {
-      this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), entry.receipt_no ?? 1, this.receiptLang());
+      this.receiptService.printReceipt(entry, this.event()!, this.paperSize(), entry.receipt_no, this.receiptLang());
     }
   }
 
@@ -675,7 +674,7 @@ export class WeddingDetailComponent implements OnInit, AfterViewInit, OnDestroy 
             duration: 4000, panelClass: 'success-snackbar',
           });
           if (this.autoPrint()) {
-            this.receiptService.printReceipt(entry, this.event()!, '80', entry.receipt_no ?? 1, this.receiptLang());
+            this.receiptService.printReceipt(entry, this.event()!, '80', entry.receipt_no, this.receiptLang());
           }
           this.submitting.set(false);
           this.playKaChing();

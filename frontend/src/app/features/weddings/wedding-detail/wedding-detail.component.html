@@ -310,6 +310,60 @@
                 </div>
               }
 
+              <!-- Live entry preview -->
+              @if (moiForm.get('guest_name')?.value || moiForm.get('amount')?.value) {
+                <div class="entry-preview">
+                  @if (moiForm.get('guest_name')?.value) {
+                    <span class="ep-chip ep-name">
+                      <span class="ep-lbl">Guest</span>
+                      {{ moiForm.get('guest_name')?.value }}
+                    </span>
+                  }
+                  @if (moiForm.get('relationship')?.value) {
+                    <span class="ep-chip ep-rel">
+                      <span class="ep-lbl">Rel</span>
+                      {{ moiForm.get('relationship')?.value }}
+                    </span>
+                  }
+                  @if (moiForm.get('side')?.value) {
+                    <span class="ep-chip ep-side">
+                      <span class="ep-lbl">Side</span>
+                      {{ moiForm.get('side')?.value }}
+                    </span>
+                  }
+                  @if (moiForm.get('amount')?.value) {
+                    <span class="ep-chip ep-amount">
+                      <span class="ep-lbl">₹</span>
+                      {{ moiForm.get('amount')?.value | number }}
+                    </span>
+                  }
+                  @if (moiForm.get('payment_mode')?.value) {
+                    <span class="ep-chip ep-mode">
+                      <span class="ep-lbl">Mode</span>
+                      {{ moiForm.get('payment_mode')?.value }}
+                    </span>
+                  }
+                  @if (moiForm.get('city')?.value) {
+                    <span class="ep-chip ep-loc">
+                      <span class="ep-lbl">City</span>
+                      {{ moiForm.get('city')?.value }}
+                    </span>
+                  }
+                  @if (moiForm.get('district')?.value) {
+                    <span class="ep-chip ep-loc">
+                      <span class="ep-lbl">Dist</span>
+                      {{ moiForm.get('district')?.value }}
+                    </span>
+                  }
+                  @if (moiForm.get('received_by')?.value) {
+                    <span class="ep-chip ep-recv">
+                      <span class="ep-lbl">By</span>
+                      {{ moiForm.get('received_by')?.value }}
+                    </span>
+                  }
+                </div>
+              }
+
               <!-- Voice banner -->
               @if (voice.isListening()) {
                 <div class="voice-listening-banner" role="alert">

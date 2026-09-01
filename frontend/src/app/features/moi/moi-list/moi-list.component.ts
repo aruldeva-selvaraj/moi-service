@@ -409,7 +409,7 @@ export class MoiListComponent implements OnInit, AfterViewInit, OnDestroy {
   printEntry(entry: any): void {
     const ev = this.events().find(e => e.id === entry.event_id);
     if (!ev) { this.snackBar.open('Event not found', 'Close', { duration: 2000 }); return; }
-    this.receiptService.printReceipt(entry, ev, '80', entry.receipt_no ?? 1, 'en');
+    this.receiptService.printReceipt(entry, ev, '80', entry.receipt_no, 'en');
   }
 
   openDeleteDialog(entry: any): void {

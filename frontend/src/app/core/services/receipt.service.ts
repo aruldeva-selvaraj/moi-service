@@ -215,7 +215,7 @@ export class ReceiptService {
     const eventOfLabel = cfg.label + ' of';
 
     const tableRows = filtered.map((x, i) => {
-      return `<tr style="background:${i % 2 === 0 ? '#ffffff' : '#fdf5f7'};">
+      return `<tr>
         <td class="tc tn">${i + 1}</td>
         <td class="tl tname">${esc(x.guest_name)}</td>
         <td class="tl trel">${esc(x.relationship || '—')}</td>

@@ -1,20 +1,65 @@
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+@keyframes gradShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+
 .toolbar-row {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  animation: fadeUp 0.4s ease both;
 }
+
 .search-field { flex: 1; min-width: 220px; }
-.table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid var(--mat-sys-outline-variant, #e0e0e0); }
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(192,68,106,0.15);
+  box-shadow: 0 4px 20px rgba(60,10,30,0.08);
+  animation: fadeUp 0.5s 0.1s ease both;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #C0446A, #D4AF37, #C0446A);
+    background-size: 200% auto;
+    animation: gradShift 3s ease infinite;
+    z-index: 1;
+  }
+}
+
 .users-table { width: 100%; }
-.user-cell { display: flex; align-items: center; gap: 10px; }
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .user-avatar {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: var(--mat-sys-primary-container, #e3f2fd);
-  color: var(--mat-sys-on-primary-container, #1565c0);
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C0446A, #8B1A36);
+  color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(192,68,106,0.35);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+
+  &:hover { transform: scale(1.1); }
 }
-.role-select { width: 110px; }
-.no-results { text-align: center; padding: 40px; color: var(--mat-sys-on-surface-variant, #666); }
+
+.role-select { width: 120px; }
+
+.no-results {
+  text-align: center;
+  padding: 48px;
+  color: var(--mat-sys-on-surface-variant, #666);
+  font-size: 0.9rem;
+}

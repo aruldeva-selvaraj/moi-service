@@ -1,20 +1,49 @@
+@keyframes fadeUp    { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+@keyframes gradShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+
 .form-section {
   margin-bottom: 24px;
+  animation: fadeUp 0.5s ease both;
 }
 
 .form-section-title {
   font-family: var(--font-heading, 'Playfair Display', serif);
-  color: var(--text-heading, #6B2D0A);
   margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text-heading, #3A0D20), #C0446A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding-left: 12px;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #C0446A, #D4AF37);
+    border-radius: 2px;
+  }
 }
 
 .form-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid rgba(192,68,106,0.1);
+  margin-top: 8px;
+  animation: fadeUp 0.5s 0.1s ease both;
 }
 
 .btn-spinner {
   display: inline-block;
   margin-right: 8px;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }
+
+@keyframes spin { to { transform: rotate(360deg); } }

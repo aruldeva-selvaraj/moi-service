@@ -1,26 +1,25 @@
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin         { to { transform: rotate(360deg); } }
+@keyframes gradientShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+@keyframes fadeUp       { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+
 .spin-icon { animation: spin 1s linear infinite; }
 
 .side-toggle {
   height: 36px;
   font-size: 0.8rem;
-
-  .mat-button-toggle {
-    font-size: 0.8rem;
-  }
+  .mat-button-toggle { font-size: 0.8rem; }
 }
 
 .selector-card {
-  background: var(--card-bg, white);
+  background: var(--bg-card, #fff);
   border-radius: var(--radius-md, 12px);
-  border: 1px solid var(--border-color, #f0d080);
+  border: var(--card-border);
   padding: 20px;
   margin-bottom: 24px;
+  animation: fadeUp 0.4s ease both;
 }
 
-.wedding-select {
-  width: 300px;
-}
+.wedding-select { width: 300px; }
 
 // ── Report banner ─────────────────────────────────────────────────────────────
 
@@ -28,45 +27,82 @@
   display: inline-block;
   font-size: 0.75rem;
   font-weight: 600;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
   border-radius: 10px;
   padding: 2px 10px;
   margin-bottom: 8px;
+  backdrop-filter: blur(4px);
 }
 
 .report-banner {
-  background: linear-gradient(135deg, var(--color-primary-dark, #5a2d0c) 0%, var(--color-primary, #8B4513) 100%);
+  background: linear-gradient(135deg, #1A0510 0%, #3A1020 40%, #2D0E35 70%, #1A0510 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
   border-radius: var(--radius-lg, 16px);
-  padding: 24px;
+  padding: 28px 24px;
   margin-bottom: 24px;
-  color: white;
+  color: #fff;
+  border: 1px solid rgba(212,175,55,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(192,68,106,0.1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #C0446A, #D4AF37, #C0446A, transparent);
+    animation: gradientShift 4s ease infinite;
+    background-size: 200% auto;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(192,68,106,0.15), transparent 70%);
+    pointer-events: none;
+  }
 }
 
 .report-banner-title {
   font-family: var(--font-heading, 'Playfair Display', serif);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   margin: 0 0 4px;
+  background: linear-gradient(135deg, #FFD700, #FFF0A0, #D4AF37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 12px rgba(212,175,55,0.3));
 }
 
 .report-banner-date {
-  opacity: 0.8;
+  opacity: 0.6;
   margin-bottom: 20px;
+  font-size: 0.85rem;
 }
 
-.banner-stat {
-  text-align: center;
-}
+.banner-stat { text-align: center; }
 
 .banner-value {
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 700;
   font-family: var(--font-heading, 'Playfair Display', serif);
-  color: #FFD700;
+  background: linear-gradient(135deg, #FFD700, #FFF0A0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(212,175,55,0.5));
 }
 
 .banner-label {
-  opacity: 0.8;
-  font-size: 0.8rem;
+  opacity: 0.65;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 // ── Section headers ───────────────────────────────────────────────────────────
@@ -80,8 +116,11 @@
 
 .section-title {
   font-family: var(--font-heading, 'Playfair Display', serif);
-  color: var(--text-heading, #6B2D0A);
   margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text-heading, #3A0D20), #C0446A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 
   &.no-margin { margin-bottom: 0; }
 }
@@ -97,16 +136,17 @@
 }
 
 .couple-link {
-  color: var(--text-heading, #6B2D0A);
+  color: var(--color-primary, #C0446A);
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.2s;
 
-  &:hover { text-decoration: underline; }
+  &:hover { color: #D4AF37; text-decoration: underline; }
 }
 
 .family-name {
   font-size: 0.75rem;
-  color: var(--text-muted, #8B6347);
+  color: var(--text-muted, rgba(255,255,255,0.42));
 }
 
 .view-btn {
@@ -118,36 +158,55 @@
 .print-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: fadeUp 0.25s ease both;
 }
 
 .print-modal {
-  background: #fff;
-  border-radius: 12px;
+  background: rgba(20, 8, 15, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 20px;
   padding: 32px 28px 24px;
   width: 480px;
   max-width: 94vw;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #C0446A, #D4AF37, transparent);
+    border-radius: 20px 20px 0 0;
+  }
 }
 
 .modal-title {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #4a148c;
+  background: linear-gradient(135deg, #FFD700, #E8A0B4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   text-align: center;
+  font-family: var(--font-heading, 'Playfair Display', serif);
 }
 
 .modal-subtitle {
-  font-size: 0.875rem;
-  color: #666;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.5);
   text-align: center;
   margin-bottom: 8px;
 }
@@ -155,7 +214,7 @@
 .modal-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   margin: 8px 0;
 }
@@ -163,28 +222,29 @@
 .side-btn {
   width: 100%;
   padding: 12px 16px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 10px;
   justify-content: center;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
+  transition: all 0.2s;
 
   mat-icon { font-size: 20px; width: 20px; height: 20px; }
 }
 
 .modal-section-label {
   width: 100%;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: #666;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.4);
   display: flex;
   align-items: center;
   gap: 5px;
-  margin: 4px 0 2px;
+  margin: 6px 0 2px;
 
   .label-icon { font-size: 15px; width: 15px; height: 15px; }
 }
@@ -192,55 +252,56 @@
 .modal-divider {
   width: 100%;
   height: 1px;
-  background: #e0e0e0;
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent);
   margin: 10px 0 6px;
 }
 
 .dl-groom-btn {
-  color: #1565c0 !important;
-  border-color: #1565c0 !important;
-  &:hover { background: #e3f2fd !important; }
+  color: #90caf9 !important;
+  border-color: rgba(33,150,243,0.4) !important;
+  background: rgba(33,150,243,0.08) !important;
+  &:hover { background: rgba(33,150,243,0.18) !important; border-color: rgba(33,150,243,0.7) !important; }
 }
 
 .dl-bride-btn {
-  color: #c2185b !important;
-  border-color: #c2185b !important;
-  &:hover { background: #fce4ec !important; }
+  color: #f48fb1 !important;
+  border-color: rgba(192,68,106,0.4) !important;
+  background: rgba(192,68,106,0.08) !important;
+  &:hover { background: rgba(192,68,106,0.18) !important; border-color: rgba(192,68,106,0.7) !important; }
 }
 
 .dl-all-btn {
-  color: #6a1b9a !important;
-  border-color: #6a1b9a !important;
-  &:hover { background: #f3e5f5 !important; }
+  color: #ce93d8 !important;
+  border-color: rgba(156,39,176,0.4) !important;
+  background: rgba(156,39,176,0.08) !important;
+  &:hover { background: rgba(156,39,176,0.18) !important; border-color: rgba(156,39,176,0.7) !important; }
 }
 
 .groom-btn {
-  background: #e3f2fd !important;
-  color: #1565c0 !important;
-  border: 2px solid #1565c0 !important;
-
-  &:hover { background: #1565c0 !important; color: #fff !important; }
+  background: rgba(33,150,243,0.1) !important;
+  color: #90caf9 !important;
+  border: 1.5px solid rgba(33,150,243,0.4) !important;
+  &:hover { background: rgba(33,150,243,0.2) !important; color: #fff !important; }
 }
 
 .bride-btn {
-  background: #fce4ec !important;
-  color: #c2185b !important;
-  border: 2px solid #c2185b !important;
-
-  &:hover { background: #c2185b !important; color: #fff !important; }
+  background: rgba(192,68,106,0.1) !important;
+  color: #f48fb1 !important;
+  border: 1.5px solid rgba(192,68,106,0.4) !important;
+  &:hover { background: rgba(192,68,106,0.2) !important; color: #fff !important; }
 }
 
 .all-btn {
-  background: #f3e5f5 !important;
-  color: #6a1b9a !important;
-  border: 2px solid #6a1b9a !important;
-
-  &:hover { background: #6a1b9a !important; color: #fff !important; }
+  background: rgba(156,39,176,0.1) !important;
+  color: #ce93d8 !important;
+  border: 1.5px solid rgba(156,39,176,0.4) !important;
+  &:hover { background: rgba(156,39,176,0.2) !important; color: #fff !important; }
 }
 
 .cancel-btn {
-  color: #888 !important;
+  color: rgba(255,255,255,0.4) !important;
   margin-top: 4px;
+  &:hover { color: rgba(255,255,255,0.7) !important; }
 }
 
 // ── Analytics Charts ──────────────────────────────────────────────────────────
@@ -253,22 +314,29 @@
 }
 
 .chart-card {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  background: var(--bg-card, #fff);
+  border: var(--card-border);
+  border-radius: 14px;
   padding: 16px 20px;
   min-width: 180px;
   flex: 0 0 auto;
+  box-shadow: var(--card-shadow);
+  animation: fadeUp 0.5s ease both;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 
+  &:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(192,68,106,0.12); }
   &.chart-card-wide { flex: 1 1 260px; }
 }
 
 .chart-title {
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #555;
+  font-weight: 700;
+  font-size: 0.78rem;
+  background: linear-gradient(90deg, var(--color-primary, #C0446A), var(--color-gold, #D4AF37));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
   margin-bottom: 12px;
 }
 

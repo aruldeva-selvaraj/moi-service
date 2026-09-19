@@ -1,9 +1,26 @@
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+@keyframes gradShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+
 .filter-card {
-  background: var(--card-bg, white);
+  background: var(--bg-card, #fff);
   border-radius: var(--radius-md, 12px);
-  border: 1px solid var(--border-color, #f0d080);
+  border: var(--card-border);
   padding: 20px;
   margin-bottom: 24px;
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.4s ease both;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #C0446A, #D4AF37, #C0446A);
+    background-size: 200% auto;
+    animation: gradShift 3s ease infinite;
+  }
 }
 
 .filter-row {
@@ -50,23 +67,42 @@
   font-size: inherit;
   color: inherit;
   padding: 0;
+  transition: color 0.2s;
 
-  &:hover { color: var(--color-primary, #8B4513); }
+  &:hover { color: var(--color-primary, #C0446A); }
 
   .sort-icon {
     font-size: 14px;
     width: 14px;
     height: 14px;
-    color: var(--text-muted, #aaa);
+    color: rgba(192,68,106,0.5);
+    transition: color 0.2s;
   }
 }
 
 .table-paginator {
-  background: var(--card-bg, white);
+  background: var(--bg-card, #fff);
   border-radius: 0 0 var(--radius-md, 12px) var(--radius-md, 12px);
-  border: 1px solid var(--border-color, #f0d080);
+  border: var(--card-border);
   border-top: none;
 }
+
+.wedding-link {
+  color: var(--color-primary, #C0446A);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+  &:hover { color: #D4AF37; text-decoration: underline; }
+}
+
+.guest-name { font-weight: 600; }
+
+.guest-relation {
+  font-size: 0.75rem;
+  color: var(--text-muted, #8B6347);
+}
+
+.date-cell { font-size: 0.8rem; }
 
 .filter-row-secondary {
   margin-top: 12px;
@@ -82,13 +118,17 @@
   gap: 12px;
   padding: 10px 16px;
   margin-bottom: 12px;
-  background: var(--color-primary-light, #fff3e0);
-  border: 1px solid var(--color-primary, #8B4513);
+  background: linear-gradient(135deg, rgba(192,68,106,0.1), rgba(212,175,55,0.06));
+  border: 1px solid rgba(192,68,106,0.25);
   border-radius: var(--radius-md, 12px);
+  animation: fadeUp 0.3s ease both;
 
   .bulk-count {
-    font-weight: 600;
-    color: var(--color-primary, #8B4513);
+    font-weight: 700;
+    background: linear-gradient(90deg, #C0446A, #D4AF37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-right: 4px;
   }
 }

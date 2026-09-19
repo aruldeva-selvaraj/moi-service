@@ -4,24 +4,53 @@
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 30%, rgba(192,68,106,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%, rgba(139,26,54,0.25) 0%, transparent 60%),
+    linear-gradient(160deg, #0d0520 0%, #1a0835 30%, #2a0f20 60%, #0d0520 100%);
 }
 
 .signup-card {
   width: 100%;
   max-width: 520px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
+  background: rgba(20, 8, 15, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 24px;
   padding: 36px 32px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-  animation: cardIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:
+    0 32px 80px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(212,175,55,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #C0446A, #D4AF37, #C0446A, transparent);
+    border-radius: 24px 24px 0 0;
+    animation: border-glow 3s ease-in-out infinite;
+  }
+}
+
+@keyframes border-glow {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; filter: drop-shadow(0 0 4px rgba(212,175,55,0.6)); }
 }
 
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(32px) scale(0.96); }
   to   { opacity: 1; transform: none; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────
@@ -33,10 +62,11 @@
   .header-icon {
     width: 64px; height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #7b1fa2, #e91e63);
+    background: linear-gradient(135deg, #C0446A, #8B1A36);
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 16px;
-    box-shadow: 0 8px 24px rgba(123, 31, 162, 0.45);
+    box-shadow: 0 8px 24px rgba(192, 68, 106, 0.5);
+    animation: float 4s ease-in-out infinite;
 
     mat-icon { color: #fff; font-size: 32px; width: 32px; height: 32px; }
   }
@@ -44,7 +74,12 @@
   h1 {
     margin: 0 0 8px;
     font-size: 1.75rem; font-weight: 700;
-    color: #fff;
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    background: linear-gradient(135deg, #FFD700, #FFF0A0, #D4AF37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 12px rgba(212,175,55,0.3));
   }
 
   .header-sub {
@@ -125,8 +160,8 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus-within {
-    border-color: rgba(156, 39, 176, 0.7);
-    box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.18);
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1), 0 0 20px rgba(192, 68, 106, 0.15);
   }
 
   .field-icon {
@@ -236,11 +271,16 @@
     height: 46px;
     border-radius: 10px !important;
     font-size: 0.95rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #7b1fa2, #e91e63) !important;
-    box-shadow: 0 4px 18px rgba(233,30,99,0.35);
-    transition: box-shadow 0.2s;
-    &:not(:disabled):hover { box-shadow: 0 6px 24px rgba(233,30,99,0.5); }
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: linear-gradient(135deg, #C0446A 0%, #8B1A36 40%, #D4AF37 100%) !important;
+    background-size: 200% auto !important;
+    box-shadow: 0 4px 18px rgba(192,68,106,0.45);
+    transition: box-shadow 0.2s, background-position 0.4s;
+    &:not(:disabled):hover {
+      box-shadow: 0 8px 28px rgba(192,68,106,0.65);
+      background-position: right center !important;
+    }
     &:disabled { opacity: 0.6; }
   }
 }

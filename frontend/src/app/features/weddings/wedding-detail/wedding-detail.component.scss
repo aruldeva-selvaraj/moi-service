@@ -1,9 +1,15 @@
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+@keyframes gradientShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+@keyframes dotPulse { from { opacity:1; transform:scale(1); } to { opacity:0.4; transform:scale(1.4); } }
+@keyframes voicePulse { from { opacity:1; transform:scale(1); color:#e53935; } to { opacity:0.6; transform:scale(1.2); color:#ff5252; } }
+
 .full-width { width: 100%; }
 
 .ai-smart-entry-placeholder {
   height: 80px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--color-primary, #7b1a36) 4%, transparent);
+  background: linear-gradient(135deg, rgba(192,68,106,0.05), rgba(212,175,55,0.03));
+  border: 1px dashed rgba(212,175,55,0.2);
   margin-bottom: 20px;
 }
 
@@ -14,12 +20,10 @@
   align-items: center;
   gap: 12px;
   padding: 14px 20px 12px;
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--color-primary, #7b1a36) 8%, transparent),
-    color-mix(in srgb, var(--color-accent, #c9920a) 4%, transparent));
+  background: linear-gradient(135deg, rgba(192,68,106,0.12), rgba(212,175,55,0.06));
   border-radius: 10px 10px 0 0;
   margin: -20px -20px 18px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-primary, #7b1a36) 12%, transparent);
+  border-bottom: 1px solid rgba(192,68,106,0.18);
 }
 
 .mf-header-icon {
@@ -38,7 +42,10 @@
 .mf-header-title {
   font-weight: 700;
   font-size: 0.95rem;
-  color: var(--text-primary, #222);
+  background: linear-gradient(90deg, #C0446A, #D4AF37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .mf-header-sub {
@@ -147,13 +154,23 @@
 // ── AI Smart Entry ───────────────────────────────────────────────────────────
 
 .ai-smart-entry {
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--color-primary, #6c3eb8) 6%, transparent),
-    color-mix(in srgb, var(--color-accent, #c9920a) 4%, transparent));
-  border: 1px solid color-mix(in srgb, var(--color-primary, #6c3eb8) 25%, transparent);
+  background: linear-gradient(135deg, rgba(192,68,106,0.08), rgba(212,175,55,0.05));
+  border: 1px solid rgba(212,175,55,0.2);
   border-radius: 12px;
   padding: 16px 20px;
   margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #C0446A, #D4AF37, #C0446A);
+    background-size: 200% auto;
+    animation: gradientShift 3s ease infinite;
+  }
 }
 
 .ai-entry-header {
@@ -164,7 +181,7 @@
 }
 
 .ai-entry-icon {
-  color: var(--color-accent, #c9920a);
+  color: #D4AF37;
   font-size: 20px;
   width: 20px;
   height: 20px;
@@ -173,7 +190,10 @@
 .ai-entry-title {
   font-weight: 700;
   font-size: 0.92rem;
-  color: var(--color-primary, #6c3eb8);
+  background: linear-gradient(90deg, #C0446A, #D4AF37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .ai-entry-hint {
@@ -255,7 +275,7 @@
 .event-type-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted, #8B6347);
+  color: var(--text-muted, rgba(255,255,255,0.42));
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 2px;
@@ -270,9 +290,12 @@
 
 .wedding-title {
   font-family: var(--font-heading, 'Playfair Display', serif);
-  color: var(--text-heading, #6B2D0A);
   font-size: 1.8rem;
   margin: 0;
+  background: linear-gradient(135deg, var(--text-heading, #3A0D20), #C0446A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .wedding-meta {

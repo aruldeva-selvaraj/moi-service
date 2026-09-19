@@ -2,12 +2,12 @@
 @keyframes gradShift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
 
 .filter-card {
-  background: var(--bg-card, #fff);
+  background: var(--card-bg, rgba(255,255,255,0.90)) !important;
   border-radius: var(--radius-md, 12px);
-  border: var(--card-border);
+  border: var(--card-border, 1px solid rgba(192,68,106,0.15));
   padding: 20px;
   margin-bottom: 24px;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--card-shadow, 0 4px 20px rgba(0,0,0,0.07));
   position: relative;
   overflow: hidden;
   animation: fadeUp 0.4s ease both;
@@ -36,7 +36,7 @@
 .filter-search  { width: 250px; }
 
 .wedding-link {
-  color: var(--text-heading, #F0DEC8);
+  color: var(--text-heading, #8B1A36);
   text-decoration: none;
   font-weight: 500;
 
@@ -81,9 +81,9 @@
 }
 
 .table-paginator {
-  background: var(--bg-card, #fff);
+  background: var(--card-bg, rgba(255,255,255,0.90)) !important;
   border-radius: 0 0 var(--radius-md, 12px) var(--radius-md, 12px);
-  border: var(--card-border);
+  border: var(--card-border, 1px solid rgba(192,68,106,0.15));
   border-top: none;
 }
 

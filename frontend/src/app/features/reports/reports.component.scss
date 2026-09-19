@@ -11,12 +11,13 @@
 }
 
 .selector-card {
-  background: var(--bg-card, #fff);
+  background: var(--card-bg, rgba(255,255,255,0.90)) !important;
   border-radius: var(--radius-md, 12px);
-  border: var(--card-border);
+  border: var(--card-border, 1px solid rgba(192,68,106,0.15));
   padding: 20px;
   margin-bottom: 24px;
   animation: fadeUp 0.4s ease both;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
 }
 
 .wedding-select { width: 300px; }
@@ -117,7 +118,7 @@
 .section-title {
   font-family: var(--font-heading, 'Playfair Display', serif);
   margin-bottom: 16px;
-  background: linear-gradient(135deg, var(--text-heading, #F0DEC8), #C0446A);
+  background: linear-gradient(135deg, var(--text-heading, #8B1A36), #C0446A);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -146,7 +147,7 @@
 
 .family-name {
   font-size: 0.75rem;
-  color: var(--text-muted, rgba(255,255,255,0.42));
+  color: var(--text-muted, rgba(20,10,35,0.50));
 }
 
 .view-btn {
@@ -168,14 +169,14 @@
 }
 
 .print-modal {
-  background: rgba(20, 8, 15, 0.9);
+  background: var(--card-bg, rgba(255,255,255,0.96));
   backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(212,175,55,0.25);
+  border: 1px solid var(--border-color, rgba(192,68,106,0.2));
   border-radius: 20px;
   padding: 32px 28px 24px;
   width: 480px;
   max-width: 94vw;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.1);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(192,68,106,0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -206,7 +207,7 @@
 
 .modal-subtitle {
   font-size: 0.82rem;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted, rgba(20,10,35,0.50));
   text-align: center;
   margin-bottom: 8px;
 }
@@ -240,7 +241,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-muted, rgba(20,10,35,0.45));
   display: flex;
   align-items: center;
   gap: 5px;
@@ -299,9 +300,9 @@
 }
 
 .cancel-btn {
-  color: rgba(255,255,255,0.4) !important;
+  color: var(--text-muted, rgba(20,10,35,0.45)) !important;
   margin-top: 4px;
-  &:hover { color: rgba(255,255,255,0.7) !important; }
+  &:hover { color: var(--text-body, rgba(20,10,35,0.75)) !important; }
 }
 
 // ── Analytics Charts ──────────────────────────────────────────────────────────
@@ -314,13 +315,13 @@
 }
 
 .chart-card {
-  background: var(--bg-card, #fff);
-  border: var(--card-border);
+  background: var(--card-bg, rgba(255,255,255,0.90)) !important;
+  border: var(--card-border, 1px solid rgba(192,68,106,0.15));
   border-radius: 14px;
   padding: 16px 20px;
   min-width: 180px;
   flex: 0 0 auto;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--card-shadow, 0 4px 20px rgba(0,0,0,0.07));
   animation: fadeUp 0.5s ease both;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 

@@ -28,7 +28,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       justify-content: center;
       text-align: center;
       padding: 26px 20px 20px;
-      background: var(--bg-card, #fff);
+      background: var(--bg-card, rgba(255, 255, 255, 0.88));
       border: var(--card-border, 1px solid rgba(192,68,106,0.12));
       border-radius: var(--radius-md, 16px);
       box-shadow: var(--card-shadow, 0 4px 20px rgba(60,10,30,0.08));
@@ -92,7 +92,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
     .stat-label {
       font-size: 0.74rem;
-      color: var(--text-muted, rgba(255, 255, 255, 0.45));
+      color: var(--text-muted, rgba(20, 10, 35, 0.50));
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-weight: 700;
@@ -102,7 +102,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
     .stat-sub {
       font-size: 0.72rem;
-      color: var(--text-muted, rgba(255, 255, 255, 0.45));
+      color: var(--text-muted, rgba(20, 10, 35, 0.50));
       opacity: 0.7;
       margin-top: 2px;
       position: relative; z-index: 1;

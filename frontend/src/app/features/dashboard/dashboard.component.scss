@@ -191,7 +191,7 @@
     font-family: var(--font-heading, 'Playfair Display', serif);
     font-size: 1.7rem;
     font-weight: 700;
-    color: var(--text-heading, #F0DEC8);
+    color: var(--text-heading, #8B1A36);
     margin-bottom: 8px;
     letter-spacing: -0.02em;
 
@@ -205,7 +205,7 @@
 
   .event-banner-meta {
     font-size: 0.85rem;
-    color: var(--text-muted, rgba(255, 255, 255, 0.45));
+    color: var(--text-muted, rgba(20, 10, 35, 0.50));
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
@@ -271,7 +271,7 @@
 
   h2 {
     font-family: var(--font-heading, 'Playfair Display', serif);
-    color: var(--text-heading, #F0DEC8);
+    color: var(--text-heading, #8B1A36);
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
@@ -316,7 +316,7 @@
 }
 
 .meta-item {
-  color: var(--text-muted, rgba(255, 255, 255, 0.45));
+  color: var(--text-muted, rgba(20, 10, 35, 0.50));
   font-size: 0.8rem;
   display: flex;
   align-items: center;
@@ -338,7 +338,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  .guest-count { font-size: 0.75rem; color: var(--text-muted, rgba(255, 255, 255, 0.45)); }
+  .guest-count { font-size: 0.75rem; color: var(--text-muted, rgba(20, 10, 35, 0.50)); }
 }
 
 // ── Export / share actions ────────────────────────────────────────────────

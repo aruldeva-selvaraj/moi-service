@@ -24,7 +24,7 @@ const STORAGE_KEY = 'moi-theme-config-v2';
 const DEFAULT_THEME: ThemeConfig = {
   primaryColor: '#C0446A',
   accentColor: '#D4AF37',
-  mood: 'dark',
+  mood: 'light',
   depth: 'glass',
   vibe: 'festive',
 };
@@ -146,15 +146,15 @@ export class ThemeService {
       root.style.setProperty('--nav-accent-color', '#D4AF37');
       this.doc.body.setAttribute('data-mood', 'dark');
     } else {
-      root.style.setProperty('--bg-page', lighten(cfg.primaryColor, 0.92));
-      root.style.setProperty('--bg-card', '#ffffff');
-      root.style.setProperty('--bg-card-hover', lighten(cfg.primaryColor, 0.94));
-      root.style.setProperty('--bg-stat', lighten(cfg.primaryColor, 0.88));
-      root.style.setProperty('--text-heading', darken(cfg.primaryColor, 0.3));
-      root.style.setProperty('--text-body', darken(cfg.primaryColor, 0.6));
-      root.style.setProperty('--text-muted', darken(cfg.primaryColor, 0.15));
-      root.style.setProperty('--border-color', `rgba(${pr}, ${pg}, ${pb}, 0.3)`);
-      root.style.setProperty('--nav-accent-color', getContrastColor(cfg.primaryColor));
+      root.style.setProperty('--bg-page', '#F7F3FC');
+      root.style.setProperty('--bg-card', 'rgba(255, 255, 255, 0.90)');
+      root.style.setProperty('--bg-card-hover', 'rgba(255, 255, 255, 0.98)');
+      root.style.setProperty('--bg-stat', 'rgba(255, 255, 255, 0.80)');
+      root.style.setProperty('--text-heading', darken(cfg.primaryColor, 0.25));
+      root.style.setProperty('--text-body', 'rgba(20, 10, 35, 0.87)');
+      root.style.setProperty('--text-muted', 'rgba(20, 10, 35, 0.50)');
+      root.style.setProperty('--border-color', `rgba(${pr}, ${pg}, ${pb}, 0.2)`);
+      root.style.setProperty('--nav-accent-color', '#fff');
       this.doc.body.setAttribute('data-mood', 'light');
     }
 

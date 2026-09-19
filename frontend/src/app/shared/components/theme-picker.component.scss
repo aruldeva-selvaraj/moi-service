@@ -27,10 +27,10 @@
   right: 0;
   bottom: 0;
   width: 320px;
-  background: var(--card-bg, #0e0418);
-  backdrop-filter: blur(20px) saturate(180%);
-  border-left: 1px solid var(--border-color, rgba(212,175,55,0.15));
-  box-shadow: -8px 0 60px rgba(0, 0, 0, 0.6);
+  background: var(--card-bg, rgba(255,255,255,0.96));
+  backdrop-filter: blur(24px) saturate(200%);
+  border-left: 1px solid var(--border-color, rgba(124,58,237,0.18));
+  box-shadow: -8px 0 48px rgba(124,58,237,0.12), -2px 0 16px rgba(0,0,0,0.06);
   transform: translateX(102%);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
@@ -149,22 +149,22 @@
   align-items: center;
   gap: 3px;
   padding: 8px 4px 6px;
-  background: var(--bg-stat, rgba(30,8,28,0.8));
-  border: 1px solid var(--border-color, rgba(212,175,55,0.12));
+  background: var(--bg-stat, rgba(255,255,255,0.7));
+  border: 1px solid var(--border-color, rgba(124,58,237,0.12));
   border-radius: var(--radius-sm, 8px);
   cursor: pointer;
   transition: var(--card-transition, 0.2s ease);
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: var(--card-hover-shadow);
+    box-shadow: var(--card-hover-shadow, 0 4px 16px rgba(124,58,237,0.12));
     border-color: var(--color-primary);
   }
 
   &.active {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 2px var(--color-primary);
-    background: var(--bg-card-hover);
+    background: var(--bg-card-hover, rgba(124,58,237,0.08));
   }
 
   .preset-emoji { font-size: 1.1rem; line-height: 1; }
@@ -269,8 +269,8 @@
   gap: 6px;
   flex: 1;
   padding: 10px 8px;
-  background: var(--bg-stat, rgba(30,8,28,0.8));
-  border: 1px solid var(--border-color);
+  background: var(--bg-stat, rgba(255,255,255,0.7));
+  border: 1px solid var(--border-color, rgba(124,58,237,0.12));
   border-radius: var(--radius-sm, 8px);
   cursor: pointer;
   font-size: 0.8rem;

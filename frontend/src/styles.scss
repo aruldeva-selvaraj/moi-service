@@ -413,8 +413,8 @@ body {
   animation: lg-shimmer 8s ease-in-out infinite;
 }
 
-// ── DARK PREMIUM: Material component overrides ────────────────────────────
-// Override Material's light-theme defaults so every surface reads on dark bg
+// ── LIGHT CINEMATIC PREMIUM: Material component overrides ────────────────
+// Override Material defaults so every surface reads on the white glass bg
 
 // ── Browser autofill ──────────────────────────────────────────────────────
 input:-webkit-autofill,
@@ -783,19 +783,23 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
 
 // ── Tooltip ───────────────────────────────────────────────────────────────
 .mat-mdc-tooltip .mdc-tooltip__surface {
-  background: rgba(30,10,60,0.92) !important;
-  color: rgba(255,255,255,0.9) !important;
-  border: 1px solid rgba(124,58,237,0.3) !important;
+  background: rgba(30,10,60,0.88) !important;
+  color: #fff !important;
+  border: 1px solid rgba(124,58,237,0.35) !important;
+  border-radius: 8px !important;
+  font-size: 0.78rem !important;
 }
 
 // ── Snackbar ──────────────────────────────────────────────────────────────
 .mdc-snackbar__surface {
-  background: rgba(30,10,60,0.95) !important;
-  color: rgba(255,255,255,0.9) !important;
-  border: 1px solid rgba(124,58,237,0.25) !important;
-  backdrop-filter: blur(16px) !important;
+  background: rgba(30,10,60,0.92) !important;
+  color: rgba(255,255,255,0.95) !important;
+  border: 1px solid rgba(124,58,237,0.3) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
 }
-.mat-mdc-snack-bar-action { color: var(--color-gold) !important; }
+.mat-mdc-snack-bar-action { color: #A855F7 !important; }
 
 // ── Divider ───────────────────────────────────────────────────────────────
 .mat-divider { border-top-color: var(--border-color, rgba(124,58,237,0.12)) !important; }
@@ -1064,12 +1068,12 @@ mat-icon { color: var(--text-muted, rgba(20,10,35,0.5)); }
   text-transform: uppercase;
   letter-spacing: 0.04em;
 
-  &.badge-cash   { background: rgba(46,125,50,0.18);   color: #86efac; border: 1px solid rgba(46,125,50,0.3); }
-  &.badge-cheque { background: rgba(21,101,192,0.18);  color: #93c5fd; border: 1px solid rgba(21,101,192,0.3); }
-  &.badge-online { background: rgba(106,27,154,0.18);  color: #d8b4fe; border: 1px solid rgba(106,27,154,0.3); }
-  &.badge-bride  { background: rgba(192,68,106,0.18);  color: #f9a8d4; border: 1px solid rgba(192,68,106,0.3); }
-  &.badge-groom  { background: rgba(40,53,147,0.18);   color: #a5b4fc; border: 1px solid rgba(40,53,147,0.3); }
-  &.badge-both   { background: rgba(212,175,55,0.15);  color: #fde68a; border: 1px solid rgba(212,175,55,0.3); }
+  &.badge-cash   { background: rgba(22,163,74,0.10);   color: #15803d; border: 1px solid rgba(22,163,74,0.25); }
+  &.badge-cheque { background: rgba(29,78,216,0.10);   color: #1d4ed8; border: 1px solid rgba(29,78,216,0.25); }
+  &.badge-online { background: rgba(124,58,237,0.10);  color: #7c3aed; border: 1px solid rgba(124,58,237,0.25); }
+  &.badge-bride  { background: rgba(190,24,93,0.10);   color: #be185d; border: 1px solid rgba(190,24,93,0.22); }
+  &.badge-groom  { background: rgba(67,56,202,0.10);   color: #4338ca; border: 1px solid rgba(67,56,202,0.22); }
+  &.badge-both   { background: rgba(161,98,7,0.10);    color: #a16207; border: 1px solid rgba(161,98,7,0.22); }
 }
 
 // ── Form card ─────────────────────────────────────────────────────────────
@@ -1153,20 +1157,17 @@ mat-icon { color: var(--text-muted, rgba(20,10,35,0.5)); }
 }
 
 // ── Snackbars ─────────────────────────────────────────────────────────────
-.success-snackbar {
-  background: linear-gradient(135deg, #1b5e20, #2e7d32) !important;
-  color: white !important;
-  border-radius: 10px !important;
+.success-snackbar .mdc-snackbar__surface {
+  background: linear-gradient(135deg, #166534, #15803d) !important;
+  border-color: rgba(22,163,74,0.4) !important;
 }
-.error-snackbar {
-  background: linear-gradient(135deg, #7f0000, #c62828) !important;
-  color: white !important;
-  border-radius: 10px !important;
+.error-snackbar .mdc-snackbar__surface {
+  background: linear-gradient(135deg, #991b1b, #dc2626) !important;
+  border-color: rgba(239,68,68,0.4) !important;
 }
-.warn-snackbar {
-  background: linear-gradient(135deg, #e65100, #f57c00) !important;
-  color: white !important;
-  border-radius: 10px !important;
+.warn-snackbar .mdc-snackbar__surface {
+  background: linear-gradient(135deg, #92400e, #d97706) !important;
+  border-color: rgba(245,158,11,0.4) !important;
 }
 
 // ── Form fields ───────────────────────────────────────────────────────────

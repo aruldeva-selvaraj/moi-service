@@ -275,7 +275,7 @@
 .event-type-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted, rgba(255,255,255,0.42));
+  color: var(--text-muted, rgba(15,10,35,0.48));
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 2px;
@@ -419,7 +419,7 @@
   border: 1.5px solid rgba(124,58,237,0.5);
   border-radius: 16px;
   background: rgba(124,58,237,0.1);
-  color: #f9a8d4;
+  color: #7c3aed;
   font-size: 0.78rem;
   font-weight: 600;
   padding: 3px 11px;
@@ -465,13 +465,13 @@
     letter-spacing: 0.03em;
   }
 
-  &.ep-name   { background: rgba(21,101,192,0.25); color: #93c5fd; border: 1px solid rgba(21,101,192,0.4); }
-  &.ep-rel    { background: rgba(106,27,154,0.25); color: #d8b4fe; border: 1px solid rgba(106,27,154,0.4); }
-  &.ep-side   { background: rgba(46,125,50,0.25);  color: #86efac; border: 1px solid rgba(46,125,50,0.4); }
-  &.ep-amount { background: rgba(124,58,237,0.25); color: #d8b4fe; border: 1px solid rgba(124,58,237,0.4); font-size: 0.88rem; }
-  &.ep-mode   { background: rgba(55,71,79,0.35);   color: rgba(255,255,255,0.75); border: 1px solid rgba(255,255,255,0.15); }
-  &.ep-loc    { background: rgba(0,105,92,0.25);   color: #6ee7b7; border: 1px solid rgba(0,105,92,0.4); }
-  &.ep-recv   { background: rgba(69,39,160,0.25);  color: #c4b5fd; border: 1px solid rgba(69,39,160,0.4); }
+  &.ep-name   { background: rgba(21,101,192,0.10); color: #1565c0; border: 1px solid rgba(21,101,192,0.3); }
+  &.ep-rel    { background: rgba(106,27,154,0.10); color: #6a1b9a; border: 1px solid rgba(106,27,154,0.3); }
+  &.ep-side   { background: rgba(46,125,50,0.10);  color: #2e7d32; border: 1px solid rgba(46,125,50,0.3); }
+  &.ep-amount { background: rgba(124,58,237,0.10); color: #7c3aed; border: 1px solid rgba(124,58,237,0.3); font-size: 0.88rem; }
+  &.ep-mode   { background: rgba(55,71,79,0.10);   color: #37474f; border: 1px solid rgba(55,71,79,0.25); }
+  &.ep-loc    { background: rgba(0,105,92,0.10);   color: #00695c; border: 1px solid rgba(0,105,92,0.3); }
+  &.ep-recv   { background: rgba(69,39,160,0.10);  color: #4527a0; border: 1px solid rgba(69,39,160,0.3); }
 }
 
 // ── Duplicate warning ─────────────────────────────────────────────────────────
@@ -486,9 +486,9 @@
   padding: 10px 12px;
   margin-bottom: 12px;
   font-size: 0.85rem;
-  color: #fcd34d;
+  color: #92400e;
 
-  .dup-icon { font-size: 18px; height: 18px; width: 18px; color: #ffb300; flex-shrink: 0; }
+  .dup-icon { font-size: 18px; height: 18px; width: 18px; color: #d97706; flex-shrink: 0; }
   .dup-close { margin-left: auto; width: 28px; height: 28px; line-height: 28px;
                mat-icon { font-size: 16px; height: 16px; width: 16px; } }
 }
@@ -505,13 +505,13 @@
   padding: 10px 14px;
   margin-bottom: 16px;
   font-size: 0.875rem;
-  color: #fdba74;
+  color: #9a3412;
 
   mat-icon {
     font-size: 18px;
     height: 18px;
     width: 18px;
-    color: #fb8c00;
+    color: #ea580c;
   }
 
   button {
@@ -629,13 +629,14 @@ button.voice-active .mat-icon {
 }
 
 .print-modal {
-  background: #0e0418;
-  border: 1px solid rgba(212,175,55,0.2);
+  background: var(--card-bg, rgba(255,255,255,0.96));
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(124,58,237,0.2);
   border-radius: 20px;
   padding: 32px 28px 24px;
   width: 480px;
   max-width: 94vw;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.75);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(124,58,237,0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -656,17 +657,18 @@ button.voice-active .mat-icon {
 .modal-title {
   font-size: 1.2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #FFD700, #E8A0B4);
+  background: linear-gradient(135deg, var(--color-primary, #7C3AED), #A855F7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-align: center;
   font-family: var(--font-heading, 'Playfair Display', serif);
+  color: var(--color-primary, #7C3AED);
 }
 
 .modal-subtitle {
   font-size: 0.875rem;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted, rgba(20,10,35,0.50));
   text-align: center;
   margin-bottom: 8px;
 }
@@ -800,7 +802,7 @@ tr.just-added td {
 .activity-timeline {
   margin-top: 20px;
   padding: 12px 16px;
-  background: var(--bg-stat, rgba(30,8,28,0.8));
+  background: var(--bg-stat, rgba(255,255,255,0.85));
   border: 1px solid var(--border-color, rgba(212,175,55,0.12));
   border-radius: var(--radius-md, 12px);
 }

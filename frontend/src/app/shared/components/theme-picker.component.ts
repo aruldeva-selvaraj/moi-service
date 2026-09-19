@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ThemeService, PRESET_THEMES, Mood, Depth, Vibe } from '../../core/services/theme.service';
+import { ThemeService, PRESET_THEMES, Depth, Vibe } from '../../core/services/theme.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -22,11 +22,10 @@ export class ThemePickerComponent {
     return (event.target as HTMLInputElement).value;
   }
 
-  isActivePreset(preset: { config: { primaryColor: string; accentColor: string; mood: string; depth: string; vibe: string } }): boolean {
+  isActivePreset(preset: { config: { primaryColor: string; accentColor: string; depth: string; vibe: string } }): boolean {
     const c = this.ts.config();
     return c.primaryColor === preset.config.primaryColor &&
            c.accentColor  === preset.config.accentColor  &&
-           c.mood  === preset.config.mood  &&
            c.depth === preset.config.depth &&
            c.vibe  === preset.config.vibe;
   }

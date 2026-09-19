@@ -1,14 +1,12 @@
 import { Injectable, signal, effect, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
-export type Mood = 'light' | 'dark';
-export type Depth = 'flat' | 'glass' | 'elevated' | 'neon' | 'liquid-glass';
+export type Depth = 'flat' | 'glass' | 'elevated' | 'liquid-glass';
 export type Vibe = 'classic' | 'festive' | 'royal' | 'modern';
 
 export interface ThemeConfig {
   primaryColor: string;
   accentColor: string;
-  mood: Mood;
   depth: Depth;
   vibe: Vibe;
 }
@@ -19,51 +17,50 @@ export interface PresetTheme {
   config: ThemeConfig;
 }
 
-const STORAGE_KEY = 'moi-theme-config-v2';
+const STORAGE_KEY = 'moi-theme-config-v3';
 
 const DEFAULT_THEME: ThemeConfig = {
   primaryColor: '#7C3AED',
   accentColor: '#A855F7',
-  mood: 'light',
   depth: 'glass',
   vibe: 'modern',
 };
 
 export const PRESET_THEMES: PresetTheme[] = [
   {
-    name: 'Violet Light',
+    name: 'Violet Glass',
     icon: '✨',
-    config: { primaryColor: '#7C3AED', accentColor: '#A855F7', mood: 'light', depth: 'glass', vibe: 'modern' },
-  },
-  {
-    name: 'Purple Dark',
-    icon: '🌌',
-    config: { primaryColor: '#7C3AED', accentColor: '#A855F7', mood: 'dark', depth: 'glass', vibe: 'modern' },
+    config: { primaryColor: '#7C3AED', accentColor: '#A855F7', depth: 'glass', vibe: 'modern' },
   },
   {
     name: 'Indigo Pro',
     icon: '💎',
-    config: { primaryColor: '#4F46E5', accentColor: '#818CF8', mood: 'light', depth: 'glass', vibe: 'royal' },
+    config: { primaryColor: '#4F46E5', accentColor: '#818CF8', depth: 'glass', vibe: 'royal' },
   },
   {
     name: 'Fuchsia Bold',
     icon: '🌸',
-    config: { primaryColor: '#A21CAF', accentColor: '#E879F9', mood: 'light', depth: 'glass', vibe: 'festive' },
-  },
-  {
-    name: 'Midnight Purple',
-    icon: '🌙',
-    config: { primaryColor: '#5B21B6', accentColor: '#A78BFA', mood: 'dark', depth: 'neon', vibe: 'modern' },
+    config: { primaryColor: '#A21CAF', accentColor: '#E879F9', depth: 'glass', vibe: 'festive' },
   },
   {
     name: 'Ocean Blue',
     icon: '🌊',
-    config: { primaryColor: '#1D4ED8', accentColor: '#60A5FA', mood: 'light', depth: 'glass', vibe: 'modern' },
+    config: { primaryColor: '#1D4ED8', accentColor: '#60A5FA', depth: 'glass', vibe: 'modern' },
+  },
+  {
+    name: 'Emerald',
+    icon: '🌿',
+    config: { primaryColor: '#059669', accentColor: '#34D399', depth: 'glass', vibe: 'modern' },
+  },
+  {
+    name: 'Rose Gold',
+    icon: '🌹',
+    config: { primaryColor: '#DB2777', accentColor: '#F472B6', depth: 'glass', vibe: 'festive' },
   },
   {
     name: 'Liquid Glass',
     icon: '🫧',
-    config: { primaryColor: '#5E5CE6', accentColor: '#BF5AF2', mood: 'dark', depth: 'liquid-glass', vibe: 'modern' },
+    config: { primaryColor: '#5E5CE6', accentColor: '#BF5AF2', depth: 'liquid-glass', vibe: 'modern' },
   },
 ];
 
@@ -97,10 +94,6 @@ export class ThemeService {
     this.config.update(c => ({ ...c, [key]: value }));
   }
 
-  updateMood(mood: Mood): void {
-    this.config.update(c => ({ ...c, mood }));
-  }
-
   updateDepth(depth: Depth): void {
     this.config.update(c => ({ ...c, depth }));
   }
@@ -118,7 +111,7 @@ export class ThemeService {
     const [pr, pg, pb] = hexToRgb(cfg.primaryColor);
     const [ar, ag, ab] = hexToRgb(cfg.accentColor);
 
-    // D1: Primary color variants
+    // Primary color variants
     root.style.setProperty('--color-primary', cfg.primaryColor);
     root.style.setProperty('--color-primary-dark', darken(cfg.primaryColor, 0.3));
     root.style.setProperty('--color-primary-darker', darken(cfg.primaryColor, 0.55));
@@ -126,52 +119,38 @@ export class ThemeService {
     root.style.setProperty('--color-primary-lighter', lighten(cfg.primaryColor, 0.8));
     root.style.setProperty('--color-primary-rgb', `${pr}, ${pg}, ${pb}`);
 
-    // D2: Accent color variants
+    // Accent color variants
     root.style.setProperty('--color-accent', cfg.accentColor);
     root.style.setProperty('--color-accent-dark', darken(cfg.accentColor, 0.3));
     root.style.setProperty('--color-accent-light', lighten(cfg.accentColor, 0.6));
     root.style.setProperty('--color-accent-rgb', `${ar}, ${ag}, ${ab}`);
+    root.style.setProperty('--color-gold', cfg.accentColor);
+    root.style.setProperty('--color-gold-rgb', `${ar}, ${ag}, ${ab}`);
 
-    // D3: Mood — background and text
-    const isDark = cfg.mood === 'dark';
-    if (isDark) {
-      root.style.setProperty('--bg-page', '#07020F');
-      root.style.setProperty('--bg-card', 'rgba(18, 6, 24, 0.85)');
-      root.style.setProperty('--bg-card-hover', 'rgba(25, 9, 34, 0.92)');
-      root.style.setProperty('--bg-stat', 'rgba(30, 8, 28, 0.80)');
-      root.style.setProperty('--text-heading', '#F0DEC8');
-      root.style.setProperty('--text-body', 'rgba(255, 255, 255, 0.82)');
-      root.style.setProperty('--text-muted', 'rgba(255, 255, 255, 0.42)');
-      root.style.setProperty('--border-color', `rgba(${pr}, ${pg}, ${pb}, 0.22)`);
-      root.style.setProperty('--nav-accent-color', '#D4AF37');
-      this.doc.body.setAttribute('data-mood', 'dark');
-    } else {
-      root.style.setProperty('--bg-page', '#F5F3FF');
-      root.style.setProperty('--bg-card', 'rgba(255, 255, 255, 0.92)');
-      root.style.setProperty('--bg-card-hover', 'rgba(255, 255, 255, 1.0)');
-      root.style.setProperty('--bg-stat', 'rgba(255, 255, 255, 0.85)');
-      root.style.setProperty('--text-heading', '#1E0A3C');
-      root.style.setProperty('--text-body', 'rgba(30, 10, 60, 0.87)');
-      root.style.setProperty('--text-muted', 'rgba(30, 10, 60, 0.50)');
-      root.style.setProperty('--border-color', `rgba(${pr}, ${pg}, ${pb}, 0.18)`);
-      root.style.setProperty('--nav-accent-color', '#fff');
-      this.doc.body.setAttribute('data-mood', 'light');
-    }
+    // Light cinematic — always light
+    root.style.setProperty('--bg-page', '#FAFAFE');
+    root.style.setProperty('--bg-card', 'rgba(255, 255, 255, 0.80)');
+    root.style.setProperty('--bg-card-hover', 'rgba(255, 255, 255, 0.98)');
+    root.style.setProperty('--bg-stat', 'rgba(255, 255, 255, 0.88)');
+    root.style.setProperty('--text-heading', darken(cfg.primaryColor, 0.65));
+    root.style.setProperty('--text-body', 'rgba(15, 10, 35, 0.85)');
+    root.style.setProperty('--text-muted', 'rgba(15, 10, 35, 0.48)');
+    root.style.setProperty('--border-color', `rgba(${pr}, ${pg}, ${pb}, 0.15)`);
+    root.style.setProperty('--nav-accent-color', '#fff');
+    this.doc.body.setAttribute('data-mood', 'light');
+    root.setAttribute('data-mood', 'light');
 
-    // Nav gradient
-    const navDark = darken(cfg.primaryColor, 0.35);
-    const navMid = darken(cfg.primaryColor, 0.1);
-    const navLight = cfg.primaryColor;
-    root.style.setProperty('--nav-bg', `linear-gradient(135deg, ${navDark} 0%, ${navMid} 50%, ${navLight} 100%)`);
+    // Nav — deep cinematic gradient from primary
+    const navDark = darken(cfg.primaryColor, 0.45);
+    const navMid  = darken(cfg.primaryColor, 0.18);
+    root.style.setProperty('--nav-bg', `linear-gradient(135deg, ${navDark} 0%, ${navMid} 55%, ${cfg.primaryColor} 100%)`);
 
-    // D4: Depth — card surface and shadow
+    // Depth — card surface and shadow
     this.applyDepth(root, cfg, pr, pg, pb, ar, ag, ab);
 
-    // D5: Vibe — geometry and motion
+    // Vibe — geometry and motion
     this.applyVibe(root, cfg);
 
-    // Data attributes for CSS-only selectors
-    root.setAttribute('data-mood', cfg.mood);
     root.setAttribute('data-depth', cfg.depth);
     root.setAttribute('data-vibe', cfg.vibe);
   }
@@ -182,74 +161,61 @@ export class ThemeService {
     pr: number, pg: number, pb: number,
     ar: number, ag: number, ab: number
   ): void {
-    const isDark = cfg.mood === 'dark';
     switch (cfg.depth) {
       case 'flat':
-        root.style.setProperty('--card-bg', 'var(--bg-card)');
-        root.style.setProperty('--card-border', '1px solid var(--border-color)');
-        root.style.setProperty('--card-shadow', 'none');
-        root.style.setProperty('--card-hover-shadow', `0 4px 16px rgba(${pr}, ${pg}, ${pb}, 0.15)`);
+        root.style.setProperty('--card-bg', 'rgba(255,255,255,0.97)');
+        root.style.setProperty('--card-border', `1px solid rgba(${pr}, ${pg}, ${pb}, 0.12)`);
+        root.style.setProperty('--card-shadow', `0 2px 12px rgba(${pr}, ${pg}, ${pb}, 0.08), 0 1px 3px rgba(0,0,0,0.04)`);
+        root.style.setProperty('--card-hover-shadow', `0 8px 28px rgba(${pr}, ${pg}, ${pb}, 0.16), 0 2px 8px rgba(0,0,0,0.06)`);
         root.style.setProperty('--card-backdrop', 'none');
         root.style.setProperty('--glow', 'none');
-        root.style.setProperty('--table-header-bg', `var(--color-primary)`);
+        root.style.setProperty('--table-header-bg', `rgba(${pr}, ${pg}, ${pb}, 0.06)`);
         root.style.setProperty('--nav-backdrop', 'none');
         root.style.setProperty('--nav-shadow', `0 2px 8px rgba(0,0,0,0.2)`);
         break;
 
       case 'glass':
-        root.style.setProperty('--card-bg', isDark ? 'rgba(18, 6, 24, 0.85)' : 'rgba(255,255,255,0.55)');
-        root.style.setProperty('--card-border', `1px solid rgba(${pr}, ${pg}, ${pb}, 0.2)`);
-        root.style.setProperty('--card-shadow', `0 8px 32px rgba(${pr}, ${pg}, ${pb}, 0.1), 0 2px 8px rgba(0,0,0,0.05)`);
-        root.style.setProperty('--card-hover-shadow', `0 16px 48px rgba(${pr}, ${pg}, ${pb}, 0.2)`);
-        root.style.setProperty('--card-backdrop', 'blur(16px) saturate(180%)');
+        root.style.setProperty('--card-bg', 'rgba(255,255,255,0.76)');
+        root.style.setProperty('--card-border', `1px solid rgba(255,255,255,0.85)`);
+        root.style.setProperty('--card-shadow', `0 8px 32px rgba(${pr}, ${pg}, ${pb}, 0.10), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.95)`);
+        root.style.setProperty('--card-hover-shadow', `0 20px 56px rgba(${pr}, ${pg}, ${pb}, 0.18), 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)`);
+        root.style.setProperty('--card-backdrop', 'blur(32px) saturate(200%) brightness(1.05)');
         root.style.setProperty('--glow', 'none');
-        root.style.setProperty('--table-header-bg', `rgba(${pr}, ${pg}, ${pb}, 0.75)`);
-        root.style.setProperty('--nav-backdrop', 'blur(20px) saturate(200%)');
-        root.style.setProperty('--nav-shadow', `0 4px 24px rgba(${pr}, ${pg}, ${pb}, 0.3)`);
+        root.style.setProperty('--table-header-bg', `rgba(${pr}, ${pg}, ${pb}, 0.06)`);
+        root.style.setProperty('--nav-backdrop', 'blur(40px) saturate(220%)');
+        root.style.setProperty('--nav-shadow', `0 4px 24px rgba(${pr}, ${pg}, ${pb}, 0.30), 0 1px 0 rgba(255,255,255,0.12)`);
         break;
 
       case 'elevated':
-        root.style.setProperty('--card-bg', 'var(--bg-card)');
-        root.style.setProperty('--card-border', `1px solid rgba(${pr}, ${pg}, ${pb}, 0.18)`);
-        root.style.setProperty('--card-shadow', `0 4px 16px rgba(${pr}, ${pg}, ${pb}, 0.1), 0 1px 4px rgba(0,0,0,0.06)`);
-        root.style.setProperty('--card-hover-shadow', `0 12px 40px rgba(${pr}, ${pg}, ${pb}, 0.2), 0 4px 12px rgba(0,0,0,0.1)`);
+        root.style.setProperty('--card-bg', 'rgba(255,255,255,0.97)');
+        root.style.setProperty('--card-border', `1px solid rgba(${pr}, ${pg}, ${pb}, 0.10)`);
+        root.style.setProperty('--card-shadow', `0 4px 20px rgba(${pr}, ${pg}, ${pb}, 0.10), 0 1px 4px rgba(0,0,0,0.05)`);
+        root.style.setProperty('--card-hover-shadow', `0 16px 48px rgba(${pr}, ${pg}, ${pb}, 0.18), 0 4px 12px rgba(0,0,0,0.08)`);
         root.style.setProperty('--card-backdrop', 'none');
         root.style.setProperty('--glow', 'none');
-        root.style.setProperty('--table-header-bg', `var(--color-primary)`);
+        root.style.setProperty('--table-header-bg', `rgba(${pr}, ${pg}, ${pb}, 0.06)`);
         root.style.setProperty('--nav-backdrop', 'none');
         root.style.setProperty('--nav-shadow', `0 2px 16px rgba(${pr}, ${pg}, ${pb}, 0.35)`);
         break;
 
-      case 'neon':
-        root.style.setProperty('--card-bg', isDark ? 'rgba(14, 4, 24, 0.92)' : 'rgba(255,255,255,0.97)');
-        root.style.setProperty('--card-border', `1px solid rgba(${pr}, ${pg}, ${pb}, 0.5)`);
-        root.style.setProperty('--card-shadow', `0 0 0 1px rgba(${pr}, ${pg}, ${pb}, 0.25), 0 4px 20px rgba(${pr}, ${pg}, ${pb}, 0.25)`);
-        root.style.setProperty('--card-hover-shadow', `0 0 0 1px rgba(${ar}, ${ag}, ${ab}, 0.5), 0 8px 32px rgba(${ar}, ${ag}, ${ab}, 0.35), 0 0 60px rgba(${ar}, ${ag}, ${ab}, 0.15)`);
-        root.style.setProperty('--card-backdrop', 'none');
-        root.style.setProperty('--glow', `0 0 20px rgba(${pr}, ${pg}, ${pb}, 0.5), 0 0 40px rgba(${pr}, ${pg}, ${pb}, 0.2)`);
-        root.style.setProperty('--table-header-bg', `var(--color-primary)`);
-        root.style.setProperty('--nav-backdrop', 'none');
-        root.style.setProperty('--nav-shadow', `0 0 0 1px rgba(${pr}, ${pg}, ${pb}, 0.4), 0 4px 24px rgba(${pr}, ${pg}, ${pb}, 0.4)`);
-        break;
-
       case 'liquid-glass':
-        root.style.setProperty('--card-bg', isDark ? 'rgba(18, 6, 24, 0.48)' : 'rgba(255,255,255,0.62)');
-        root.style.setProperty('--card-border', `1px solid rgba(255,255,255,${isDark ? '0.16' : '0.72'})`);
+        root.style.setProperty('--card-bg', 'rgba(255,255,255,0.65)');
+        root.style.setProperty('--card-border', `1px solid rgba(255,255,255,0.80)`);
         root.style.setProperty('--card-shadow',
-          `0 8px 40px rgba(${pr},${pg},${pb},0.18), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.85)`
+          `0 12px 48px rgba(${pr},${pg},${pb},0.14), 0 3px 12px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.90)`
         );
         root.style.setProperty('--card-hover-shadow',
-          `0 24px 64px rgba(${pr},${pg},${pb},0.28), 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.92)`
+          `0 28px 72px rgba(${pr},${pg},${pb},0.22), 0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95)`
         );
-        root.style.setProperty('--card-backdrop', `blur(48px) saturate(200%) brightness(${isDark ? '1.06' : '1.1'})`);
-        root.style.setProperty('--glow', `0 0 32px rgba(${pr},${pg},${pb},0.3), 0 0 64px rgba(${ar},${ag},${ab},0.15)`);
-        root.style.setProperty('--table-header-bg', `rgba(${pr},${pg},${pb},0.55)`);
-        root.style.setProperty('--nav-backdrop', `blur(60px) saturate(220%) brightness(${isDark ? '1.06' : '1.12'})`);
-        root.style.setProperty('--nav-shadow', `0 4px 32px rgba(${pr},${pg},${pb},0.22), inset 0 -1px 0 rgba(255,255,255,0.15)`);
-        root.style.setProperty('--bg-card', isDark ? 'rgba(18, 6, 24, 0.48)' : 'rgba(255,255,255,0.62)');
-        root.style.setProperty('--bg-card-hover', isDark ? 'rgba(25, 9, 34, 0.58)' : 'rgba(255,255,255,0.82)');
-        root.style.setProperty('--bg-stat', isDark ? 'rgba(30, 8, 28, 0.42)' : `rgba(${pr},${pg},${pb},0.05)`);
-        root.style.setProperty('--border-color', `rgba(${pr},${pg},${pb},0.15)`);
+        root.style.setProperty('--card-backdrop', 'blur(52px) saturate(220%) brightness(1.08)');
+        root.style.setProperty('--glow', `0 0 40px rgba(${pr},${pg},${pb},0.18), 0 0 80px rgba(${ar},${ag},${ab},0.10)`);
+        root.style.setProperty('--table-header-bg', `rgba(${pr},${pg},${pb},0.06)`);
+        root.style.setProperty('--nav-backdrop', 'blur(64px) saturate(240%) brightness(1.10)');
+        root.style.setProperty('--nav-shadow', `0 4px 32px rgba(${pr},${pg},${pb},0.22), inset 0 -1px 0 rgba(255,255,255,0.18)`);
+        root.style.setProperty('--bg-card', 'rgba(255,255,255,0.65)');
+        root.style.setProperty('--bg-card-hover', 'rgba(255,255,255,0.85)');
+        root.style.setProperty('--bg-stat', `rgba(${pr},${pg},${pb},0.04)`);
+        root.style.setProperty('--border-color', `rgba(${pr},${pg},${pb},0.12)`);
         break;
     }
   }
@@ -294,7 +260,12 @@ export class ThemeService {
   private loadFromStorage(): ThemeConfig {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return { ...DEFAULT_THEME, ...JSON.parse(raw) };
+      if (raw) {
+        const saved = JSON.parse(raw);
+        // Strip any old mood/neon keys — always light
+        const { mood: _m, ...rest } = saved;
+        return { ...DEFAULT_THEME, ...rest };
+      }
     } catch { /* ignore */ }
     return { ...DEFAULT_THEME };
   }

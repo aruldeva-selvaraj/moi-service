@@ -7,7 +7,7 @@
   <div class="panel-header">
     <div class="panel-title-group">
       <span class="panel-title">✨ Theme Studio</span>
-      <span class="dimension-badge">5D Engine</span>
+      <span class="dimension-badge">Light Cinematic</span>
     </div>
     <button mat-icon-button class="close-btn" (click)="ts.closePicker()" aria-label="Close theme panel">
       <mat-icon>close</mat-icon>
@@ -98,37 +98,17 @@
 
     <div class="divider"></div>
 
-    <!-- D3: Mood -->
+    <!-- D3: Depth -->
     <section class="section">
       <h4 class="section-label">
         <span class="dim-badge">D3</span>
-        Mood
-      </h4>
-      <div class="toggle-group">
-        <button class="toggle-btn" [class.active]="ts.config().mood === 'light'"
-                (click)="ts.updateMood('light')">
-          <mat-icon>light_mode</mat-icon>
-          <span>Light</span>
-        </button>
-        <button class="toggle-btn" [class.active]="ts.config().mood === 'dark'"
-                (click)="ts.updateMood('dark')">
-          <mat-icon>dark_mode</mat-icon>
-          <span>Dark</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- D4: Depth -->
-    <section class="section">
-      <h4 class="section-label">
-        <span class="dim-badge">D4</span>
         Depth Style
       </h4>
       <div class="depth-grid">
         <button class="depth-btn" [class.active]="ts.config().depth === 'flat'"
                 (click)="ts.updateDepth('flat')">
           <span class="depth-preview flat-prev"></span>
-          <span>Flat</span>
+          <span>Clean</span>
         </button>
         <button class="depth-btn" [class.active]="ts.config().depth === 'glass'"
                 (click)="ts.updateDepth('glass')">
@@ -140,23 +120,18 @@
           <span class="depth-preview elevated-prev"></span>
           <span>3D</span>
         </button>
-        <button class="depth-btn" [class.active]="ts.config().depth === 'neon'"
-                (click)="ts.updateDepth('neon')">
-          <span class="depth-preview neon-prev"></span>
-          <span>Neon</span>
-        </button>
         <button class="depth-btn liquid-glass-btn" [class.active]="ts.config().depth === 'liquid-glass'"
                 (click)="ts.updateDepth('liquid-glass')">
           <span class="depth-preview liquid-glass-prev"></span>
-          <span>🫧 Liquid Glass</span>
+          <span>🫧 Liquid</span>
         </button>
       </div>
     </section>
 
-    <!-- D5: Vibe -->
+    <!-- D4: Vibe -->
     <section class="section">
       <h4 class="section-label">
-        <span class="dim-badge">D5</span>
+        <span class="dim-badge">D4</span>
         Vibe
       </h4>
       <div class="vibe-grid">

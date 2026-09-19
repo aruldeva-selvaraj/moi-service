@@ -58,19 +58,10 @@
       </button>
     }
 
-    <!-- Dark mode quick-toggle -->
-    <button mat-icon-button
-            [matTooltip]="ts.config().mood === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-            matTooltipPosition="below"
-            (click)="ts.updateMood(ts.config().mood === 'dark' ? 'light' : 'dark')"
-            aria-label="Toggle dark mode">
-      <mat-icon>{{ ts.config().mood === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
-    </button>
-
-    <!-- 5D Theme button -->
+    <!-- Theme Studio button -->
     <button mat-icon-button
             class="theme-toggle-btn"
-            matTooltip="Theme Studio (5D)"
+            matTooltip="Theme Studio"
             matTooltipPosition="below"
             [class.picker-open]="ts.isPickerOpen()"
             (click)="ts.togglePicker()"
@@ -114,10 +105,6 @@
         <mat-icon>account_circle</mat-icon>
         Profile
       </a>
-      <button mat-menu-item (click)="ts.updateMood(ts.config().mood === 'dark' ? 'light' : 'dark')">
-        <mat-icon>{{ ts.config().mood === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
-        {{ ts.config().mood === 'dark' ? 'Light Mode' : 'Dark Mode' }}
-      </button>
       <button mat-menu-item (click)="ts.togglePicker()">
         <mat-icon>palette</mat-icon>
         Change Theme
@@ -186,14 +173,6 @@
         <mat-icon>add</mat-icon>
         New Event
       </a>
-
-      <!-- Dark mode toggle in mobile menu -->
-      <button mat-stroked-button
-              (click)="ts.updateMood(ts.config().mood === 'dark' ? 'light' : 'dark')"
-              aria-label="Toggle dark mode">
-        <mat-icon>{{ ts.config().mood === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
-        {{ ts.config().mood === 'dark' ? 'Light Mode' : 'Dark Mode' }}
-      </button>
 
       <!-- Theme studio in mobile menu -->
       <button mat-stroked-button (click)="ts.togglePicker(); toggleMobileMenu()">

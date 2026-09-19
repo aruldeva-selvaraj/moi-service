@@ -1231,3 +1231,176 @@ mat-icon { color: rgba(255,255,255,0.65); }
 }
 
 [role="alert"] { outline: none; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FINAL FORM FIELD VISIBILITY OVERRIDE — must stay at end of file to win cascade
+// Targets Angular Material MDC outlined text fields with maximum specificity
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Outlined border: leading / notch / trailing segments ──────────────────
+body .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__leading,
+body .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__notch,
+body .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__trailing,
+body .mat-mdc-text-field-wrapper.mdc-text-field--outlined .mdc-notched-outline__leading,
+body .mat-mdc-text-field-wrapper.mdc-text-field--outlined .mdc-notched-outline__notch,
+body .mat-mdc-text-field-wrapper.mdc-text-field--outlined .mdc-notched-outline__trailing {
+  border-color: rgba(212, 175, 55, 0.35) !important;
+  border-width: 1.5px !important;
+}
+
+body .mat-mdc-form-field .mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline__leading,
+body .mat-mdc-form-field .mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline__notch,
+body .mat-mdc-form-field .mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline__trailing,
+body .mat-mdc-text-field-wrapper.mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline__leading,
+body .mat-mdc-text-field-wrapper.mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline__notch,
+body .mat-mdc-text-field-wrapper.mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: rgba(212, 175, 55, 0.75) !important;
+  border-width: 2px !important;
+}
+
+// ── Input / textarea text ─────────────────────────────────────────────────
+body .mat-mdc-form-field .mdc-text-field__input,
+body .mat-mdc-form-field .mat-mdc-input-element,
+body .mat-mdc-form-field input.mat-mdc-input-element,
+body .mat-mdc-form-field textarea.mat-mdc-input-element {
+  color: rgba(255, 255, 255, 0.90) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.90) !important;
+  caret-color: #D4AF37 !important;
+}
+
+// ── Placeholder text ──────────────────────────────────────────────────────
+body .mat-mdc-form-field .mdc-text-field__input::placeholder,
+body .mat-mdc-form-field input.mat-mdc-input-element::placeholder,
+body .mat-mdc-form-field textarea.mat-mdc-input-element::placeholder {
+  color: rgba(255, 255, 255, 0.38) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.38) !important;
+  opacity: 1 !important;
+}
+
+// ── Floating / static label ───────────────────────────────────────────────
+body .mat-mdc-form-field .mat-mdc-floating-label,
+body .mat-mdc-form-field .mdc-floating-label,
+body .mat-mdc-form-field .mdc-floating-label--float-above,
+body .mat-mdc-form-field mat-label {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+body .mat-mdc-form-field.mat-focused .mat-mdc-floating-label,
+body .mat-mdc-form-field.mat-focused .mdc-floating-label {
+  color: #D4AF37 !important;
+}
+
+// ── Select trigger (the text shown after choosing an option) ──────────────
+body .mat-mdc-form-field .mat-mdc-select .mat-mdc-select-value,
+body .mat-mdc-form-field .mat-mdc-select .mat-mdc-select-value-text,
+body .mat-mdc-form-field .mat-mdc-select .mat-mdc-select-min-line,
+body .mat-mdc-select .mat-mdc-select-value,
+body .mat-mdc-select .mat-mdc-select-value-text,
+body .mat-mdc-select .mat-mdc-select-min-line {
+  color: rgba(255, 255, 255, 0.90) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.90) !important;
+}
+body .mat-mdc-form-field .mat-mdc-select .mat-mdc-select-placeholder,
+body .mat-mdc-select .mat-mdc-select-placeholder {
+  color: rgba(255, 255, 255, 0.38) !important;
+}
+body .mat-mdc-form-field .mat-mdc-select .mat-mdc-select-arrow,
+body .mat-mdc-select .mat-mdc-select-arrow {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+// ── Select / autocomplete dropdown panel (CDK overlay) ────────────────────
+.cdk-overlay-container .mat-mdc-select-panel.mat-mdc-select-panel,
+.cdk-overlay-container .mat-mdc-autocomplete-panel,
+.cdk-overlay-container .mdc-menu-surface,
+.cdk-overlay-container .mat-mdc-menu-panel {
+  background-color: #100320 !important;
+  border: 1px solid rgba(212, 175, 55, 0.30) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(212,175,55,0.06) !important;
+}
+
+.cdk-overlay-container .mat-mdc-option .mdc-list-item__primary-text,
+.cdk-overlay-container .mat-mdc-option {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.cdk-overlay-container .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.cdk-overlay-container .mat-mdc-option.mat-mdc-option-active {
+  background-color: rgba(212, 175, 55, 0.10) !important;
+}
+.cdk-overlay-container .mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text,
+.cdk-overlay-container .mat-mdc-option.mdc-list-item--selected {
+  color: #FFD700 !important;
+  background-color: rgba(192, 68, 106, 0.18) !important;
+}
+
+// ── Menu items inside cdk overlay ─────────────────────────────────────────
+.cdk-overlay-container .mat-mdc-menu-item,
+.cdk-overlay-container .mat-mdc-menu-item .mat-mdc-menu-item-text {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.cdk-overlay-container .mat-mdc-menu-item:hover:not([disabled]) {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+// ── Datepicker panel ──────────────────────────────────────────────────────
+.cdk-overlay-container .mat-datepicker-content {
+  background-color: #100320 !important;
+  border: 1px solid rgba(212, 175, 55, 0.25) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+.cdk-overlay-container .mat-calendar-body-cell-content,
+.cdk-overlay-container .mat-calendar-body-label,
+.cdk-overlay-container .mat-calendar-arrow,
+.cdk-overlay-container .mat-datepicker-toggle,
+.cdk-overlay-container .mat-calendar-next-button,
+.cdk-overlay-container .mat-calendar-previous-button {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+.cdk-overlay-container .mat-calendar-body-selected {
+  background-color: rgba(192, 68, 106, 0.7) !important;
+  color: #fff !important;
+}
+.cdk-overlay-container .mat-calendar-body-today {
+  border-color: rgba(212, 175, 55, 0.5) !important;
+}
+
+// ── Text-field wrapper background ─────────────────────────────────────────
+body .mat-mdc-form-field .mat-mdc-text-field-wrapper,
+body .mat-mdc-form-field .mdc-text-field {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+// ── Chips inside fields ───────────────────────────────────────────────────
+body .mat-mdc-chip,
+body .mdc-evolution-chip {
+  background-color: rgba(192, 68, 106, 0.18) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(192, 68, 106, 0.35) !important;
+}
+body .mat-mdc-chip .mat-mdc-chip-action-label,
+body .mdc-evolution-chip .mdc-evolution-chip__action--primary .mdc-evolution-chip__text-label {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+// ── Radio / Checkbox label text ───────────────────────────────────────────
+body .mat-mdc-radio-button .mdc-label,
+body .mat-mdc-checkbox .mdc-label {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+body .mat-mdc-radio-button.mat-accent .mdc-radio__outer-circle,
+body .mat-mdc-radio-button.mat-primary .mdc-radio__outer-circle {
+  border-color: rgba(212, 175, 55, 0.4) !important;
+}
+body .mat-mdc-radio-button.mat-accent.mat-mdc-radio-checked .mdc-radio__outer-circle,
+body .mat-mdc-radio-button.mat-primary.mat-mdc-radio-checked .mdc-radio__outer-circle {
+  border-color: #D4AF37 !important;
+}
+body .mat-mdc-radio-button.mat-accent.mat-mdc-radio-checked .mdc-radio__inner-circle,
+body .mat-mdc-radio-button.mat-primary.mat-mdc-radio-checked .mdc-radio__inner-circle {
+  background-color: #D4AF37 !important;
+  border-color: #D4AF37 !important;
+}
+
+// ── Slide toggle ──────────────────────────────────────────────────────────
+body .mat-mdc-slide-toggle .mdc-label {
+  color: rgba(255, 255, 255, 0.82) !important;
+}

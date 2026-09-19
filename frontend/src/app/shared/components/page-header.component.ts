@@ -38,7 +38,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       font-family: var(--font-heading, 'Playfair Display', serif);
       font-size: 2rem;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--text-heading, #8B1A36) 0%, var(--color-primary, #C0446A) 80%);
+      background: linear-gradient(135deg, var(--text-heading, #1E0A3C) 0%, var(--color-primary, #7C3AED) 80%);
       background-size: 200% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -58,7 +58,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       height: 2px;
       width: 60px;
       margin-top: 10px;
-      background: linear-gradient(90deg, var(--color-primary, #C0446A), var(--color-gold, #D4AF37));
+      background: linear-gradient(90deg, var(--color-primary, #7C3AED), var(--color-gold, #A855F7));
       border-radius: 1px;
       animation: expandWidth 0.6s 0.3s ease both;
     }

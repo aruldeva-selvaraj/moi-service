@@ -35,6 +35,9 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.17",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
     "@analogjs/vitest-angular": "^1.10.0",
     "@angular-devkit/build-angular": "^21.0.0",
     "@angular/cli": "^21.0.0",

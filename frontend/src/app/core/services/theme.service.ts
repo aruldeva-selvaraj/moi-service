@@ -22,48 +22,48 @@ export interface PresetTheme {
 const STORAGE_KEY = 'moi-theme-config-v2';
 
 const DEFAULT_THEME: ThemeConfig = {
-  primaryColor: '#C0446A',
-  accentColor: '#D4AF37',
+  primaryColor: '#7C3AED',
+  accentColor: '#A855F7',
   mood: 'light',
   depth: 'glass',
-  vibe: 'festive',
+  vibe: 'modern',
 };
 
 export const PRESET_THEMES: PresetTheme[] = [
   {
-    name: 'Cinematic Dark',
-    icon: '🎬',
-    config: { primaryColor: '#C0446A', accentColor: '#D4AF37', mood: 'dark', depth: 'glass', vibe: 'festive' },
+    name: 'Violet Light',
+    icon: '✨',
+    config: { primaryColor: '#7C3AED', accentColor: '#A855F7', mood: 'light', depth: 'glass', vibe: 'modern' },
   },
   {
-    name: 'Royal Purple',
-    icon: '👑',
-    config: { primaryColor: '#6B21A8', accentColor: '#C084FC', mood: 'dark', depth: 'glass', vibe: 'royal' },
+    name: 'Purple Dark',
+    icon: '🌌',
+    config: { primaryColor: '#7C3AED', accentColor: '#A855F7', mood: 'dark', depth: 'glass', vibe: 'modern' },
   },
   {
-    name: 'Midnight Neon',
+    name: 'Indigo Pro',
+    icon: '💎',
+    config: { primaryColor: '#4F46E5', accentColor: '#818CF8', mood: 'light', depth: 'glass', vibe: 'royal' },
+  },
+  {
+    name: 'Fuchsia Bold',
+    icon: '🌸',
+    config: { primaryColor: '#A21CAF', accentColor: '#E879F9', mood: 'light', depth: 'glass', vibe: 'festive' },
+  },
+  {
+    name: 'Midnight Purple',
     icon: '🌙',
-    config: { primaryColor: '#3B82F6', accentColor: '#A855F7', mood: 'dark', depth: 'neon', vibe: 'modern' },
+    config: { primaryColor: '#5B21B6', accentColor: '#A78BFA', mood: 'dark', depth: 'neon', vibe: 'modern' },
   },
   {
-    name: 'Dark Emerald',
-    icon: '🍃',
-    config: { primaryColor: '#065F46', accentColor: '#10B981', mood: 'dark', depth: 'glass', vibe: 'modern' },
-  },
-  {
-    name: 'Rose Gold',
-    icon: '🌹',
-    config: { primaryColor: '#BE185D', accentColor: '#F43F5E', mood: 'dark', depth: 'glass', vibe: 'classic' },
+    name: 'Ocean Blue',
+    icon: '🌊',
+    config: { primaryColor: '#1D4ED8', accentColor: '#60A5FA', mood: 'light', depth: 'glass', vibe: 'modern' },
   },
   {
     name: 'Liquid Glass',
     icon: '🫧',
     config: { primaryColor: '#5E5CE6', accentColor: '#BF5AF2', mood: 'dark', depth: 'liquid-glass', vibe: 'modern' },
-  },
-  {
-    name: 'Ocean Dark',
-    icon: '🌊',
-    config: { primaryColor: '#1E40AF', accentColor: '#06B6D4', mood: 'dark', depth: 'glass', vibe: 'modern' },
   },
 ];
 
@@ -146,14 +146,14 @@ export class ThemeService {
       root.style.setProperty('--nav-accent-color', '#D4AF37');
       this.doc.body.setAttribute('data-mood', 'dark');
     } else {
-      root.style.setProperty('--bg-page', '#F7F3FC');
-      root.style.setProperty('--bg-card', 'rgba(255, 255, 255, 0.90)');
-      root.style.setProperty('--bg-card-hover', 'rgba(255, 255, 255, 0.98)');
-      root.style.setProperty('--bg-stat', 'rgba(255, 255, 255, 0.80)');
-      root.style.setProperty('--text-heading', darken(cfg.primaryColor, 0.25));
-      root.style.setProperty('--text-body', 'rgba(20, 10, 35, 0.87)');
-      root.style.setProperty('--text-muted', 'rgba(20, 10, 35, 0.50)');
-      root.style.setProperty('--border-color', `rgba(${pr}, ${pg}, ${pb}, 0.2)`);
+      root.style.setProperty('--bg-page', '#F5F3FF');
+      root.style.setProperty('--bg-card', 'rgba(255, 255, 255, 0.92)');
+      root.style.setProperty('--bg-card-hover', 'rgba(255, 255, 255, 1.0)');
+      root.style.setProperty('--bg-stat', 'rgba(255, 255, 255, 0.85)');
+      root.style.setProperty('--text-heading', '#1E0A3C');
+      root.style.setProperty('--text-body', 'rgba(30, 10, 60, 0.87)');
+      root.style.setProperty('--text-muted', 'rgba(30, 10, 60, 0.50)');
+      root.style.setProperty('--border-color', `rgba(${pr}, ${pg}, ${pb}, 0.18)`);
       root.style.setProperty('--nav-accent-color', '#fff');
       this.doc.body.setAttribute('data-mood', 'light');
     }

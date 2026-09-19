@@ -4,7 +4,7 @@
 .filter-card {
   background: var(--card-bg, rgba(255,255,255,0.90)) !important;
   border-radius: var(--radius-md, 12px);
-  border: var(--card-border, 1px solid rgba(192,68,106,0.15));
+  border: var(--card-border, 1px solid rgba(124,58,237,0.15));
   padding: 20px;
   margin-bottom: 24px;
   box-shadow: var(--card-shadow, 0 4px 20px rgba(0,0,0,0.07));
@@ -17,7 +17,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #C0446A, #D4AF37, #C0446A);
+    background: linear-gradient(90deg, #7C3AED, #A855F7, #7C3AED);
     background-size: 200% auto;
     animation: gradShift 3s ease infinite;
   }
@@ -36,7 +36,7 @@
 .filter-search  { width: 250px; }
 
 .wedding-link {
-  color: var(--text-heading, #8B1A36);
+  color: var(--text-heading, #1E0A3C);
   text-decoration: none;
   font-weight: 500;
 
@@ -69,13 +69,13 @@
   padding: 0;
   transition: color 0.2s;
 
-  &:hover { color: var(--color-primary, #C0446A); }
+  &:hover { color: var(--color-primary, #7C3AED); }
 
   .sort-icon {
     font-size: 14px;
     width: 14px;
     height: 14px;
-    color: rgba(192,68,106,0.5);
+    color: rgba(124,58,237,0.5);
     transition: color 0.2s;
   }
 }
@@ -83,16 +83,16 @@
 .table-paginator {
   background: var(--card-bg, rgba(255,255,255,0.90)) !important;
   border-radius: 0 0 var(--radius-md, 12px) var(--radius-md, 12px);
-  border: var(--card-border, 1px solid rgba(192,68,106,0.15));
+  border: var(--card-border, 1px solid rgba(124,58,237,0.15));
   border-top: none;
 }
 
 .wedding-link {
-  color: var(--color-primary, #C0446A);
+  color: var(--color-primary, #7C3AED);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
-  &:hover { color: #D4AF37; text-decoration: underline; }
+  &:hover { color: #A855F7; text-decoration: underline; }
 }
 
 .guest-name { font-weight: 600; }
@@ -118,14 +118,14 @@
   gap: 12px;
   padding: 10px 16px;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, rgba(192,68,106,0.1), rgba(212,175,55,0.06));
-  border: 1px solid rgba(192,68,106,0.25);
+  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(168,85,247,0.06));
+  border: 1px solid rgba(124,58,237,0.25);
   border-radius: var(--radius-md, 12px);
   animation: fadeUp 0.3s ease both;
 
   .bulk-count {
     font-weight: 700;
-    background: linear-gradient(90deg, #C0446A, #D4AF37);
+    background: linear-gradient(90deg, #7C3AED, #A855F7);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

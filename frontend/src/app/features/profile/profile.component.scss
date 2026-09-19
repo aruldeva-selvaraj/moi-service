@@ -18,11 +18,11 @@
 .avatar {
   width: 52px; height: 52px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #C0446A, #D4AF37);
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.4rem; font-weight: 700;
-  box-shadow: 0 4px 16px rgba(192,68,106,0.4);
+  box-shadow: 0 4px 16px rgba(124,58,237,0.4);
   position: relative;
   flex-shrink: 0;
   animation: float 4s ease-in-out infinite;
@@ -32,7 +32,7 @@
     position: absolute;
     inset: -3px;
     border-radius: 50%;
-    border: 1.5px solid rgba(212,175,55,0.5);
+    border: 1.5px solid rgba(168,85,247,0.5);
     animation: pulse-ring 2s ease-out infinite;
   }
 }
@@ -49,7 +49,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #C0446A, #D4AF37, #C0446A);
+    background: linear-gradient(90deg, #7C3AED, #A855F7, #7C3AED);
     background-size: 200% auto;
     animation: gradShift 3s ease infinite;
   }
@@ -61,14 +61,14 @@
   display: flex; align-items: center; gap: 12px;
   padding: 10px 0;
   color: var(--mat-sys-on-surface-variant, #555);
-  border-bottom: 1px solid rgba(192,68,106,0.06);
+  border-bottom: 1px solid rgba(124,58,237,0.06);
   transition: background 0.2s;
 
   &:last-child { border-bottom: none; }
 
   mat-icon {
     font-size: 18px; width: 18px; height: 18px;
-    color: #C0446A;
+    color: #7C3AED;
     flex-shrink: 0;
   }
 }

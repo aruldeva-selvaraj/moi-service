@@ -23,7 +23,7 @@
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.8), rgba(192,68,106,0.8), rgba(212,175,55,0.8), transparent);
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.8), rgba(124,58,237,0.8), rgba(212,175,55,0.8), transparent);
     background-size: 200% auto;
     animation: navGradient 4s linear infinite;
   }
@@ -121,7 +121,7 @@
       position: absolute;
       bottom: 2px; left: 50%; right: 50%;
       height: 2px;
-      background: linear-gradient(90deg, var(--color-primary, #C0446A), var(--color-gold, #D4AF37));
+      background: linear-gradient(90deg, var(--color-primary, #7C3AED), var(--color-gold, #D4AF37));
       border-radius: 1px;
       transition: left 0.3s ease, right 0.3s ease;
     }
@@ -209,7 +209,7 @@
   width: 38px !important;
   height: 38px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #D4AF37, #C0446A) !important;
+  background: linear-gradient(135deg, #D4AF37, #7C3AED) !important;
   color: #fff !important;
   padding: 0 !important;
   overflow: hidden;
@@ -239,15 +239,15 @@
   padding: 14px 16px 12px;
   min-width: 230px;
   cursor: default;
-  background: linear-gradient(135deg, rgba(192,68,106,0.08), rgba(212,175,55,0.06));
-  border-bottom: 1px solid rgba(192,68,106,0.12);
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(212,175,55,0.06));
+  border-bottom: 1px solid rgba(124,58,237,0.12);
 }
 
 .avatar-menu-initials {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #D4AF37, #C0446A);
+  background: linear-gradient(135deg, #D4AF37, #7C3AED);
   color: #fff;
   font-weight: 700;
   font-size: 1rem;
@@ -255,7 +255,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(192, 68, 106, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
 .avatar-menu-info { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
@@ -325,7 +325,7 @@
 .mobile-avatar-initials {
   width: 44px; height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #D4AF37, #C0446A);
+  background: linear-gradient(135deg, #D4AF37, #7C3AED);
   color: #fff;
   font-weight: 700;
   font-size: 1rem;
@@ -378,7 +378,7 @@
     transition: all 0.2s ease;
 
     &.active-link {
-      background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(192,68,106,0.1)) !important;
+      background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(124,58,237,0.1)) !important;
       color: #FFD700 !important;
       border: 1px solid rgba(212,175,55,0.2);
     }
@@ -488,7 +488,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  background: linear-gradient(90deg, rgba(212,175,55,0.8), rgba(192,68,106,0.7));
+  background: linear-gradient(90deg, rgba(212,175,55,0.8), rgba(124,58,237,0.7));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

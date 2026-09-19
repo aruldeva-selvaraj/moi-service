@@ -9,7 +9,7 @@
 .form-section-title {
   font-family: var(--font-heading, 'Playfair Display', serif);
   margin-bottom: 16px;
-  background: linear-gradient(135deg, var(--text-heading, #8B1A36), #C0446A);
+  background: linear-gradient(135deg, var(--text-heading, #1E0A3C), #7C3AED);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -21,7 +21,7 @@
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 3px;
-    background: linear-gradient(180deg, #C0446A, #D4AF37);
+    background: linear-gradient(180deg, #7C3AED, #A855F7);
     border-radius: 2px;
   }
 }
@@ -31,7 +31,7 @@
   gap: 12px;
   justify-content: flex-end;
   padding-top: 8px;
-  border-top: 1px solid rgba(192,68,106,0.1);
+  border-top: 1px solid rgba(124,58,237,0.1);
   margin-top: 8px;
   animation: fadeUp 0.5s 0.1s ease both;
 }

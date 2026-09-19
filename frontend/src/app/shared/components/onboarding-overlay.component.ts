@@ -46,13 +46,14 @@ import { RouterLink } from '@angular/router';
   `,
   styles: [`
     .onboarding-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9999; }
-    .onboarding-card { background:var(--color-surface,#fff); border-radius:16px; padding:40px; max-width:440px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+    .onboarding-card { background:var(--color-surface, rgba(18, 6, 24, 0.95)); border-radius:16px; padding:40px; max-width:440px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
     .step-indicators { display:flex; gap:8px; justify-content:center; margin-bottom:24px; }
     .step-dot { width:10px; height:10px; border-radius:50%; background:#ddd; transition:background 0.3s; }
     .step-dot.active { background:var(--color-primary,#7b2d8b); }
     .onboard-icon { font-size:56px; width:56px; height:56px; color:var(--color-primary,#7b2d8b); margin-bottom:16px; }
-    h2 { margin:0 0 12px; }
-    p { color:var(--color-text-secondary,#666); margin-bottom:24px; line-height:1.6; }
+    h2 { margin:0 0 12px; color: rgba(255,255,255,0.92); }
+    h2 { color: rgba(255,255,255,0.88) !important; }
+    p { color:var(--color-text-secondary, rgba(255,255,255,0.55)); margin-bottom:24px; line-height:1.6; }
     .onboard-actions { display:flex; gap:12px; justify-content:center; }
   `]
 })

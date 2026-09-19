@@ -59,17 +59,6 @@
         label="Average per Guest" />
     </div>
 
-    <!-- 3D Coin Visualisation — defer until scrolled into view -->
-    @if (eventReport() && event()!.moi_count > 0) {
-      @defer (on viewport) {
-        <app-moi-canvas3d
-          [report]="eventReport()!"
-          [config]="eventConfig()" />
-      } @placeholder {
-        <div style="height:120px"></div>
-      }
-    }
-
     <mat-tab-group>
 
       <!-- Add Moi Tab -->

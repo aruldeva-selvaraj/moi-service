@@ -87,7 +87,7 @@ import { CommonModule } from '@angular/common';
     }
 
     .sk-card {
-      background: var(--card-bg, #fff);
+      background: var(--card-bg, rgba(18, 6, 24, 0.90));
       border: 1px solid var(--border-color, #eee);
       border-radius: var(--radius-md, 12px);
       padding: 20px;

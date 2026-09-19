@@ -1,6 +1,6 @@
 <div class="page-container">
   <app-page-header
-    [title]="isEdit ? '✏️ Edit Event' : '🎉 New Event'"
+    [title]="isEdit ? 'Edit Event' : 'New Event'"
     [subtitle]="isEdit ? 'Update event details' : 'Register a new event for moi tracking'" />
 
   <div class="form-card">
@@ -26,8 +26,7 @@
         <div class="grid-2">
           <mat-form-field appearance="outline">
             <mat-label>{{ selectedEventConfig.primaryLabel }} *</mat-label>
-            <input matInput formControlName="primary_name"
-              [placeholder]="'Enter ' + selectedEventConfig.primaryLabel">
+            <input matInput formControlName="primary_name">
             <mat-icon matPrefix>person</mat-icon>
             @if (form.get('primary_name')?.hasError('required') && form.get('primary_name')?.touched) {
               <mat-error>{{ selectedEventConfig.primaryLabel }} is required</mat-error>
@@ -37,8 +36,7 @@
           @if (selectedEventConfig.showSecondary) {
             <mat-form-field appearance="outline">
               <mat-label>{{ selectedEventConfig.secondaryLabel }}</mat-label>
-              <input matInput formControlName="secondary_name"
-                [placeholder]="'Enter ' + selectedEventConfig.secondaryLabel">
+              <input matInput formControlName="secondary_name">
               <mat-icon matPrefix>person</mat-icon>
             </mat-form-field>
           }
@@ -46,7 +44,7 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Family Name (optional)</mat-label>
-          <input matInput formControlName="family_name" placeholder="e.g., Krishnaswamy">
+          <input matInput formControlName="family_name">
           <mat-icon matPrefix>family_restroom</mat-icon>
         </mat-form-field>
       </div>
@@ -67,27 +65,26 @@
 
           <mat-form-field appearance="outline">
             <mat-label>City</mat-label>
-            <input matInput formControlName="city" placeholder="e.g., Chennai">
+            <input matInput formControlName="city">
             <mat-icon matPrefix>location_city</mat-icon>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>District</mat-label>
-            <input matInput formControlName="district" placeholder="e.g., Chennai District">
+            <input matInput formControlName="district">
             <mat-icon matPrefix>map</mat-icon>
           </mat-form-field>
         </div>
 
         <mat-form-field appearance="outline">
           <mat-label>Venue / Hall</mat-label>
-          <input matInput formControlName="venue" placeholder="e.g., Sri Vijaya Mahal, T Nagar">
+          <input matInput formControlName="venue">
           <mat-icon matPrefix>location_on</mat-icon>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Notes (optional)</mat-label>
-          <textarea matInput formControlName="notes" rows="3"
-            placeholder="Any additional notes about the event..."></textarea>
+          <textarea matInput formControlName="notes" rows="3"></textarea>
           <mat-icon matPrefix>notes</mat-icon>
         </mat-form-field>
       </div>

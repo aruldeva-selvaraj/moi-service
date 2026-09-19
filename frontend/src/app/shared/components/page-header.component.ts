@@ -38,7 +38,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       font-family: var(--font-heading, 'Playfair Display', serif);
       font-size: 2rem;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--text-heading, #3A0D20) 0%, var(--color-primary, #C0446A) 80%);
+      background: linear-gradient(135deg, var(--text-heading, #F0DEC8) 0%, var(--color-primary, #C0446A) 80%);
       background-size: 200% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -48,7 +48,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
     }
 
     .page-header-text p {
-      color: var(--text-muted, #7A5060);
+      color: var(--text-muted, rgba(255, 255, 255, 0.45));
       margin-top: 6px;
       font-size: 0.9rem;
       line-height: 1.5;

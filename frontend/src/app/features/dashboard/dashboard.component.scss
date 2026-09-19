@@ -205,7 +205,7 @@
 
   .event-banner-meta {
     font-size: 0.85rem;
-    color: var(--text-muted, #7A5060);
+    color: var(--text-muted, rgba(255, 255, 255, 0.45));
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
@@ -316,7 +316,7 @@
 }
 
 .meta-item {
-  color: var(--text-muted, #7A5060);
+  color: var(--text-muted, rgba(255, 255, 255, 0.45));
   font-size: 0.8rem;
   display: flex;
   align-items: center;
@@ -338,7 +338,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  .guest-count { font-size: 0.75rem; color: var(--text-muted, #7A5060); }
+  .guest-count { font-size: 0.75rem; color: var(--text-muted, rgba(255, 255, 255, 0.45)); }
 }
 
 // ── Export / share actions ────────────────────────────────────────────────

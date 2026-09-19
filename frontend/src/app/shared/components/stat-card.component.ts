@@ -92,7 +92,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
     .stat-label {
       font-size: 0.74rem;
-      color: var(--text-muted, #7A5060);
+      color: var(--text-muted, rgba(255, 255, 255, 0.45));
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-weight: 700;
@@ -102,7 +102,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
     .stat-sub {
       font-size: 0.72rem;
-      color: var(--text-muted, #7A5060);
+      color: var(--text-muted, rgba(255, 255, 255, 0.45));
       opacity: 0.7;
       margin-top: 2px;
       position: relative; z-index: 1;

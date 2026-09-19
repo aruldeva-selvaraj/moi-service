@@ -281,20 +281,25 @@ $wedding-theme: mat.m2-define-light-theme((
 // ── Global reset ──────────────────────────────────────────────────────────
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { min-height: 100%; overflow-x: hidden; scroll-behavior: smooth; }
+html {
+  min-height: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  background-color: #07020F !important;
+}
 
 body {
   min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  font-family: var(--font-body);
-  background-color: var(--bg-page);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  background-color: #07020F !important;
   background-image:
     radial-gradient(ellipse 65% 55% at 12% 18%, rgba(192, 68, 106, 0.14) 0%, transparent 65%),
     radial-gradient(ellipse 55% 45% at 88% 82%, rgba(139, 26, 54, 0.12) 0%, transparent 65%),
     radial-gradient(ellipse 40% 35% at 55% 45%, rgba(212, 175, 55, 0.04) 0%, transparent 70%);
   background-attachment: fixed;
-  color: var(--text-body);
+  color: rgba(255, 255, 255, 0.82) !important;
   transition: background-color 0.4s ease, color 0.4s ease;
 
   // Ambient orb 1 — rose/crimson top-left
@@ -474,7 +479,22 @@ body,
 .mat-mdc-paginator-range-label,
 .mat-mdc-paginator-page-size-label,
 .mat-mdc-select-placeholder {
-  color: var(--text-body) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+// Force dark background on all major surface elements regardless of CSS variable resolution
+app-root,
+app-dashboard,
+app-wedding-list,
+app-wedding-form,
+app-wedding-detail,
+app-moi-list,
+app-reports,
+app-profile,
+app-user-management {
+  display: block;
+  background-color: transparent !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────
@@ -507,7 +527,7 @@ body,
   box-shadow: 0 16px 48px rgba(0,0,0,0.7) !important;
 }
 .mat-mdc-menu-item {
-  color: var(--text-body) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
   &:hover, &:focus { background: rgba(255,255,255,0.06) !important; }
 }
 .mat-mdc-menu-item .mat-icon,
@@ -656,12 +676,12 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
 // ── Table ─────────────────────────────────────────────────────────────────
 .mat-mdc-table {
   background: transparent !important;
-  color: var(--text-body) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 .mat-mdc-header-row { background: rgba(26, 5, 16, 0.85) !important; }
 .mat-mdc-row {
   background: rgba(255,255,255,0.025) !important;
-  color: var(--text-body) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
   border-color: rgba(212, 175, 55, 0.08) !important;
   transition: background 0.2s;
   &:nth-child(even) { background: rgba(255,255,255,0.04) !important; }
@@ -670,7 +690,7 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
 .mat-mdc-cell,
 .mat-mdc-header-cell,
 .mat-mdc-footer-cell {
-  color: var(--text-body) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
   border-bottom-color: rgba(212, 175, 55, 0.08) !important;
 }
 .mat-mdc-header-cell { color: rgba(255,255,255,0.7) !important; font-weight: 700 !important; }
@@ -679,7 +699,7 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
 // ── Paginator ─────────────────────────────────────────────────────────────
 .mat-mdc-paginator {
   background: rgba(255,255,255,0.025) !important;
-  color: var(--text-muted) !important;
+  color: rgba(255, 255, 255, 0.42) !important;
   border-top: 1px solid rgba(212, 175, 55, 0.08) !important;
 }
 .mat-mdc-paginator-range-label,
@@ -693,7 +713,7 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
 .mat-mdc-raised-button:not([color]),
 .mat-mdc-flat-button:not([color]) {
   background: rgba(255,255,255,0.08) !important;
-  color: var(--text-body) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 .mat-mdc-icon-button { color: var(--text-muted) !important; }
 
@@ -701,7 +721,7 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
 .mat-mdc-chip,
 .mat-mdc-standard-chip {
   background-color: rgba(255,255,255,0.08) !important;
-  color: var(--text-body) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 .mat-mdc-chip.mat-mdc-chip-selected { background-color: var(--color-primary) !important; color: #fff !important; }
 .mat-mdc-chip-action-label { color: inherit !important; }
@@ -712,7 +732,7 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
   border-color: rgba(212, 175, 55, 0.18) !important;
 }
 .mat-mdc-button-toggle {
-  color: var(--text-muted) !important;
+  color: rgba(255, 255, 255, 0.42) !important;
   background: transparent !important;
 }
 .mat-mdc-button-toggle-label-content { color: inherit !important; }
@@ -742,9 +762,9 @@ body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
 
 // ── Expansion panel ───────────────────────────────────────────────────────
 .mat-expansion-panel {
-  background: var(--bg-card) !important;
-  color: var(--text-body) !important;
-  border: var(--card-border) !important;
+  background: rgba(18, 6, 24, 0.90) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(212, 175, 55, 0.12) !important;
 }
 .mat-expansion-panel-header-title,
 .mat-expansion-panel-header-description { color: var(--text-body) !important; }
@@ -793,8 +813,8 @@ mat-icon { color: rgba(255,255,255,0.65); }
 // Legacy compat
 :root[data-mood="dark"] {
   .mat-mdc-card, .mat-mdc-dialog-container, .mat-mdc-menu-panel {
-    background-color: var(--bg-card) !important;
-    color: var(--text-body) !important;
+    background-color: rgba(18, 6, 24, 0.90) !important;
+    color: rgba(255, 255, 255, 0.82) !important;
   }
 }
 
@@ -846,11 +866,11 @@ mat-icon { color: rgba(255,255,255,0.65); }
 
 // ── Stat cards ────────────────────────────────────────────────────────────
 .stat-card {
-  background: var(--card-bg);
-  backdrop-filter: var(--card-backdrop);
-  -webkit-backdrop-filter: var(--card-backdrop);
-  border: var(--card-border);
-  border-radius: var(--radius-md);
+  background: rgba(18, 6, 24, 0.90) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(212, 175, 55, 0.12) !important;
+  border-radius: var(--radius-md, 16px);
   padding: 26px 20px;
   text-align: center;
   transition: transform var(--card-transition), box-shadow var(--card-transition);
@@ -1051,10 +1071,10 @@ mat-icon { color: rgba(255,255,255,0.65); }
 
 // ── Form card ─────────────────────────────────────────────────────────────
 .form-card {
-  background: var(--card-bg);
-  backdrop-filter: var(--card-backdrop);
-  -webkit-backdrop-filter: var(--card-backdrop);
-  border-radius: var(--radius-lg);
+  background: rgba(18, 6, 24, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-lg, 22px);
   border: var(--card-border);
   box-shadow: var(--card-shadow);
   padding: 36px;

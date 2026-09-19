@@ -15,7 +15,7 @@
 .table-wrapper {
   overflow-x: auto;
   border-radius: 14px;
-  border: 1px solid rgba(192,68,106,0.15);
+  border: 1px solid rgba(124,58,237,0.15);
   box-shadow: 0 4px 20px rgba(60,10,30,0.08);
   animation: fadeUp 0.5s 0.1s ease both;
   position: relative;
@@ -26,7 +26,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #C0446A, #D4AF37, #C0446A);
+    background: linear-gradient(90deg, #7C3AED, #A855F7, #7C3AED);
     background-size: 200% auto;
     animation: gradShift 3s ease infinite;
     z-index: 1;
@@ -44,11 +44,11 @@
 .user-avatar {
   width: 36px; height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #C0446A, #8B1A36);
+  background: linear-gradient(135deg, #7C3AED, #1E0A3C);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 0.9rem;
-  box-shadow: 0 2px 8px rgba(192,68,106,0.35);
+  box-shadow: 0 2px 8px rgba(124,58,237,0.35);
   flex-shrink: 0;
   transition: transform 0.2s;
 

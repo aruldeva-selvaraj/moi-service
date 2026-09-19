@@ -29,7 +29,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       text-align: center;
       padding: 26px 20px 20px;
       background: var(--bg-card, rgba(255, 255, 255, 0.88));
-      border: var(--card-border, 1px solid rgba(192,68,106,0.12));
+      border: var(--card-border, 1px solid rgba(124,58,237,0.12));
       border-radius: var(--radius-md, 16px);
       box-shadow: var(--card-shadow, 0 4px 20px rgba(60,10,30,0.08));
       gap: 8px;
@@ -45,7 +45,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, #C0446A, #D4AF37, #C0446A);
+        background: linear-gradient(90deg, #7C3AED, #A855F7, #7C3AED);
         background-size: 200% auto;
         animation: gradientShift 3s ease infinite;
         border-radius: 16px 16px 0 0;
@@ -64,7 +64,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
       &:hover {
         transform: translateY(-6px) scale(1.03);
-        box-shadow: 0 16px 50px rgba(192,68,106,0.18), 0 4px 16px rgba(0,0,0,0.1);
+        box-shadow: 0 16px 50px rgba(124,58,237,0.18), 0 4px 16px rgba(0,0,0,0.1);
       }
     }
 
@@ -73,7 +73,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       line-height: 1;
       flex-shrink: 0;
       animation: float 4s ease-in-out infinite;
-      filter: drop-shadow(0 2px 8px rgba(192,68,106,0.25));
+      filter: drop-shadow(0 2px 8px rgba(124,58,237,0.25));
       position: relative; z-index: 1;
     }
 
@@ -81,7 +81,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       font-size: 1.75rem;
       font-weight: 700;
       font-family: var(--font-heading, 'Playfair Display', serif);
-      background: linear-gradient(135deg, #C0446A 0%, #8B1A36 100%);
+      background: linear-gradient(135deg, #7C3AED 0%, #1E0A3C 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;

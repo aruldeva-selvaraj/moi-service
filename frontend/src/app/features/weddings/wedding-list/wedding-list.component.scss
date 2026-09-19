@@ -204,7 +204,7 @@
 // ── Results count ─────────────────────────────────────────────────────────
 .results-count {
   margin-bottom: 14px;
-  color: var(--text-muted, #7A5060);
+  color: var(--text-muted, rgba(255, 255, 255, 0.45));
   font-size: 0.88rem;
   font-weight: 500;
 }
@@ -232,7 +232,7 @@
 }
 
 .meta-item {
-  color: var(--text-muted, #7A5060);
+  color: var(--text-muted, rgba(255, 255, 255, 0.45));
   font-size: 0.8rem;
   display: flex;
   align-items: center;
@@ -253,7 +253,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  .guest-count { font-size: 0.75rem; color: var(--text-muted, #7A5060); }
+  .guest-count { font-size: 0.75rem; color: var(--text-muted, rgba(255, 255, 255, 0.45)); }
 }
 
 // ── Filter row ────────────────────────────────────────────────────────────

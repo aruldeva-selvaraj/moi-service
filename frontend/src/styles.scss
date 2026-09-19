@@ -398,6 +398,17 @@ body {
 // ── DARK PREMIUM: Material component overrides ────────────────────────────
 // Override Material's light-theme defaults so every surface reads on dark bg
 
+// ── Browser autofill — keep dark bg ──────────────────────────────────────
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(20, 8, 30, 0.9) inset !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.88) !important;
+  caret-color: #D4AF37 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 // ── Global text color cascade ─────────────────────────────────────────────
 body,
 .mat-app-background,
@@ -492,66 +503,150 @@ body,
 .mat-mdc-menu-item .mat-icon,
 .mat-mdc-menu-item mat-icon { color: var(--text-muted) !important; }
 
-// ── Form fields ───────────────────────────────────────────────────────────
-.mdc-text-field,
-.mat-mdc-form-field .mdc-text-field {
+// ── Form fields — high specificity dark overrides ─────────────────────────
+// Uses `body` prefix to outrank Material's generated selectors
+
+body .mat-mdc-form-field,
+body .mdc-text-field {
+  --mdc-outlined-text-field-input-text-color:    rgba(255,255,255,0.88);
+  --mdc-outlined-text-field-label-text-color:    rgba(255,255,255,0.5);
+  --mdc-outlined-text-field-hover-label-text-color: rgba(255,255,255,0.7);
+  --mdc-outlined-text-field-focus-label-text-color: #D4AF37;
+  --mdc-outlined-text-field-outline-color:       rgba(212,175,55,0.22);
+  --mdc-outlined-text-field-hover-outline-color: rgba(212,175,55,0.4);
+  --mdc-outlined-text-field-focus-outline-color: rgba(212,175,55,0.6);
+  --mdc-filled-text-field-container-color:       rgba(255,255,255,0.06);
+  --mdc-filled-text-field-input-text-color:      rgba(255,255,255,0.88);
+  --mdc-filled-text-field-label-text-color:      rgba(255,255,255,0.5);
+  --mat-form-field-container-text-color:         rgba(255,255,255,0.88);
+  --mat-form-field-label-text-color:             rgba(255,255,255,0.5);
+}
+
+body .mdc-text-field,
+body .mat-mdc-form-field .mdc-text-field {
   background-color: rgba(255, 255, 255, 0.06) !important;
   border-radius: 10px !important;
 }
-.mdc-text-field--outlined .mdc-notched-outline__leading,
-.mdc-text-field--outlined .mdc-notched-outline__notch,
-.mdc-text-field--outlined .mdc-notched-outline__trailing {
-  border-color: rgba(212, 175, 55, 0.2) !important;
+
+// Outline borders
+body .mdc-text-field--outlined .mdc-notched-outline__leading,
+body .mdc-text-field--outlined .mdc-notched-outline__notch,
+body .mdc-text-field--outlined .mdc-notched-outline__trailing {
+  border-color: rgba(212, 175, 55, 0.22) !important;
 }
-.mdc-text-field--focused .mdc-notched-outline__leading,
-.mdc-text-field--focused .mdc-notched-outline__notch,
-.mdc-text-field--focused .mdc-notched-outline__trailing,
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
-  border-color: rgba(212, 175, 55, 0.55) !important;
+body .mdc-text-field--focused .mdc-notched-outline__leading,
+body .mdc-text-field--focused .mdc-notched-outline__notch,
+body .mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: rgba(212, 175, 55, 0.6) !important;
+  border-width: 2px !important;
 }
-.mat-mdc-form-field input,
-.mat-mdc-form-field textarea,
-.mdc-text-field__input {
-  color: var(--text-body) !important;
-  caret-color: var(--color-gold) !important;
+
+// Input text — the most critical rule
+body .mdc-text-field__input,
+body .mat-mdc-form-field input,
+body .mat-mdc-form-field textarea,
+body .mat-mdc-input-element {
+  color: rgba(255,255,255,0.88) !important;
+  caret-color: #D4AF37 !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.88) !important;
 }
-.mat-mdc-floating-label,
-.mdc-floating-label {
-  color: var(--text-muted) !important;
+
+// Placeholder
+body .mdc-text-field__input::placeholder,
+body .mat-mdc-form-field input::placeholder,
+body .mat-mdc-form-field textarea::placeholder {
+  color: rgba(255,255,255,0.3) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.3) !important;
 }
-.mat-mdc-form-field.mat-focused .mat-mdc-floating-label,
-.mat-mdc-form-field.mat-focused .mdc-floating-label {
-  color: var(--color-gold) !important;
+
+// Floating label
+body .mat-mdc-floating-label,
+body .mdc-floating-label,
+body .mdc-floating-label--float-above {
+  color: rgba(255,255,255,0.5) !important;
 }
-.mat-mdc-form-field-subscript-wrapper { color: var(--text-muted) !important; }
+body .mat-mdc-form-field.mat-focused .mat-mdc-floating-label,
+body .mat-mdc-form-field.mat-focused .mdc-floating-label {
+  color: #D4AF37 !important;
+}
+
+// Hint and error text
+body .mat-mdc-form-field-hint { color: rgba(255,255,255,0.4) !important; }
+body .mat-mdc-form-field-error { color: #f87171 !important; }
+body .mat-mdc-form-field-subscript-wrapper { color: rgba(255,255,255,0.4) !important; }
+
+// Suffix/prefix icons inside fields
+body .mat-mdc-form-field .mat-icon,
+body .mat-mdc-form-field mat-icon { color: rgba(255,255,255,0.5) !important; }
 
 // ── Select ────────────────────────────────────────────────────────────────
-.mat-mdc-select-value,
-.mat-mdc-select-value-text,
-.mat-mdc-select-arrow { color: var(--text-body) !important; }
-.mat-mdc-select-placeholder { color: var(--text-muted) !important; }
-.mat-mdc-select-panel,
-.mdc-menu-surface.mat-mdc-select-panel {
-  background: rgba(12, 4, 18, 0.97) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(212, 175, 55, 0.18) !important;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.65) !important;
-}
-.mat-mdc-option {
-  color: var(--text-body) !important;
-  &:hover { background: rgba(255, 255, 255, 0.06) !important; }
-  &.mdc-list-item--selected { background: rgba(192, 68, 106, 0.15) !important; color: #fff !important; }
-  .mdc-list-item__primary-text { color: inherit !important; }
+body .mat-mdc-select-value,
+body .mat-mdc-select-value-text,
+body .mat-mdc-select-min-line { color: rgba(255,255,255,0.88) !important; }
+body .mat-mdc-select-arrow     { color: rgba(255,255,255,0.5) !important; }
+body .mat-mdc-select-placeholder { color: rgba(255,255,255,0.3) !important; }
+
+body .mat-mdc-select-panel,
+body .mdc-menu-surface.mat-mdc-select-panel,
+body .cdk-overlay-pane .mat-mdc-select-panel {
+  background: rgba(10, 3, 16, 0.98) !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7) !important;
 }
 
-// ── Autocomplete ──────────────────────────────────────────────────────────
-.mat-mdc-autocomplete-panel {
-  background: rgba(12, 4, 18, 0.97) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(212, 175, 55, 0.18) !important;
+body .mat-mdc-option {
+  color: rgba(255,255,255,0.82) !important;
+  background: transparent !important;
+  &:hover, &:focus { background: rgba(255,255,255,0.06) !important; }
+  &.mdc-list-item--selected,
+  &.mat-mdc-option-active {
+    background: rgba(192,68,106,0.18) !important;
+    color: #fff !important;
+  }
 }
+body .mat-mdc-option .mdc-list-item__primary-text { color: inherit !important; }
+
+// ── Autocomplete ──────────────────────────────────────────────────────────
+body .mat-mdc-autocomplete-panel,
+body .cdk-overlay-pane .mat-mdc-autocomplete-panel {
+  background: rgba(10, 3, 16, 0.98) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7) !important;
+}
+
+// ── CDK overlay — dropdowns/menus render here (outside component tree) ────
+.cdk-overlay-container,
+.cdk-overlay-backdrop { color: rgba(255,255,255,0.88); }
+
+.cdk-overlay-container .mat-mdc-select-panel,
+.cdk-overlay-container .mat-mdc-autocomplete-panel,
+.cdk-overlay-container .mat-mdc-menu-panel,
+.cdk-overlay-container .mdc-menu-surface {
+  background: rgba(10, 3, 16, 0.98) !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7) !important;
+  color: rgba(255,255,255,0.88) !important;
+}
+
+.cdk-overlay-container .mat-mdc-option,
+.cdk-overlay-container .mat-mdc-menu-item {
+  color: rgba(255,255,255,0.82) !important;
+  background: transparent !important;
+}
+.cdk-overlay-container .mat-mdc-option:hover,
+.cdk-overlay-container .mat-mdc-menu-item:hover {
+  background: rgba(255,255,255,0.06) !important;
+}
+.cdk-overlay-container .mat-mdc-option.mdc-list-item--selected {
+  background: rgba(192,68,106,0.18) !important;
+  color: #fff !important;
+}
+.cdk-overlay-container .mdc-list-item__primary-text { color: inherit !important; }
+.cdk-overlay-container .mat-mdc-menu-item .mat-icon { color: rgba(255,255,255,0.55) !important; }
 
 // ── Table ─────────────────────────────────────────────────────────────────
 .mat-mdc-table {
